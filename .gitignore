@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Database
+data/gasoil.db
+data/gasoil.db-shm
+data/gasoil.db-wal
+
+# Environment
+.env.local
+.env*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Claude memory
+.claude/

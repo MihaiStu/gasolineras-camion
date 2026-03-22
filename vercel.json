@@ -1,0 +1,8 @@
+{
+  "framework": null,
+  "buildCommand": "echo 'static deployment'",
+  "outputDirectory": "public",
+  "redirects": [
+    { "source": "/", "destination": "/gasolineras.html", "permanent": false }
+  ]
+}

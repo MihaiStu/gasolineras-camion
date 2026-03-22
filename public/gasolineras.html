@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdmiLogistic · Gasolineras Camión</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --navy: #0f172a;
+    --navy2: #1e293b;
+    --panel: #162032;
+    --accent: #f97316;
+    --accent2: #fb923c;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --border: #1e3a5f;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--navy);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--navy2);
+    border-bottom: 2px solid var(--accent);
+    padding: 0 14px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-shrink: 0;
+    z-index: 1000;
+  }
+  .logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .logo span { color: var(--text); }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .total-badge {
+    background: var(--border);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  /* ROUTES PANEL */
+  .routes-wrapper {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .btn-routes {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    padding: 6px 11px;
+    border-radius: 4px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .btn-routes:hover, .btn-routes.open { border-color: var(--accent); background: #1a2640; }
+  .routes-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 10px;
+    width: 300px;
+    z-index: 3000;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  }
+  .routes-dropdown.open { display: block; }
+  .routes-note {
+    font-size: 10px;
+    color: var(--muted);
+    padding: 4px 6px 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  .route-group { margin-bottom: 8px; }
+  .route-group:last-child { margin-bottom: 0; }
+  .rg-header {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 3px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .route-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 3px;
+    margin-bottom: 2px;
+    transition: background 0.15s;
+    gap: 8px;
+  }
+  .route-link:hover { background: var(--navy); color: var(--accent); }
+  .route-link-name { flex: 1; min-width: 0; }
+  .route-via {
+    font-size: 10px;
+    color: var(--muted);
+    display: block;
+    margin-top: 1px;
+  }
+  .gps-badge {
+    font-size: 10px;
+    background: #052e16;
+    color: var(--green);
+    border: 1px solid var(--green);
+    border-radius: 3px;
+    padding: 2px 5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .route-link:hover .gps-badge { background: #064e24; }
+
+  /* LAYOUT */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 320px;
+    flex-shrink: 0;
+    background: var(--panel);
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .sidebar-top {
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .search-box {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-box:focus { border-color: var(--accent); }
+  .search-box::placeholder { color: var(--muted); }
+  .filters {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 3px 9px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .filter-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+  .sort-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sort-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .sort-select {
+    flex: 1;
+    background: var(--navy);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    outline: none;
+  }
+
+  .station-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px;
+  }
+  .station-list::-webkit-scrollbar { width: 4px; }
+  .station-list::-webkit-scrollbar-track { background: var(--navy); }
+  .station-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .station-card {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 9px 11px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .station-card:hover { border-color: var(--accent); background: #1a2640; }
+  .station-card.selected { border-color: var(--accent); background: #1e2e45; }
+  .station-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+  }
+  .station-meta {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+  }
+  .station-zone {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
+  /* MAP */
+  #map { flex: 1; background: var(--navy2); }
+
+  .zone-header {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px 6px 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .no-results {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 32px 16px;
+  }
+
+  /* POPUP MAP */
+  .leaflet-popup-content-wrapper {
+    background: var(--navy2) !important;
+    border: 1px solid var(--accent) !important;
+    border-radius: 6px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+    color: var(--text) !important;
+  }
+  .leaflet-popup-tip { background: var(--navy2) !important; }
+  .popup-inner { font-family: 'Barlow', sans-serif; min-width: 180px; }
+  .popup-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .popup-row { font-size: 12px; color: #94a3b8; margin: 2px 0; }
+  .popup-row b { color: var(--text); }
+
+  @media (max-width: 640px) {
+    .sidebar { width: 260px; }
+    .logo { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <!-- Rutas GPS (izquierda) -->
+  <div class="routes-wrapper">
+    <button class="btn-routes" id="btnRoutes" onclick="toggleRoutes()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      RUTAS GPS
+    </button>
+    <div class="routes-dropdown" id="routesDropdown">
+      <div class="routes-note">🚛 Rutas sin peaje · acceso camiones · A-x autovías gratuitas</div>
+      <div id="routesList"></div>
+    </div>
+  </div>
+
+  <!-- Logo (centro) -->
+  <div class="logo">ADMI<span>LOGISTIC</span> · <span style="font-weight:400;font-size:15px;color:var(--muted)">Gasolineras Camión</span></div>
+
+  <!-- Derecha -->
+  <div class="header-right">
+    <div class="total-badge" id="totalBadge">— estaciones</div>
+  </div>
+</header>
+
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-top">
+      <input class="search-box" id="searchBox" type="text" placeholder="🔍  Buscar estación, localidad, vía...">
+      <div class="filters" id="zoneFilters"></div>
+      <div class="sort-row">
+        <span class="sort-label">Ordenar:</span>
+        <select class="sort-select" id="sortSelect" onchange="renderList()">
+          <option value="name_asc">Nombre A-Z</option>
+          <option value="zone_asc">Zona</option>
+        </select>
+      </div>
+    </div>
+    <div class="station-list" id="stationList"></div>
+  </div>
+  <div id="map"></div>
+</div>
+
+<script>
+// ── RUTAS GPS ──────────────────────────────────────────────────────────────────
+const ROUTE_GPS = [
+  {
+    label: 'Base Pinto',
+    icon: '🏠',
+    routes: [
+      { name: 'Zona base · Pinto', via: 'Mosaico Marítimo', url: 'https://maps.google.com/maps?q=Pinto,Madrid,España' }
+    ]
+  },
+  {
+    label: 'Pinto ↔ Barcelona',
+    icon: '🟡',
+    routes: [
+      { name: '→ Pinto → Barcelona', via: 'A-2 sin peaje', url: 'https://www.google.com/maps/dir/?api=1&origin=Pinto,Madrid,España&destination=Barcelona,España&waypoints=Guadalajara,España|Calatayud,Zaragoza,España|Lleida,España&travelmode=driving' },
+      { name: '← Barcelona → Pinto', via: 'A-2 sin peaje', url: 'https://www.google.com/maps/dir/?api=1&origin=Barcelona,España&destination=Pinto,Madrid,España&waypoints=Lleida,España|Calatayud,Zaragoza,España|Guadalajara,España&travelmode=driving' }
+    ]
+  },
+  {
+    label: 'Barcelona ↔ Valencia',
+    icon: '🔴',
+    routes: [
+      { name: '→ Barcelona → Valencia', via: 'AP-7 libre (desde El Vendrell)', url: 'https://www.google.com/maps/dir/?api=1&origin=Barcelona,España&destination=Valencia,España&waypoints=Tarragona,España|Cambrils,España|Vinaròs,España&travelmode=driving' },
+      { name: '← Valencia → Barcelona', via: 'AP-7 libre (hasta El Vendrell)', url: 'https://www.google.com/maps/dir/?api=1&origin=Valencia,España&destination=Barcelona,España&waypoints=Sagunto,España|Vinaròs,España|Cambrils,España&travelmode=driving' }
+    ]
+  },
+  {
+    label: 'Pinto ↔ Alicante',
+    icon: '🔵',
+    routes: [
+      { name: '→ Pinto → Alicante', via: 'A-3 + A-31 sin peaje', url: 'https://www.google.com/maps/dir/?api=1&origin=Pinto,Madrid,España&destination=Alicante,España&waypoints=Castillo+de+Garcimuñoz,Cuenca,España|La+Roda,Albacete,España|Villena,Alicante,España&travelmode=driving' },
+      { name: '← Alicante → Pinto', via: 'A-31 + A-4 vía Ontigola', url: 'https://www.google.com/maps/dir/?api=1&origin=Alicante,España&destination=Pinto,Madrid,España&waypoints=Villena,Alicante,España|La+Roda,Albacete,España|Ontigola,Toledo,España&travelmode=driving' }
+    ]
+  },
+  {
+    label: 'Pinto ↔ Huelva',
+    icon: '🟠',
+    routes: [
+      { name: '→ Pinto → Huelva', via: 'A-5 + A-66 + A-49', url: 'https://www.google.com/maps/dir/?api=1&origin=Pinto,Madrid,España&destination=Huelva,España&waypoints=Oropesa,Toledo,España|Mérida,Badajoz,España|Fuente+de+Cantos,Badajoz,España&travelmode=driving' },
+      { name: '← Huelva → Pinto', via: 'A-49 + A-66 + A-5', url: 'https://www.google.com/maps/dir/?api=1&origin=Huelva,España&destination=Pinto,Madrid,España&waypoints=Fuente+de+Cantos,Badajoz,España|Mérida,Badajoz,España|Oropesa,Toledo,España&travelmode=driving' }
+    ]
+  },
+  {
+    label: 'Alicante ↔ Molina de Segura',
+    icon: '🌊',
+    routes: [
+      { name: '→ Alicante → Molina', via: 'A-7 libre + A-30', url: 'https://www.google.com/maps/dir/?api=1&origin=Alicante,España&destination=Molina+de+Segura,Murcia,España&waypoints=Elche,Alicante,España|Granja+de+Rocamora,Alicante,España&travelmode=driving' },
+      { name: '← Molina → Alicante', via: 'A-30 + A-7 libre', url: 'https://www.google.com/maps/dir/?api=1&origin=Molina+de+Segura,Murcia,España&destination=Alicante,España&waypoints=Granja+de+Rocamora,Alicante,España|Elche,Alicante,España&travelmode=driving' }
+    ]
+  }
+];
+
+function buildRoutesList() {
+  const container = document.getElementById('routesList');
+  container.innerHTML = ROUTE_GPS.map(group => `
+    <div class="route-group">
+      <div class="rg-header">${group.icon} ${group.label}</div>
+      ${group.routes.map(r => `
+        <a class="route-link" href="${r.url}" target="_blank" rel="noopener">
+          <span class="route-link-name">
+            ${r.name}
+            <span class="route-via">${r.via}</span>
+          </span>
+          <span class="gps-badge">GPS ↗</span>
+        </a>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function toggleRoutes() {
+  const dd = document.getElementById('routesDropdown');
+  const btn = document.getElementById('btnRoutes');
+  const isOpen = dd.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', e => {
+  const wrapper = document.querySelector('.routes-wrapper');
+  if (wrapper && !wrapper.contains(e.target)) {
+    document.getElementById('routesDropdown').classList.remove('open');
+    document.getElementById('btnRoutes').classList.remove('open');
+  }
+});
+
+// ── DATA ───────────────────────────────────────────────────────────────────────
+const RAW_DATA = `ANDAMUR La Junquera	AP-7, N-II	La Junquera	Girona	1,603	ZONA JUNQUERA
+ANDAMUR La Junquera-Llers	AP-7, N-II	Llers	Girona	1,603	ZONA JUNQUERA
+GM FUEL Servei Carrer 3	B-10	Barcelona	Barcelona	1,547	ZONA JUNQUERA
+NIEVES Parets	N-152	Parets del Valles	Barcelona	1,660	ZONA JUNQUERA
+Renova Oil Incoenergy	N-230	Torrefarrera	Lérida	1,554	ZONA JUNQUERA
+ANDAMUR Pamplona	AP15, N-121-A	Imárcoain	Navarra	1,614	ZONA IRÚN
+ANDAMUR San Román - Araia	A-1	San Román de San Millán	Álava	1,605	ZONA IRÚN
+Merkaoil	AP-8, GI-2638	Lezo	Guipúzcoa	1,592	ZONA IRÚN
+EUROCAM Nanclares de Oca	A-1	Nanclares de la Oca	Álava	1,592	ZONA IRÚN
+Gexa	AP-8, GI-636	Oiartzun	Guipúzcoa	1,597	ZONA IRÚN
+ANDAMUR El Límite	A-7	Huércal-Overa	Almería	1,560	ANDALUCIA
+ANDAMUR Guarromán	A-4	Guarromán	Jaén	1,589	ANDALUCIA
+Las Cuartillas	N-630	Valencina de la Concepción	Sevilla	1,553	ANDALUCIA
+Magdaoil	A-92	Alcalá de Guadaira	Sevilla	1,536	ANDALUCIA
+Ruta 4	A-4	La Campana	Sevilla	1,534	ANDALUCIA
+TJ Oil	M-630	Salteras	Sevilla	1,531	ANDALUCIA
+BQP Villanueva Food and Fuel	A-4	Écija	Sevilla	1,555	ANDALUCIA
+HAFESA OIL Almerimar	A-7	El Ejido	Almería	1,547	ANDALUCIA
+GALP Huétor Tájar	A-92	Huetor Tajar	Granada	1,604	ANDALUCIA
+VALCARCE Láchar	A-92	Láchar	Granada	1,552	ANDALUCIA
+VALCARCE Gor	A-92	Gor	Granada	1,552	ANDALUCIA
+CARBURANTES A92	A-92	Darro	Granada	1,552	ANDALUCIA
+El Fresno	A-7	Los Barrios	Cadiz	1,536	ANDALUCIA
+NIEVES Algeciras	A-7	Los Barrios	Cádiz	1,670	ANDALUCIA
+GALP Jerez	A-381	Jerez de la Frontera	Cádiz	1,597	ANDALUCIA
+GALP Puerto Real	CA-35	Puerto Real	Cádiz	1,629	ANDALUCIA
+AREA 117 Benamejí	N-331	Benamejí	Córdoba	1,543	ANDALUCIA
+DEOIL Gibraleon	N-431	Gibraleón	Huelva	1,560	ANDALUCIA
+GALP Rosal de La Frontera	N-433	Rosal de la Frontera	Huelva	1,630	ANDALUCIA
+Platero	A-494	Moguer	Huelva	1,548	ANDALUCIA
+GALP Estepona	A-7	Estepona	Málaga	1,594	ANDALUCIA
+AREA 117 Humilladero I	A-92	Humilladero	Málaga	1,545	ANDALUCIA
+AREA 117 Humilladero II	A-92	Humilladero	Málaga	1,545	ANDALUCIA
+GALP Málaga - El Viso	A-357	Málaga	Málaga	1,600	ANDALUCIA
+GALP Málaga - El Limonar	A-7	Málaga	Málaga	1,623	ANDALUCIA
+AGLA La Isla	A-8053	Dos Hermanas	Sevilla	1,551	ANDALUCIA
+GALP Los Palacios	AP-4	Los Palacios y Villafranca	Sevilla	1,590	ANDALUCIA
+ANDAMUR Lorca	A-7	Lorca	Murcia	1,570	MURCIA
+Sierra Espuña Trade	A-7	Totana	Murcia	1,542	MURCIA
+Agetrans	A-7	Totana	Murcia	1,540	MURCIA
+La Cañada	A-30	Molina de Segura	Murcia	1,542	MURCIA
+Mill Enterprise	MU-533	Ceuti	Murcia	1,540	MURCIA
+Grupo Caliche	AP-7	San Javier	Murcia	1,569	MURCIA
+MAGNAOIL Vía de la Plata	A-5	Mérida	Badajoz	1,603	EXTREMADURA
+MAGNAOIL El Nevero	A-5	Badajoz	Badajoz	1,603	EXTREMADURA
+GALP Cáceres - Ctra. A Trujillo	N-521	Cáceres	Cáceres	1,678	EXTREMADURA
+GALP Peraleda de la Mata	A-5	Peraleda de la Mata	Cáceres	1,683	EXTREMADURA
+AREA 117 Torremocha del Campo	A-2	Torremocha del Campo	Guadalajara	1,543	CASTILLA-LA MANCHA
+VALCARCE Área de Uclés 90	A-3	Villarubio	Cuenca	1,544	CASTILLA-LA MANCHA
+BEROIL Tébar	A-3	Tébar	Cuenca	1,605	CASTILLA-LA MANCHA
+GALP Castillo de Garcimuñoz	A-3	Castillo de Garcimuñoz	Cuenca	1,595	CASTILLA-LA MANCHA
+VALCARCE El Casar de Talavera	A-5, N-502	El Casar de Talavera	Toledo	1,543	CASTILLA-LA MANCHA
+GALP Calera y Chozas	A-5	Calera y Chozas	Toledo	1,603	CASTILLA-LA MANCHA
+GALP Puerto Lápice I	A-4	Puerto Lapice	Ciudad Real	1,601	CASTILLA-LA MANCHA
+GALP Puerto Lápice II	A-4	Puerto Lapice	Ciudad Real	1,601	CASTILLA-LA MANCHA
+ATENOIL Valdepeñas	A-4	La Consolación	Ciudad Real	1,535	CASTILLA-LA MANCHA
+ATENOIL Valdepeñas II MD	A-4	La Consolación	Ciudad Real	1,535	CASTILLA-LA MANCHA
+ALZ El Oliveral	AP-7, A-3	Ribarroja del Turia	Valencia	1,539	COMUNIDAD VALENCIANA
+GALP Ribarroja Del Turia	AP-7, A-3	Ribarroja del Turia	Valencia	1,540	COMUNIDAD VALENCIANA
+GALP Beneixida	N-340	Beneixida	Valencia	1,542	COMUNIDAD VALENCIANA
+GALP Fuente La Higuera	A-35	Fuente La Higuera	Valencia	1,560	COMUNIDAD VALENCIANA
+GALP Fuente La Higuera II	A-35	Fuente La Higuera	Valencia	1,560	COMUNIDAD VALENCIANA
+GALP Torrent I	A-7	Torrent	Valencia	1,589	COMUNIDAD VALENCIANA
+GALP Torrent II	A-7	Torrent	Valencia	1,589	COMUNIDAD VALENCIANA
+GALP El Puig	A-7	El Puig de Santa María	Valencia	1,590	COMUNIDAD VALENCIANA
+GALP Villargordo Cabriel I	A-3	Villargordo del Gabriel	Valencia	1,595	COMUNIDAD VALENCIANA
+GALP Villargordo Cabriel II	A-3	Villargordo del Gabriel	Valencia	1,595	COMUNIDAD VALENCIANA
+GALP Agost - AP7 Dir.Murcia	AP-7	Agost	Alicante	1,616	COMUNIDAD VALENCIANA
+GALP Agost - AP7 Dir.Valencia	AP-7	Agost	Alicante	1,616	COMUNIDAD VALENCIANA
+GALP Elche I	A-70	Torrellano	Alicante	1,593	COMUNIDAD VALENCIANA
+GALP Elche II	A-70	Torrellano	Alicante	1,594	COMUNIDAD VALENCIANA
+GALP San Antonio I	AP-7	Pedreguer	Alicante	1,595	COMUNIDAD VALENCIANA
+GALP San Antonio II	AP-7	Pedreguer	Alicante	1,595	COMUNIDAD VALENCIANA
+ENI La Ribera Norte	AP-7	Ribera de Cabanes	Castellón	1,546	COMUNIDAD VALENCIANA
+ENI La Ribera Sur (Dir Valencia)	AP-7	Ribera de Cabanes	Castellón	1,546	COMUNIDAD VALENCIANA
+GALP La Plana I	AP-7	Burriana	Castellón	1,598	COMUNIDAD VALENCIANA
+GALP La Plana II	AP-7	Burriana	Castellón	1,598	COMUNIDAD VALENCIANA
+GHC Ganesha Combustibles	A-3	Madrid	Madrid	1,543	COMUNIDAD DE MADRID
+VALCARCE Torrejón de Ardoz	M-206	Torrejón de Ardoz	Madrid	1,541	COMUNIDAD DE MADRID
+GALP Alcalá Henares I	A-2	Alcalá de Henares	Madrid	1,596	COMUNIDAD DE MADRID
+GALP Alcalá Henares II	A-2	Alcalá de Henares	Madrid	1,596	COMUNIDAD DE MADRID
+GALP Parla	A-42	Parla	Madrid	1,617	COMUNIDAD DE MADRID
+ATENOIL Parla II	M-408	Parla	Madrid	1,535	COMUNIDAD DE MADRID
+GALP Pinto - Eboli I	M-506	Pinto	Madrid	1,595	COMUNIDAD DE MADRID
+GALP Pinto - Eboli II	M-506	Pinto	Madrid	1,595	COMUNIDAD DE MADRID
+GALP Perales De Tajuña	A-3, N-III	Perales De Tajuña	Madrid	1,597	COMUNIDAD DE MADRID
+ENI San Sebastián de los Reyes I MD	A-1	San Sebastian de los Reyes	Madrid	1,535	COMUNIDAD DE MADRID
+ENI San Sebastián de los Reyes II MI	N-1	Fuente del Fresno	Madrid	1,535	COMUNIDAD DE MADRID
+GALP S.S.de los Reyes-Jarama	A-1	San Sebastián de los Reyes	Madrid	1,596	COMUNIDAD DE MADRID
+AVIA Castillo Benavente	A-6	Benavente	Zamora	1,625	CASTILLA Y LEÓN
+AVIA Castillo El Burgo	A-231	El Burgo Ranero	León	1,617	CASTILLA Y LEÓN
+GALP Villadangos - Dir. Astorga	N-120	Villadangos del Paramo	León	1,680	CASTILLA Y LEÓN
+VALCARCE Aranda	N-1	Aranda de Duero	Burgos	1,619	CASTILLA Y LEÓN
+BEROIL Estépar	N-620	Estépar	Burgos	1,636	CASTILLA Y LEÓN
+BEROIL Miranda de Ebro	AP-1	Miranda de Ebro	Burgos	1,636	CASTILLA Y LEÓN
+GALP Villatoro	N-627	Burgos	Burgos	1,675	CASTILLA Y LEÓN
+GALP Sarracín I	A-1	Sarracín	Burgos	1,675	CASTILLA Y LEÓN
+GALP Sarracín II	A-1	Sarracín	Burgos	1,675	CASTILLA Y LEÓN
+GALP Los Balbases	A-62	Los Balbases	Burgos	1,677	CASTILLA Y LEÓN
+Bernal	A-62	Aldehuela de la Bóveda	Salamanca	1,599	CASTILLA Y LEÓN
+GALP Aldehuela de la Bóveda	A-62	Aldehuela de la Bóveda	Salamanca	1,683	CASTILLA Y LEÓN
+GALP Villacastín Dir. Coruña	N-6	Villacastin	Segovia	1,598	CASTILLA Y LEÓN
+GALP Villacastín Dir. Madrid	N-6	Villacastin	Segovia	1,598	CASTILLA Y LEÓN
+GALP Martin Muñoz de la Dehesa-Arevalo	A-6	Martín Muñoz de la Dehesa	Segovia	1,619	CASTILLA Y LEÓN
+GALP Medina Del Campo	A-6	Medina del Campo	Valladolid	1,675	CASTILLA Y LEÓN
+San Lamberto	A-2	Zaragoza	Zaragoza	1,538	ARAGÓN
+ALFA ENERGY Alfajarín	AP-2, N-II	Alfajarín	Zaragoza	1,547	ARAGÓN
+HAFESA OIL Cadrete	N-330	Cadrete	Zaragoza	1,547	ARAGÓN
+AVIA Gallur	N-232	Gallur	Zaragoza	1,543	ARAGÓN
+PETROBIL Valdeherrera	A-202	Calatayud	Zaragoza	1,545	ARAGÓN
+GALP Zaragoza I	A-2	La Muela	Zaragoza	1,599	ARAGÓN
+GALP Zaragoza II	A-2	La Muela	Zaragoza	1,599	ARAGÓN
+GALP Monegros I	AP-2	Candasnos	Huesca	1,600	ARAGÓN
+GALP Monegros II	AP-2	Candasnos	Huesca	1,600	ARAGÓN
+ANDAMUR La Junquera	AP-7, N-II	La Junquera	Girona	1,603	CATALUÑA
+ANDAMUR La Junquera-Llers	AP-7, N-II	Llers	Girona	1,603	CATALUÑA
+GM FUEL Servei Carrer 3	B-10	Barcelona	Barcelona	1,547	CATALUÑA
+Renova Oil Incoenergy	N-230	Torrefarrera	Lérida	1,554	CATALUÑA
+NIEVES Lérida	N-II	Lérida	Lérida	1,695	CATALUÑA
+NIEVES Parets	N-152	Parets del Valles	Barcelona	1,660	CATALUÑA
+GALP El Prat de Llobregat-Vertix	C-31	El Prat de Llobregat	Barcelona	1,583	CATALUÑA
+GALP Molins de Rei	B-23	Molins de Rei	Barcelona	1,583	CATALUÑA
+GALP Granollers	BP-5002	Granollers	Barcelona	1,608	CATALUÑA
+GALP Porta de Barcelona Sur	AP-7	Castellbisbal	Barcelona	1,584	CATALUÑA
+GM FUEL La Gornal	N-340	Castellet i Gonal	Barcelona	1,536	CATALUÑA
+PRIMER Area Truck Service	C-153	Vic	Barcelona	1,541	CATALUÑA
+GALP Barcelona	B-10	Barcelona	Barcelona	1,583	CATALUÑA
+GALP El Bruc	A-2	El Bruc	Barcelona	1,584	CATALUÑA
+NIEVES Sesrovires	AP-7, A2	Sant Esteve de Sesrovires	Barcelona	1,635	CATALUÑA
+NIEVES Zona Franca	B-10	Barcelona	Barcelona	1,635	CATALUÑA
+GALP Gironès Norte	AP-7	Aiguaviva	Girona	1,642	CATALUÑA
+GALP Gironès Sur	AP-7	Riudellots de la Selva	Girona	1,642	CATALUÑA
+GALP Jonquera - Tramuntana	N-II	La Junquera	Girona	1,646	CATALUÑA
+GM FUEL Coma-Ruga	N-340	Masos de Comarruga	Tarragona	1,538	CATALUÑA
+GALP Alt Camp I	AP-2	Rodonya	Tarragona	1,586	CATALUÑA
+GALP Alt Camp II	AP-2	Rodonya	Tarragona	1,586	CATALUÑA
+ALAS Hospitalet De L'Infant	N-340	L'Hospitalet De L'Infant	Tarragona	1,541	CATALUÑA
+ALAS Vila-Seca	AP-7	Vila-Seca	Tarragona	1,544	CATALUÑA
+ALAS Constantí	C-14	Constantí	Tarragona	1,544	CATALUÑA
+ALAS L'Ametlla de Mar	N-340	L'Ametlla de Mar	Tarragona	1,564	CATALUÑA
+ANDAMUR Pamplona	AP15, N-121-A	Imárcoain	Navarra	1,614	NAVARRA
+NOIL Bera de Bidasoa	N-121-A	Bera	Navarra	1,597	NAVARRA
+EUROCAM Tudela	A-68	Tudela	Navarra	1,592	NAVARRA
+EUROCAM Pamplona-Agustinos	AP-15	Pamplona	Navarra	1,598	NAVARRA
+GALP Ziordia	A-1	Ziordia	Navarra	1,665	NAVARRA
+GALP Alsasua Dir. Madrid	A-1	Altsasu Alsasu	Navarra	1,642	NAVARRA
+GALP Alsasua Dir. Irún	A-1	Altsasu Alsasu	Navarra	1,665	NAVARRA
+ANDAMUR San Román - Araia	A-1	San Román de San Millán	Álava	1,605	PAIS VASCO
+Merkaoil	AP-8, GI-2638	Lezo	Guipúzcoa	1,592	PAIS VASCO
+Gexa	AP-8, GI-636	Oiartzun	Guipúzcoa	1,597	PAIS VASCO
+EUROCAM Nanclares de Oca	A-1	Nanclares de la Oca	Álava	1,592	PAIS VASCO
+GALP Irún	A-15, NA-700	Irun	Guipúzcoa	1,668	PAIS VASCO
+GALP Lasarte	A-1	Lasarte	Guipúzcoa	1,666	PAIS VASCO
+EUROCAM Logroño	AP-68	Logroño	La Rioja	1,599	LA RIOJA
+BEROIL San Asensio	N-232	San Asensio	La Rioja	1,636	LA RIOJA
+Empresoil	A-8	Gijón	Asturias	1,621	ASTURIAS
+GALP De la Vega I	A-8	Posada de Llanes	Asturias	1,687	ASTURIAS
+GALP De la Vega II	A-8	Posada de Llanes	Asturias	1,687	ASTURIAS
+Cetanoil	LC-221	Cecebre	A Coruña	1,617	GALICIA
+GALP Guitiriz I	A-6	Guitiriz	Lugo	1,668	GALICIA
+GALP Guitiriz II	A-6	Guitiriz	Lugo	1,668	GALICIA
+GALP Monforte de Lemos	N-120, LU-933	Monforte de Lemos	Lugo	1,684	GALICIA
+GALP Barbadanes - Dir. Celanova	OU-540	Barbadas	Ourense	1,678	GALICIA
+El Sol	A-55, N-550	Mos	Pontevedra	1,618	GALICIA
+Sertuy	A-55, N-550	Guillarey	Pontevedra	1,623	GALICIA
+GALP Meis	AG-41	Meis (San Martin)	Pontevedra	1,698	GALICIA
+GALP Silleda	AP-53	Silleda	Pontevedra	1,674	GALICIA`;
+
+const COORDS = {
+  "La Junquera|Girona": [42.4192, 2.8726],
+  "Llers|Girona": [42.3800, 2.8500],
+  "Barcelona|Barcelona": [41.3851, 2.1734],
+  "Parets del Valles|Barcelona": [41.5680, 2.2270],
+  "Torrefarrera|Lérida": [41.6985, 0.6485],
+  "Imárcoain|Navarra": [42.7580, -1.6130],
+  "San Román de San Millán|Álava": [42.8500, -2.5500],
+  "Lezo|Guipúzcoa": [43.3270, -1.8900],
+  "Nanclares de la Oca|Álava": [42.8580, -2.9580],
+  "Oiartzun|Guipúzcoa": [43.2960, -1.8680],
+  "Huércal-Overa|Almería": [37.3890, -1.9450],
+  "Guarromán|Jaén": [38.1750, -3.6850],
+  "Valencina de la Concepción|Sevilla": [37.4150, -6.0700],
+  "Alcalá de Guadaira|Sevilla": [37.3380, -5.8480],
+  "La Campana|Sevilla": [37.5620, -5.4090],
+  "Salteras|Sevilla": [37.4380, -6.1950],
+  "Écija|Sevilla": [37.5430, -5.0830],
+  "El Ejido|Almería": [36.7780, -2.8090],
+  "Huetor Tajar|Granada": [37.2060, -4.0430],
+  "Láchar|Granada": [37.2120, -3.9790],
+  "Gor|Granada": [37.3820, -2.9670],
+  "Darro|Granada": [37.3500, -3.1500],
+  "Los Barrios|Cadiz": [36.1900, -5.5070],
+  "Los Barrios|Cádiz": [36.1900, -5.5070],
+  "Jerez de la Frontera|Cádiz": [36.6850, -6.1360],
+  "Puerto Real|Cádiz": [36.5260, -6.1920],
+  "Benamejí|Córdoba": [37.2680, -4.5500],
+  "Gibraleón|Huelva": [37.3840, -6.9700],
+  "Rosal de la Frontera|Huelva": [37.9870, -7.2180],
+  "Moguer|Huelva": [37.2730, -6.8390],
+  "Estepona|Málaga": [36.4270, -5.1460],
+  "Humilladero|Málaga": [37.1060, -4.6970],
+  "Málaga|Málaga": [36.7213, -4.4214],
+  "Dos Hermanas|Sevilla": [37.2960, -5.9230],
+  "Los Palacios y Villafranca|Sevilla": [37.1600, -5.9280],
+  "Lorca|Murcia": [37.6710, -1.7040],
+  "Totana|Murcia": [37.7700, -1.5010],
+  "Molina de Segura|Murcia": [38.0580, -1.2130],
+  "Ceuti|Murcia": [38.0820, -1.2660],
+  "San Javier|Murcia": [37.8060, -0.8350],
+  "Mérida|Badajoz": [38.9170, -6.3420],
+  "Badajoz|Badajoz": [38.8794, -6.9706],
+  "Cáceres|Cáceres": [39.4752, -6.3724],
+  "Peraleda de la Mata|Cáceres": [39.8460, -5.5000],
+  "Torremocha del Campo|Guadalajara": [40.9820, -2.5090],
+  "Villarubio|Cuenca": [39.9600, -2.9300],
+  "Tébar|Cuenca": [39.6630, -2.1960],
+  "Castillo de Garcimuñoz|Cuenca": [39.7180, -2.3390],
+  "El Casar de Talavera|Toledo": [39.9150, -4.7080],
+  "Calera y Chozas|Toledo": [39.8970, -5.1180],
+  "Puerto Lapice|Ciudad Real": [39.3120, -3.4670],
+  "La Consolación|Ciudad Real": [38.7500, -3.3500],
+  "Ribarroja del Turia|Valencia": [39.5360, -0.5980],
+  "Beneixida|Valencia": [39.0730, -0.4670],
+  "Fuente La Higuera|Valencia": [38.8260, -0.8890],
+  "Torrent|Valencia": [39.4340, -0.4670],
+  "El Puig de Santa María|Valencia": [39.5830, -0.2880],
+  "Villargordo del Gabriel|Valencia": [39.4720, -1.6470],
+  "Agost|Alicante": [38.4380, -0.6580],
+  "Torrellano|Alicante": [38.2670, -0.6800],
+  "Pedreguer|Alicante": [38.7830, 0.0440],
+  "Ribera de Cabanes|Castellón": [40.1610, 0.1440],
+  "Burriana|Castellón": [39.8870, -0.0680],
+  "Madrid|Madrid": [40.4168, -3.7038],
+  "Torrejón de Ardoz|Madrid": [40.4590, -3.4790],
+  "Alcalá de Henares|Madrid": [40.4817, -3.3636],
+  "Parla|Madrid": [40.2390, -3.7680],
+  "Pinto|Madrid": [40.2490, -3.6940],
+  "Perales De Tajuña|Madrid": [40.2540, -3.3630],
+  "San Sebastian de los Reyes|Madrid": [40.5490, -3.6270],
+  "Fuente del Fresno|Madrid": [40.5490, -3.6470],
+  "San Sebastián de los Reyes|Madrid": [40.5490, -3.6270],
+  "Benavente|Zamora": [42.0010, -5.6780],
+  "El Burgo Ranero|León": [42.4190, -5.2240],
+  "Villadangos del Paramo|León": [42.5270, -5.7720],
+  "Aranda de Duero|Burgos": [41.6680, -3.6900],
+  "Estépar|Burgos": [42.3400, -3.7680],
+  "Miranda de Ebro|Burgos": [42.6880, -2.9450],
+  "Burgos|Burgos": [42.3439, -3.6969],
+  "Sarracín|Burgos": [42.2940, -3.6500],
+  "Los Balbases|Burgos": [42.1820, -3.8820],
+  "Aldehuela de la Bóveda|Salamanca": [40.9500, -6.1120],
+  "Villacastin|Segovia": [40.7630, -4.4220],
+  "Martín Muñoz de la Dehesa|Segovia": [40.9480, -4.5930],
+  "Medina del Campo|Valladolid": [41.3100, -4.9140],
+  "Zaragoza|Zaragoza": [41.6488, -0.8891],
+  "Alfajarín|Zaragoza": [41.6730, -0.7270],
+  "Cadrete|Zaragoza": [41.5830, -0.9700],
+  "Gallur|Zaragoza": [41.8680, -1.3180],
+  "Calatayud|Zaragoza": [41.3540, -1.6440],
+  "La Muela|Zaragoza": [41.5950, -1.0970],
+  "Candasnos|Huesca": [41.5080, 0.0260],
+  "Aiguaviva|Girona": [41.8760, 2.8120],
+  "Riudellots de la Selva|Girona": [41.8940, 2.7980],
+  "Lérida|Lérida": [41.6176, 0.6200],
+  "El Prat de Llobregat|Barcelona": [41.3270, 2.0960],
+  "Molins de Rei|Barcelona": [41.4130, 1.9940],
+  "Granollers|Barcelona": [41.6070, 2.2870],
+  "Castellbisbal|Barcelona": [41.4680, 1.9780],
+  "Castellet i Gonal|Barcelona": [41.2530, 1.6690],
+  "Vic|Barcelona": [41.9300, 2.2540],
+  "El Bruc|Barcelona": [41.5810, 1.7330],
+  "Sant Esteve de Sesrovires|Barcelona": [41.4560, 1.8640],
+  "Masos de Comarruga|Tarragona": [41.1640, 1.5340],
+  "Rodonya|Tarragona": [41.2530, 1.3920],
+  "L'Hospitalet De L'Infant|Tarragona": [40.9760, 0.9090],
+  "Vila-Seca|Tarragona": [41.1100, 1.1390],
+  "Constantí|Tarragona": [41.1490, 1.1640],
+  "L'Ametlla de Mar|Tarragona": [40.8810, 0.7850],
+  "Bera|Navarra": [43.2720, -1.7020],
+  "Tudela|Navarra": [42.0570, -1.6060],
+  "Pamplona|Navarra": [42.8125, -1.6458],
+  "Ziordia|Navarra": [42.8710, -2.2760],
+  "Altsasu Alsasu|Navarra": [42.8990, -2.1810],
+  "Irun|Guipúzcoa": [43.3390, -1.7890],
+  "Lasarte|Guipúzcoa": [43.2710, -2.0170],
+  "Logroño|La Rioja": [42.4627, -2.4450],
+  "San Asensio|La Rioja": [42.5270, -2.8190],
+  "Gijón|Asturias": [43.5322, -5.6611],
+  "Posada de Llanes|Asturias": [43.4100, -4.7320],
+  "Cecebre|A Coruña": [43.2260, -8.3350],
+  "Guitiriz|Lugo": [43.1840, -7.8750],
+  "Monforte de Lemos|Lugo": [42.5240, -7.5190],
+  "Barbadas|Ourense": [42.2970, -7.8840],
+  "Mos|Pontevedra": [42.1610, -8.5640],
+  "Guillarey|Pontevedra": [42.2050, -8.5980],
+  "Meis (San Martin)|Pontevedra": [42.5020, -8.6680],
+  "Silleda|Pontevedra": [42.6970, -8.2380]
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let stations = [];
+let markers = {};
+let map;
+let activeZone = 'TODAS';
+let selectedId = null;
+
+function parseRaw(raw) {
+  const lines = raw.trim().split('\n');
+  const result = [];
+  lines.forEach((line, idx) => {
+    const parts = line.split('\t');
+    if (parts.length >= 5) {
+      const name = parts[0].trim();
+      const via = parts[1].trim();
+      const localidad = parts[2].trim();
+      const provincia = parts[3].trim();
+      const priceStr = parts[4].trim().replace(',', '.');
+      const zone = parts[5] ? parts[5].trim() : 'OTRAS';
+      const price = parseFloat(priceStr);
+      if (isNaN(price)) return;
+      const key = `${localidad}|${provincia}`;
+      let coords = COORDS[key] || null;
+      if (!coords) {
+        const fallback = Object.keys(COORDS).find(k => k.startsWith(localidad + '|'));
+        coords = fallback ? COORDS[fallback] : null;
+      }
+      const jitter = () => (Math.random() - 0.5) * 0.008;
+      result.push({
+        id: idx,
+        name, via, localidad, provincia, price, zone,
+        lat: coords ? coords[0] + jitter() : null,
+        lng: coords ? coords[1] + jitter() : null
+      });
+    }
+  });
+  return result;
+}
+
+function makeMarkerIcon() {
+  return L.divIcon({
+    className: '',
+    html: `<svg width="20" height="28" viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10 0C4.477 0 0 4.477 0 10c0 7.18 10 18 10 18s10-10.82 10-18C20 4.477 15.523 0 10 0z" fill="#f97316" opacity="0.95"/>
+      <circle cx="10" cy="10" r="4" fill="white" opacity="0.9"/>
+    </svg>`,
+    iconSize: [20, 28],
+    iconAnchor: [10, 28],
+    popupAnchor: [0, -28]
+  });
+}
+
+function buildZones() {
+  const zones = ['TODAS', ...new Set(stations.map(s => s.zone))].sort((a, b) => a === 'TODAS' ? -1 : a.localeCompare(b));
+  const container = document.getElementById('zoneFilters');
+  container.innerHTML = '';
+  zones.forEach(z => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (z === activeZone ? ' active' : '');
+    btn.textContent = z;
+    btn.onclick = () => { activeZone = z; buildZones(); renderList(); updateMarkers(); };
+    container.appendChild(btn);
+  });
+}
+
+function filteredStations() {
+  const q = document.getElementById('searchBox').value.toLowerCase();
+  return stations.filter(s => {
+    const matchZone = activeZone === 'TODAS' || s.zone === activeZone;
+    const matchQ = !q || s.name.toLowerCase().includes(q) || s.localidad.toLowerCase().includes(q) || s.via.toLowerCase().includes(q) || s.provincia.toLowerCase().includes(q);
+    return matchZone && matchQ;
+  });
+}
+
+function sortedStations(list) {
+  const sort = document.getElementById('sortSelect').value;
+  return [...list].sort((a, b) => {
+    if (sort === 'name_asc') return a.name.localeCompare(b.name);
+    if (sort === 'zone_asc') return a.zone.localeCompare(b.zone) || a.name.localeCompare(b.name);
+    return 0;
+  });
+}
+
+function renderList() {
+  const list = sortedStations(filteredStations());
+  const container = document.getElementById('stationList');
+  container.innerHTML = '';
+  document.getElementById('totalBadge').textContent = `${list.length} estaciones`;
+
+  if (!list.length) {
+    container.innerHTML = '<div class="no-results">Sin resultados</div>';
+    return;
+  }
+
+  let lastZone = null;
+  const sort = document.getElementById('sortSelect').value;
+
+  list.forEach(s => {
+    if (sort === 'zone_asc' && s.zone !== lastZone) {
+      const h = document.createElement('div');
+      h.className = 'zone-header';
+      h.textContent = s.zone;
+      container.appendChild(h);
+      lastZone = s.zone;
+    }
+    const card = document.createElement('div');
+    card.className = 'station-card' + (s.id === selectedId ? ' selected' : '');
+    card.dataset.id = s.id;
+    card.innerHTML = `
+      <div class="station-name">${s.name}</div>
+      <div class="station-meta">${s.via} · ${s.localidad}, ${s.provincia}</div>
+      <div class="station-zone">${s.zone}</div>
+    `;
+    card.onclick = () => selectStation(s.id);
+    container.appendChild(card);
+  });
+}
+
+function selectStation(id) {
+  selectedId = id;
+  const s = stations.find(x => x.id === id);
+  if (!s) return;
+  renderList();
+  if (s.lat && map) {
+    map.setView([s.lat, s.lng], 12, { animate: true });
+    if (markers[id]) markers[id].openPopup();
+  }
+}
+
+function updateMarkers() {
+  const visible = new Set(filteredStations().map(s => s.id));
+  stations.forEach(s => {
+    if (!s.lat || !markers[s.id]) return;
+    if (visible.has(s.id)) {
+      if (!map.hasLayer(markers[s.id])) markers[s.id].addTo(map);
+    } else {
+      if (map.hasLayer(markers[s.id])) map.removeLayer(markers[s.id]);
+    }
+  });
+}
+
+function rebuildMarkers() {
+  Object.values(markers).forEach(m => map.removeLayer(m));
+  markers = {};
+  stations.forEach(s => {
+    if (!s.lat) return;
+    const m = L.marker([s.lat, s.lng], { icon: makeMarkerIcon() });
+    m.bindPopup(`
+      <div class="popup-inner">
+        <div class="popup-name">${s.name}</div>
+        <div class="popup-row"><b>Vía:</b> ${s.via}</div>
+        <div class="popup-row"><b>Localidad:</b> ${s.localidad}, ${s.provincia}</div>
+        <div class="popup-row"><b>Zona:</b> ${s.zone}</div>
+      </div>
+    `, { maxWidth: 220 });
+    m.on('click', () => {
+      selectedId = s.id;
+      renderList();
+      setTimeout(() => {
+        const card = document.querySelector(`[data-id="${s.id}"]`);
+        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    });
+    markers[s.id] = m;
+    m.addTo(map);
+  });
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  buildRoutesList();
+  stations = parseRaw(RAW_DATA);
+
+  map = L.map('map', { center: [40.4, -3.7], zoom: 6, zoomControl: true });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CARTO',
+    subdomains: 'abcd',
+    maxZoom: 19
+  }).addTo(map);
+
+  buildZones();
+  renderList();
+  rebuildMarkers();
+
+  document.getElementById('searchBox').addEventListener('input', () => {
+    renderList();
+    updateMarkers();
+  });
+});
+</script>
+</body>
+</html>
