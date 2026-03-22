@@ -461,7 +461,7 @@
 <div class="main">
   <div class="sidebar">
     <div class="sidebar-top">
-      <input class="search-box" id="searchBox" type="text" placeholder="🔍  Buscar estación, localidad, vía...">
+      <input class="search-box" id="searchBox" type="text" placeholder="🔍  Buscar estación, localidad, vía..." oninput="if(typeof renderList==='function'){renderList();updateMarkers();}" onkeyup="if(typeof renderList==='function'){renderList();updateMarkers();}">
       <div class="filters" id="zoneFilters"></div>
       <div id="routeBanner" style="display:none" class="route-banner">
         <span class="route-banner-name" id="routeBannerName"></span>
