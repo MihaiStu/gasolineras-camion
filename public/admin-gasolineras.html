@@ -212,6 +212,38 @@
     flex-shrink: 0;
   }
   .route-link:hover .gps-badge { background: #064e24; }
+  .route-link { cursor: pointer; }
+  .route-banner {
+    background: #0a1f38;
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 5px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .route-banner-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--accent);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .btn-clear-route {
+    background: none;
+    border: 1px solid var(--muted);
+    color: var(--muted);
+    border-radius: 3px;
+    padding: 2px 7px;
+    font-size: 11px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .btn-clear-route:hover { border-color: var(--text); color: var(--text); }
 
   /* LAYOUT */
   .main {
@@ -476,6 +508,10 @@
     <div class="sidebar-top">
       <input class="search-box" id="searchBox" type="text" placeholder="🔍  Buscar estación, localidad, vía...">
       <div class="filters" id="zoneFilters"></div>
+      <div id="routeBanner" style="display:none" class="route-banner">
+        <span class="route-banner-name" id="routeBannerName"></span>
+        <button class="btn-clear-route" onclick="clearRouteFilter()">✕ Todas</button>
+      </div>
       <div class="sort-row">
         <span class="sort-label">Ordenar:</span>
         <select class="sort-select" id="sortSelect" onchange="renderList()">
@@ -516,50 +552,93 @@ const ROUTE_GPS = [
     label: 'Base Pinto',
     icon: '🏠',
     routes: [
-      { name: 'Zona base · Pinto', via: 'Mosaico Marítimo', url: 'https://maps.google.com/maps?q=Pinto,Madrid,España' }
+      { name: 'Zona base · Pinto', via: 'Mosaico Marítimo', routeId: 'base', url: 'https://maps.google.com/maps?q=Pinto,Madrid,España' }
     ]
   },
   {
     label: 'Pinto ↔ Barcelona',
     icon: '🟡',
     routes: [
-      { name: '→ Pinto → Barcelona', via: 'A-2 sin peaje', url: 'https://www.google.com/maps/dir/?api=1&origin=Pinto,Madrid,España&destination=Barcelona,España&waypoints=Guadalajara,España|Calatayud,Zaragoza,España|Lleida,España&travelmode=driving' },
-      { name: '← Barcelona → Pinto', via: 'A-2 sin peaje', url: 'https://www.google.com/maps/dir/?api=1&origin=Barcelona,España&destination=Pinto,Madrid,España&waypoints=Lleida,España|Calatayud,Zaragoza,España|Guadalajara,España&travelmode=driving' }
+      { name: '→ Pinto → Barcelona', via: 'A-2 sin peaje', routeId: 'pinto-bcn', url: 'https://www.google.com/maps/dir/?api=1&origin=Pinto,Madrid,España&destination=Barcelona,España&waypoints=Guadalajara,España|Calatayud,Zaragoza,España|Lleida,España&travelmode=driving' },
+      { name: '← Barcelona → Pinto', via: 'A-2 sin peaje', routeId: 'bcn-pinto', url: 'https://www.google.com/maps/dir/?api=1&origin=Barcelona,España&destination=Pinto,Madrid,España&waypoints=Lleida,España|Calatayud,Zaragoza,España|Guadalajara,España&travelmode=driving' }
     ]
   },
   {
     label: 'Barcelona ↔ Valencia',
     icon: '🔴',
     routes: [
-      { name: '→ Barcelona → Valencia', via: 'AP-7 libre (desde El Vendrell)', url: 'https://www.google.com/maps/dir/?api=1&origin=Barcelona,España&destination=Valencia,España&waypoints=Tarragona,España|Cambrils,España|Vinaròs,España&travelmode=driving' },
-      { name: '← Valencia → Barcelona', via: 'AP-7 libre (hasta El Vendrell)', url: 'https://www.google.com/maps/dir/?api=1&origin=Valencia,España&destination=Barcelona,España&waypoints=Sagunto,España|Vinaròs,España|Cambrils,España&travelmode=driving' }
+      { name: '→ Barcelona → Valencia', via: 'AP-7 libre (desde El Vendrell)', routeId: 'bcn-val', url: 'https://www.google.com/maps/dir/?api=1&origin=Barcelona,España&destination=Valencia,España&waypoints=Tarragona,España|Cambrils,España|Vinaròs,España&travelmode=driving' },
+      { name: '← Valencia → Barcelona', via: 'AP-7 libre (hasta El Vendrell)', routeId: 'val-bcn', url: 'https://www.google.com/maps/dir/?api=1&origin=Valencia,España&destination=Barcelona,España&waypoints=Sagunto,España|Vinaròs,España|Cambrils,España&travelmode=driving' }
     ]
   },
   {
     label: 'Pinto ↔ Alicante',
     icon: '🔵',
     routes: [
-      { name: '→ Pinto → Alicante', via: 'A-3 + A-31 sin peaje', url: 'https://www.google.com/maps/dir/?api=1&origin=Pinto,Madrid,España&destination=Alicante,España&waypoints=Castillo+de+Garcimuñoz,Cuenca,España|La+Roda,Albacete,España|Villena,Alicante,España&travelmode=driving' },
-      { name: '← Alicante → Pinto', via: 'A-31 + A-4 vía Ontigola', url: 'https://www.google.com/maps/dir/?api=1&origin=Alicante,España&destination=Pinto,Madrid,España&waypoints=Villena,Alicante,España|La+Roda,Albacete,España|Ontigola,Toledo,España&travelmode=driving' }
+      { name: '→ Pinto → Alicante', via: 'A-3 + A-31 sin peaje', routeId: 'pinto-ali', url: 'https://www.google.com/maps/dir/?api=1&origin=Pinto,Madrid,España&destination=Alicante,España&waypoints=Castillo+de+Garcimuñoz,Cuenca,España|La+Roda,Albacete,España|Villena,Alicante,España&travelmode=driving' },
+      { name: '← Alicante → Pinto', via: 'A-31 + A-4 vía Ontigola', routeId: 'ali-pinto', url: 'https://www.google.com/maps/dir/?api=1&origin=Alicante,España&destination=Pinto,Madrid,España&waypoints=Villena,Alicante,España|La+Roda,Albacete,España|Ontigola,Toledo,España&travelmode=driving' }
     ]
   },
   {
     label: 'Pinto ↔ Huelva',
     icon: '🟠',
     routes: [
-      { name: '→ Pinto → Huelva', via: 'A-5 + A-66 + A-49', url: 'https://www.google.com/maps/dir/?api=1&origin=Pinto,Madrid,España&destination=Huelva,España&waypoints=Oropesa,Toledo,España|Mérida,Badajoz,España|Fuente+de+Cantos,Badajoz,España&travelmode=driving' },
-      { name: '← Huelva → Pinto', via: 'A-49 + A-66 + A-5', url: 'https://www.google.com/maps/dir/?api=1&origin=Huelva,España&destination=Pinto,Madrid,España&waypoints=Fuente+de+Cantos,Badajoz,España|Mérida,Badajoz,España|Oropesa,Toledo,España&travelmode=driving' }
+      { name: '→ Pinto → Huelva', via: 'A-5 + A-66 + A-49', routeId: 'pinto-hue', url: 'https://www.google.com/maps/dir/?api=1&origin=Pinto,Madrid,España&destination=Huelva,España&waypoints=Oropesa,Toledo,España|Mérida,Badajoz,España|Fuente+de+Cantos,Badajoz,España&travelmode=driving' },
+      { name: '← Huelva → Pinto', via: 'A-49 + A-66 + A-5', routeId: 'hue-pinto', url: 'https://www.google.com/maps/dir/?api=1&origin=Huelva,España&destination=Pinto,Madrid,España&waypoints=Fuente+de+Cantos,Badajoz,España|Mérida,Badajoz,España|Oropesa,Toledo,España&travelmode=driving' }
     ]
   },
   {
     label: 'Alicante ↔ Molina de Segura',
     icon: '🌊',
     routes: [
-      { name: '→ Alicante → Molina', via: 'A-7 libre + A-30', url: 'https://www.google.com/maps/dir/?api=1&origin=Alicante,España&destination=Molina+de+Segura,Murcia,España&waypoints=Elche,Alicante,España|Granja+de+Rocamora,Alicante,España&travelmode=driving' },
-      { name: '← Molina → Alicante', via: 'A-30 + A-7 libre', url: 'https://www.google.com/maps/dir/?api=1&origin=Molina+de+Segura,Murcia,España&destination=Alicante,España&waypoints=Granja+de+Rocamora,Alicante,España|Elche,Alicante,España&travelmode=driving' }
+      { name: '→ Alicante → Molina', via: 'A-7 libre + A-30', routeId: 'ali-mol', url: 'https://www.google.com/maps/dir/?api=1&origin=Alicante,España&destination=Molina+de+Segura,Murcia,España&waypoints=Elche,Alicante,España|Granja+de+Rocamora,Alicante,España&travelmode=driving' },
+      { name: '← Molina → Alicante', via: 'A-30 + A-7 libre', routeId: 'mol-ali', url: 'https://www.google.com/maps/dir/?api=1&origin=Molina+de+Segura,Murcia,España&destination=Alicante,España&waypoints=Granja+de+Rocamora,Alicante,España|Elche,Alicante,España&travelmode=driving' }
     ]
   }
 ];
+
+const ROUTE_STATION_FILTER = {
+  'base': ['Pinto|Madrid','Parla|Madrid'],
+  'pinto-bcn': ['Pinto|Madrid','Alcalá de Henares|Madrid','Torrejón de Ardoz|Madrid','Perales De Tajuña|Madrid','Madrid|Madrid','Torremocha del Campo|Guadalajara','Calatayud|Zaragoza','La Muela|Zaragoza','Alfajarín|Zaragoza','Candasnos|Huesca','Cadrete|Zaragoza','El Bruc|Barcelona','Castellbisbal|Barcelona','Molins de Rei|Barcelona','El Prat de Llobregat|Barcelona','Barcelona|Barcelona','Granollers|Barcelona','Sant Esteve de Sesrovires|Barcelona','Torrefarrera|Lérida','Lérida|Lérida','La Junquera|Girona','Llers|Girona','Aiguaviva|Girona','Riudellots de la Selva|Girona'],
+  'bcn-pinto': ['Pinto|Madrid','Alcalá de Henares|Madrid','Torrejón de Ardoz|Madrid','Perales De Tajuña|Madrid','Madrid|Madrid','Torremocha del Campo|Guadalajara','Calatayud|Zaragoza','La Muela|Zaragoza','Alfajarín|Zaragoza','Candasnos|Huesca','El Bruc|Barcelona','Castellbisbal|Barcelona','Molins de Rei|Barcelona','El Prat de Llobregat|Barcelona','Barcelona|Barcelona','Granollers|Barcelona','Torrefarrera|Lérida','Lérida|Lérida','La Junquera|Girona','Llers|Girona'],
+  'bcn-val': ['Barcelona|Barcelona','El Prat de Llobregat|Barcelona','Castellbisbal|Barcelona','Rodonya|Tarragona','Masos de Comarruga|Tarragona',"L'Hospitalet De L'Infant|Tarragona",'Vila-Seca|Tarragona','Constantí|Tarragona',"L'Ametlla de Mar|Tarragona",'Ribera de Cabanes|Castellón','Burriana|Castellón','El Puig de Santa María|Valencia','Torrent|Valencia','Ribarroja del Turia|Valencia','Beneixida|Valencia'],
+  'val-bcn': ['Barcelona|Barcelona','El Prat de Llobregat|Barcelona','Castellbisbal|Barcelona','Rodonya|Tarragona','Masos de Comarruga|Tarragona',"L'Hospitalet De L'Infant|Tarragona",'Vila-Seca|Tarragona','Constantí|Tarragona',"L'Ametlla de Mar|Tarragona",'Ribera de Cabanes|Castellón','Burriana|Castellón','El Puig de Santa María|Valencia','Torrent|Valencia','Ribarroja del Turia|Valencia','Beneixida|Valencia'],
+  'pinto-ali': ['Pinto|Madrid','Perales De Tajuña|Madrid','Madrid|Madrid','Villarubio|Cuenca','Tébar|Cuenca','Castillo de Garcimuñoz|Cuenca','Villargordo del Gabriel|Valencia','Fuente La Higuera|Valencia','Beneixida|Valencia','Torrellano|Alicante','Agost|Alicante'],
+  'ali-pinto': ['Torrellano|Alicante','Agost|Alicante','Fuente La Higuera|Valencia','Castillo de Garcimuñoz|Cuenca','Tébar|Cuenca','Villargordo del Gabriel|Valencia','La Consolación|Ciudad Real','Puerto Lapice|Ciudad Real','Pinto|Madrid','Parla|Madrid','Madrid|Madrid'],
+  'pinto-hue': ['Pinto|Madrid','Madrid|Madrid','El Casar de Talavera|Toledo','Calera y Chozas|Toledo','Peraleda de la Mata|Cáceres','Cáceres|Cáceres','Mérida|Badajoz','Badajoz|Badajoz','Gibraleón|Huelva','Moguer|Huelva','Rosal de la Frontera|Huelva','Valencina de la Concepción|Sevilla','Salteras|Sevilla','Los Palacios y Villafranca|Sevilla','Dos Hermanas|Sevilla','La Campana|Sevilla','Alcalá de Guadaira|Sevilla'],
+  'hue-pinto': ['Pinto|Madrid','Madrid|Madrid','El Casar de Talavera|Toledo','Calera y Chozas|Toledo','Peraleda de la Mata|Cáceres','Cáceres|Cáceres','Mérida|Badajoz','Badajoz|Badajoz','Gibraleón|Huelva','Moguer|Huelva','Rosal de la Frontera|Huelva','Valencina de la Concepción|Sevilla','Salteras|Sevilla','Los Palacios y Villafranca|Sevilla','Dos Hermanas|Sevilla','La Campana|Sevilla','Alcalá de Guadaira|Sevilla'],
+  'ali-mol': ['Torrellano|Alicante','Agost|Alicante','Pedreguer|Alicante','Lorca|Murcia','Totana|Murcia','Molina de Segura|Murcia','Ceuti|Murcia','San Javier|Murcia'],
+  'mol-ali': ['Torrellano|Alicante','Agost|Alicante','Pedreguer|Alicante','Lorca|Murcia','Totana|Murcia','Molina de Segura|Murcia','Ceuti|Murcia','San Javier|Murcia']
+};
+
+let activeRoute = null;
+let activeRouteName = '';
+
+function filterByRoute(routeId, routeName) {
+  activeRoute = routeId;
+  activeRouteName = routeName;
+  activeZone = 'TODAS';
+  document.getElementById('routesDropdown').classList.remove('open');
+  document.getElementById('btnRoutes').classList.remove('open');
+  buildZones();
+  renderList();
+  updateMarkers();
+  const banner = document.getElementById('routeBanner');
+  if (banner) { document.getElementById('routeBannerName').textContent = routeName; banner.style.display = 'flex'; }
+  const visible = filteredStations().filter(s => s.lat);
+  if (visible.length > 0 && map) map.fitBounds(L.latLngBounds(visible.map(s => [s.lat, s.lng])), { padding: [40, 40] });
+}
+
+function clearRouteFilter() {
+  activeRoute = null;
+  activeRouteName = '';
+  const banner = document.getElementById('routeBanner');
+  if (banner) banner.style.display = 'none';
+  buildZones();
+  renderList();
+  updateMarkers();
+  if (map) map.setView([40.4, -3.7], 6);
+}
 
 function buildRoutesList() {
   const container = document.getElementById('routesList');
@@ -567,13 +646,13 @@ function buildRoutesList() {
     <div class="route-group">
       <div class="rg-header">${group.icon} ${group.label}</div>
       ${group.routes.map(r => `
-        <a class="route-link" href="${r.url}" target="_blank" rel="noopener">
+        <div class="route-link" onclick="filterByRoute('${r.routeId}', '${r.name}')">
           <span class="route-link-name">
             ${r.name}
             <span class="route-via">${r.via}</span>
           </span>
-          <span class="gps-badge">GPS ↗</span>
-        </a>
+          <a class="gps-badge" href="${r.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">GPS ↗</a>
+        </div>
       `).join('')}
     </div>
   `).join('');
@@ -980,7 +1059,8 @@ function filteredStations() {
   return stations.filter(s => {
     const matchZone = activeZone === 'TODAS' || s.zone === activeZone;
     const matchQ = !q || s.name.toLowerCase().includes(q) || s.localidad.toLowerCase().includes(q) || s.via.toLowerCase().includes(q) || s.provincia.toLowerCase().includes(q);
-    return matchZone && matchQ;
+    const matchRoute = !activeRoute || (ROUTE_STATION_FILTER[activeRoute] || []).includes(`${s.localidad}|${s.provincia}`);
+    return matchZone && matchQ && matchRoute;
   });
 }
 
