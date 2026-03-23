@@ -1229,6 +1229,7 @@ function rebuildMarkers() {
         <div class="popup-row"><b>Vía:</b> ${s.via}</div>
         <div class="popup-row"><b>Localidad:</b> ${s.localidad}, ${s.provincia}</div>
         <div class="popup-row"><b>Zona:</b> ${s.zone}</div>
+        <a href="https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}" target="_blank" rel="noopener" style="display:block;margin-top:8px;background:#1a73e8;color:#fff;text-align:center;padding:5px 8px;border-radius:4px;font-size:12px;font-weight:600;text-decoration:none;">&#128205; Ver en Google Maps</a>
       </div>
     `, { maxWidth: 240 });
     m.on('click', () => {
