@@ -7,537 +7,295 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <style>
   :root {
-    --navy: #0f172a;
-    --navy2: #1e293b;
-    --panel: #162032;
-    --accent: #f97316;
-    --accent2: #fb923c;
-    --green: #22c55e;
-    --yellow: #eab308;
-    --red: #ef4444;
-    --text: #e2e8f0;
-    --muted: #64748b;
-    --border: #1e3a5f;
-    --cheap: #22c55e;
-    --mid: #eab308;
-    --exp: #ef4444;
+    --navy: #0f172a; --navy2: #1e293b; --panel: #162032;
+    --accent: #f97316; --accent2: #fb923c;
+    --green: #22c55e; --yellow: #eab308; --red: #ef4444;
+    --text: #e2e8f0; --muted: #64748b; --border: #1e3a5f;
+    --cheap: #22c55e; --mid: #eab308; --exp: #ef4444;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family: 'Barlow', sans-serif;
-    background: var(--navy);
-    color: var(--text);
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
+  body { font-family:'Barlow',sans-serif; background:var(--navy); color:var(--text); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
 
-  /* HEADER */
-  header {
-    background: var(--navy2);
-    border-bottom: 2px solid var(--accent);
-    padding: 0 14px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    flex-shrink: 0;
-    z-index: 1000;
-  }
-  .logo {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    color: var(--accent);
-    white-space: nowrap;
-  }
-  .logo span { color: var(--text); }
-  .logo .admin-tag {
-    font-size: 11px;
-    font-weight: 700;
-    background: #7c3aed;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 3px;
-    letter-spacing: 0.5px;
-    vertical-align: middle;
-    margin-left: 4px;
-  }
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .last-update {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-  }
-  .btn-update {
-    background: var(--accent);
-    color: white;
-    border: none;
-    padding: 7px 14px;
-    border-radius: 4px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 13px;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    transition: background 0.2s;
-    white-space: nowrap;
-  }
-  .btn-update:hover { background: var(--accent2); }
-  .total-badge {
-    background: var(--border);
-    border: 1px solid var(--accent);
-    border-radius: 4px;
-    padding: 4px 10px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--accent);
-    white-space: nowrap;
-  }
-  .legend {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    font-size: 11px;
-    color: var(--muted);
-  }
-  .legend-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 3px;
-  }
+  /* ── HEADER ── */
+  header { background:var(--navy2); border-bottom:2px solid var(--accent); padding:0 14px; height:56px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-shrink:0; z-index:1000; }
+  .logo { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:800; letter-spacing:1px; color:var(--accent); white-space:nowrap; }
+  .logo span { color:var(--text); }
+  .logo .admin-tag { font-size:11px; font-weight:700; background:#7c3aed; color:white; padding:2px 6px; border-radius:3px; letter-spacing:0.5px; vertical-align:middle; margin-left:4px; }
+  .header-right { display:flex; align-items:center; gap:10px; }
+  .last-update { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); white-space:nowrap; }
+  .btn-update { background:var(--accent); color:white; border:none; padding:7px 14px; border-radius:4px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:13px; letter-spacing:0.5px; cursor:pointer; transition:background 0.2s; white-space:nowrap; }
+  .btn-update:hover { background:var(--accent2); }
+  .btn-refresh { background:none; color:var(--green); border:1px solid var(--green); padding:6px 11px; border-radius:4px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:12px; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+  .btn-refresh:hover { background:rgba(34,197,94,0.1); }
+  .total-badge { background:var(--border); border:1px solid var(--accent); border-radius:4px; padding:4px 10px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent); white-space:nowrap; }
+  .legend { display:flex; gap:10px; align-items:center; font-size:11px; color:var(--muted); }
+  .legend-dot { width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:3px; }
 
-  /* ROUTES PANEL */
-  .routes-wrapper {
-    position: relative;
-    flex-shrink: 0;
-  }
-  .btn-routes {
-    background: var(--navy);
-    border: 1px solid var(--border);
-    color: var(--accent);
-    padding: 6px 11px;
-    border-radius: 4px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 13px;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .btn-routes:hover, .btn-routes.open { border-color: var(--accent); background: #1a2640; }
-  .routes-dropdown {
-    display: none;
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    background: var(--panel);
-    border: 1px solid var(--accent);
-    border-radius: 6px;
-    padding: 10px;
-    width: 300px;
-    z-index: 3000;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-  }
-  .routes-dropdown.open { display: block; }
-  .routes-note {
-    font-size: 10px;
-    color: var(--muted);
-    padding: 4px 6px 8px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 8px;
-    line-height: 1.4;
-  }
-  .route-group { margin-bottom: 8px; }
-  .route-group:last-child { margin-bottom: 0; }
-  .rg-header {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--accent);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 3px;
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .route-link {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    color: var(--text);
-    text-decoration: none;
-    font-size: 12px;
-    padding: 4px 8px;
-    border-radius: 3px;
-    margin-bottom: 2px;
-    transition: background 0.15s;
-    gap: 8px;
-  }
-  .route-link:hover { background: var(--navy); color: var(--accent); }
-  .route-link-name { flex: 1; min-width: 0; }
-  .route-via {
-    font-size: 10px;
-    color: var(--muted);
-    display: block;
-    margin-top: 1px;
-  }
-  .gps-badge {
-    font-size: 10px;
-    background: #052e16;
-    color: var(--green);
-    border: 1px solid var(--green);
-    border-radius: 3px;
-    padding: 2px 5px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .route-link:hover .gps-badge { background: #064e24; }
-  .route-link { cursor: pointer; }
-  .route-banner {
-    background: #0a1f38;
-    border: 1px solid var(--accent);
-    border-radius: 4px;
-    padding: 5px 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .route-banner-name {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 700;
-    font-size: 12px;
-    color: var(--accent);
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .btn-clear-route {
-    background: none;
-    border: 1px solid var(--muted);
-    color: var(--muted);
-    border-radius: 3px;
-    padding: 2px 7px;
-    font-size: 11px;
-    cursor: pointer;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .btn-clear-route:hover { border-color: var(--text); color: var(--text); }
+  /* ── ROUTES DROPDOWN ── */
+  .routes-wrapper { position:relative; flex-shrink:0; }
+  .btn-routes { background:var(--navy); border:1px solid var(--border); color:var(--accent); padding:6px 11px; border-radius:4px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:13px; cursor:pointer; white-space:nowrap; transition:all 0.15s; display:flex; align-items:center; gap:5px; }
+  .btn-routes:hover,.btn-routes.open { border-color:var(--accent); background:#1a2640; }
+  .routes-dropdown { display:none; position:absolute; top:calc(100% + 6px); left:0; background:var(--panel); border:1px solid var(--accent); border-radius:6px; padding:10px; width:300px; z-index:3000; box-shadow:0 8px 32px rgba(0,0,0,0.6); }
+  .routes-dropdown.open { display:block; }
+  .routes-note { font-size:10px; color:var(--muted); padding:4px 6px 8px; border-bottom:1px solid var(--border); margin-bottom:8px; line-height:1.4; }
+  .route-group { margin-bottom:8px; }
+  .route-group:last-child { margin-bottom:0; }
+  .rg-header { font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700; color:var(--accent); letter-spacing:0.5px; text-transform:uppercase; border-bottom:1px solid var(--border); padding-bottom:3px; margin-bottom:4px; display:flex; align-items:center; gap:5px; }
+  .route-link { display:flex; align-items:center; justify-content:space-between; color:var(--text); text-decoration:none; font-size:12px; padding:4px 8px; border-radius:3px; margin-bottom:2px; transition:background 0.15s; gap:8px; cursor:pointer; }
+  .route-link:hover { background:var(--navy); color:var(--accent); }
+  .route-link-name { flex:1; min-width:0; }
+  .route-via { font-size:10px; color:var(--muted); display:block; margin-top:1px; }
+  .gps-badge { font-size:10px; background:#052e16; color:var(--green); border:1px solid var(--green); border-radius:3px; padding:2px 5px; white-space:nowrap; flex-shrink:0; }
+  .route-link:hover .gps-badge { background:#064e24; }
+  .route-banner { background:#0a1f38; border:1px solid var(--accent); border-radius:4px; padding:5px 10px; display:flex; align-items:center; gap:8px; }
+  .route-banner-name { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:12px; color:var(--accent); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .btn-clear-route { background:none; border:1px solid var(--muted); color:var(--muted); border-radius:3px; padding:2px 7px; font-size:11px; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+  .btn-clear-route:hover { border-color:var(--text); color:var(--text); }
 
-  /* LAYOUT */
-  .main {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-  }
+  /* ── LAYOUT ── */
+  .main { display:flex; flex:1; overflow:hidden; }
 
-  /* SIDEBAR */
-  .sidebar {
-    width: 340px;
-    flex-shrink: 0;
-    background: var(--panel);
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid var(--border);
-    overflow: hidden;
-  }
-  .sidebar-top {
-    padding: 10px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-  }
-  .search-box {
-    background: var(--navy);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 8px 12px;
-    color: var(--text);
-    font-family: 'Barlow', sans-serif;
-    font-size: 13px;
-    width: 100%;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .search-box:focus { border-color: var(--accent); }
-  .search-box::placeholder { color: var(--muted); }
-  .filters {
-    display: flex;
-    gap: 5px;
-    flex-wrap: wrap;
-  }
-  .filter-btn {
-    background: var(--navy);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    padding: 3px 9px;
-    border-radius: 3px;
-    font-size: 10px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
-  .filter-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
-  .sort-row { display: flex; align-items: center; gap: 8px; }
-  .sort-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
-  .sort-select {
-    flex: 1;
-    background: var(--navy);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 4px 8px;
-    border-radius: 3px;
-    font-size: 12px;
-    outline: none;
-  }
-  .stats-row { display: flex; gap: 6px; }
-  .stat-chip {
-    flex: 1;
-    background: var(--navy);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 6px 8px;
-    text-align: center;
-  }
-  .stat-chip .sv { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; }
-  .stat-chip .sl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px; }
-  .sv.green { color: var(--green); }
-  .sv.yellow { color: var(--yellow); }
-  .sv.red { color: var(--red); }
+  /* ── SIDEBAR ── */
+  .sidebar { width:340px; flex-shrink:0; background:var(--panel); display:flex; flex-direction:column; border-right:1px solid var(--border); overflow:hidden; }
+  .sidebar-top { padding:10px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:7px; }
+  .search-box { background:var(--navy); border:1px solid var(--border); border-radius:4px; padding:8px 12px; color:var(--text); font-family:'Barlow',sans-serif; font-size:13px; width:100%; outline:none; transition:border-color 0.2s; }
+  .search-box:focus { border-color:var(--accent); }
+  .search-box::placeholder { color:var(--muted); }
+  .filters { display:flex; gap:5px; flex-wrap:wrap; }
+  .filter-btn { background:var(--navy); border:1px solid var(--border); color:var(--muted); padding:3px 9px; border-radius:3px; font-size:10px; font-family:'Barlow Condensed',sans-serif; font-weight:600; letter-spacing:0.5px; cursor:pointer; transition:all 0.15s; }
+  .filter-btn.active { background:var(--accent); border-color:var(--accent); color:white; }
+  .filter-btn:hover:not(.active) { border-color:var(--accent); color:var(--accent); }
+  .sort-row { display:flex; align-items:center; gap:8px; }
+  .sort-label { font-size:11px; color:var(--muted); white-space:nowrap; }
+  .sort-select { flex:1; background:var(--navy); border:1px solid var(--border); color:var(--text); padding:4px 8px; border-radius:3px; font-size:12px; outline:none; }
+  .stats-row { display:flex; gap:6px; }
+  .stat-chip { flex:1; background:var(--navy); border:1px solid var(--border); border-radius:4px; padding:6px 8px; text-align:center; }
+  .stat-chip .sv { font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600; }
+  .stat-chip .sl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:1px; }
+  .sv.green { color:var(--green); } .sv.yellow { color:var(--yellow); } .sv.red { color:var(--red); }
 
-  .station-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 6px;
-  }
-  .station-list::-webkit-scrollbar { width: 4px; }
-  .station-list::-webkit-scrollbar-track { background: var(--navy); }
-  .station-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .station-list { flex:1; overflow-y:auto; padding:6px; }
+  .station-list::-webkit-scrollbar { width:4px; }
+  .station-list::-webkit-scrollbar-track { background:var(--navy); }
+  .station-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
 
-  .station-card {
-    background: var(--navy);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 9px 11px;
-    margin-bottom: 5px;
-    cursor: pointer;
-    transition: all 0.15s;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  .station-card { background:var(--navy); border:1px solid var(--border); border-radius:5px; padding:9px 11px; margin-bottom:5px; cursor:pointer; transition:all 0.15s; display:flex; align-items:center; gap:8px; }
+  .station-card:hover { border-color:var(--accent); background:#1a2640; }
+  .station-card.selected { border-color:var(--accent); background:#1e2e45; }
+  .station-card.in-plan { border-color:var(--green); }
+  .station-info { flex:1; min-width:0; }
+  .station-name { font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text); }
+  .station-meta { font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
+  .station-zone { font-family:'Barlow Condensed',sans-serif; font-size:10px; font-weight:600; letter-spacing:0.5px; color:var(--accent); text-transform:uppercase; margin-top:2px; }
+  .price-badge { font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:600; min-width:58px; text-align:right; flex-shrink:0; line-height:1.2; }
+  .price-badge .pb-label { display:block; font-family:'Barlow Condensed',sans-serif; font-size:9px; color:var(--muted); text-align:right; font-weight:400; margin-top:1px; letter-spacing:0.3px; }
+  .price-badge.cheap { color:var(--cheap); } .price-badge.mid { color:var(--mid); } .price-badge.exp { color:var(--red); }
+  .brand-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .btn-add-plan {
+    background:none; border:1px solid var(--border); color:var(--muted);
+    border-radius:3px; padding:3px 6px; font-size:11px; cursor:pointer;
+    white-space:nowrap; flex-shrink:0; transition:all 0.15s;
+    font-family:'Barlow Condensed',sans-serif; font-weight:600;
   }
-  .station-card:hover { border-color: var(--accent); background: #1a2640; }
-  .station-card.selected { border-color: var(--accent); background: #1e2e45; }
-  .price-badge {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 15px;
-    font-weight: 600;
-    min-width: 52px;
-    text-align: right;
-    flex-shrink: 0;
-  }
-  .price-badge.cheap { color: var(--cheap); }
-  .price-badge.mid { color: var(--mid); }
-  .price-badge.exp { color: var(--red); }
-  .station-info { flex: 1; min-width: 0; }
-  .station-name {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: var(--text);
-  }
-  .station-meta {
-    font-size: 11px;
-    color: var(--muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-top: 1px;
-  }
-  .station-zone {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    color: var(--accent);
-    text-transform: uppercase;
-    margin-top: 2px;
-  }
+  .btn-add-plan:hover { border-color:var(--green); color:var(--green); }
+  .btn-add-plan.in-plan { border-color:var(--green); color:var(--green); background:rgba(34,197,94,0.08); }
+  .list-overflow { text-align:center; font-size:11px; color:var(--muted); padding:8px; border:1px dashed var(--border); border-radius:4px; margin-top:4px; }
 
-  /* MAP */
-  #map { flex: 1; background: var(--navy2); }
+  /* ── MAP ── */
+  #map { flex:1; background:var(--navy2); }
+  .zone-header { font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700; color:var(--muted); letter-spacing:1px; text-transform:uppercase; padding:8px 6px 4px; border-bottom:1px solid var(--border); margin-bottom:4px; }
+  .no-results { text-align:center; color:var(--muted); font-size:13px; padding:32px 16px; }
 
-  /* MODAL */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.75);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
+  /* ── POPUP ── */
+  .leaflet-popup-content-wrapper { background:var(--navy2) !important; border:1px solid var(--accent) !important; border-radius:6px !important; box-shadow:0 8px 32px rgba(0,0,0,0.5) !important; color:var(--text) !important; }
+  .leaflet-popup-tip { background:var(--navy2) !important; }
+  .popup-inner { font-family:'Barlow',sans-serif; min-width:210px; max-width:280px; }
+  .popup-name { font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:800; color:var(--accent); margin-bottom:3px; }
+  .popup-price { font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:700; margin:3px 0 5px; }
+  .popup-row { font-size:12px; color:#94a3b8; margin:2px 0; }
+  .popup-row b { color:var(--text); }
+  .popup-compare { width:100%; border-collapse:collapse; margin:8px 0 4px; font-size:12px; }
+  .popup-compare th { text-align:left; color:var(--muted); font-weight:600; border-bottom:1px solid var(--border); padding:3px 4px; font-size:10px; letter-spacing:0.5px; text-transform:uppercase; }
+  .popup-compare th:last-child { text-align:right; }
+  .popup-compare td { padding:4px; color:var(--text); border-bottom:1px solid rgba(30,58,95,0.4); }
+  .popup-compare tr:last-child td { border-bottom:none; }
+  .pc-best { background:rgba(34,197,94,0.1); }
+  .pc-best td { color:var(--green) !important; font-weight:700; }
+  .pc-price { font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600; text-align:right; white-space:nowrap; }
+  .popup-best {
+    background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.35);
+    border-radius:4px; padding:6px 8px; font-size:12px; color:var(--green);
+    margin:4px 0 6px; line-height:1.5;
   }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: var(--panel);
-    border: 1px solid var(--accent);
-    border-radius: 8px;
-    padding: 28px;
-    width: 580px;
-    max-width: 95vw;
-    max-height: 90vh;
-    overflow-y: auto;
+  .popup-best-label { font-weight:700; }
+  .popup-savings { font-size:11px; color:#86efac; font-weight:600; display:block; margin-top:2px; }
+  .popup-api-note { font-size:9px; color:var(--muted); text-align:right; margin-bottom:3px; }
+  .popup-gmaps { display:block; margin-top:6px; background:#1a73e8; color:#fff; text-align:center; padding:5px 8px; border-radius:4px; font-size:12px; font-weight:600; text-decoration:none; }
+  .popup-gmaps:hover { background:#1557b0; }
+  .popup-add-route {
+    display:block; width:100%; margin-top:6px;
+    background:none; border:1px solid var(--border); color:var(--muted);
+    padding:5px 8px; border-radius:4px; font-size:12px; font-weight:600;
+    cursor:pointer; font-family:'Barlow Condensed',sans-serif; letter-spacing:0.5px;
+    transition:all 0.15s;
   }
-  .modal h2 { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; color: var(--accent); margin-bottom: 6px; }
-  .modal p { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
-  .modal textarea {
-    width: 100%;
-    height: 280px;
-    background: var(--navy);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    padding: 12px;
-    resize: vertical;
-    outline: none;
-    line-height: 1.6;
-    margin-bottom: 12px;
+  .popup-add-route:hover { border-color:var(--green); color:var(--green); background:rgba(34,197,94,0.06); }
+  .popup-add-route.in-plan { border-color:var(--green); color:var(--green); background:rgba(34,197,94,0.1); }
+
+  /* ── ROUTE PLAN PANEL ── */
+  .rpp-panel {
+    position:fixed; right:-310px; top:56px;
+    width:310px; height:calc(100vh - 56px);
+    background:var(--panel); border-left:2px solid var(--accent);
+    z-index:2000; display:flex; flex-direction:column;
+    transition:right 0.3s ease;
+    box-shadow:-4px 0 24px rgba(0,0,0,0.5);
   }
-  .modal textarea:focus { border-color: var(--accent); }
-  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-  .btn-cancel { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 8px 20px; border-radius: 4px; cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 14px; }
-  .btn-cancel:hover { border-color: var(--muted); }
-  .btn-parse { background: var(--accent); border: none; color: white; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: 0.5px; }
-  .btn-parse:hover { background: var(--accent2); }
-  .parse-result { font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 8px 12px; border-radius: 4px; margin-bottom: 10px; display: none; }
-  .parse-result.ok { background: #052e16; border: 1px solid var(--green); color: var(--green); display: block; }
-  .parse-result.err { background: #450a0a; border: 1px solid var(--red); color: var(--red); display: block; }
+  .rpp-panel.open { right:0; }
+  .rpp-tab {
+    position:fixed; right:0; bottom:120px; z-index:2001;
+    background:var(--accent); color:white; border:none;
+    border-radius:6px 0 0 6px; padding:14px 7px;
+    cursor:pointer; writing-mode:vertical-rl; transform:rotate(180deg);
+    font-family:'Barlow Condensed',sans-serif; font-weight:700;
+    font-size:12px; letter-spacing:1px; transition:right 0.3s;
+    display:flex; align-items:center; gap:6px;
+  }
+  .rpp-tab:hover { background:var(--accent2); }
+  .rpp-tab.panel-open { right:310px; }
+  .rpp-tab-badge {
+    display:none; background:white; color:var(--accent);
+    border-radius:50%; width:18px; height:18px; font-size:11px;
+    font-weight:800; align-items:center; justify-content:center;
+    writing-mode:horizontal-tb; transform:rotate(180deg);
+  }
+  .rpp-tab-badge.show { display:flex; }
+  .rpp-header {
+    padding:12px 14px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    flex-shrink:0;
+  }
+  .rpp-title { font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:800; color:var(--accent); letter-spacing:0.5px; }
+  .rpp-count { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); }
+  .rpp-inputs { padding:10px 14px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:8px; flex-shrink:0; }
+  .rpp-input {
+    background:var(--navy); border:1px solid var(--border); border-radius:4px;
+    padding:7px 10px; color:var(--text); font-family:'Barlow',sans-serif;
+    font-size:12px; outline:none; transition:border-color 0.2s; width:100%;
+  }
+  .rpp-input:focus { border-color:var(--accent); }
+  .rpp-input::placeholder { color:var(--muted); }
+  .rpp-tank-row { display:flex; align-items:center; gap:8px; }
+  .rpp-tank-label { font-size:11px; color:var(--muted); white-space:nowrap; }
+  .rpp-tank-input {
+    width:80px; background:var(--navy); border:1px solid var(--border);
+    border-radius:4px; padding:5px 8px; color:var(--text);
+    font-family:'JetBrains Mono',monospace; font-size:12px; outline:none;
+    text-align:right;
+  }
+  .rpp-tank-input:focus { border-color:var(--accent); }
+  .rpp-tank-unit { font-size:11px; color:var(--muted); }
+  .rpp-stations { flex:1; overflow-y:auto; padding:8px; }
+  .rpp-stations::-webkit-scrollbar { width:3px; }
+  .rpp-stations::-webkit-scrollbar-thumb { background:var(--border); }
+  .rpp-empty { text-align:center; color:var(--muted); font-size:12px; padding:24px 12px; line-height:1.6; }
+  .rpp-item {
+    background:var(--navy); border:1px solid var(--border); border-radius:5px;
+    padding:8px 10px; margin-bottom:5px; display:flex; align-items:flex-start; gap:8px;
+  }
+  .rpp-item-num {
+    font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700;
+    color:var(--accent); flex-shrink:0; min-width:20px; margin-top:1px;
+  }
+  .rpp-item-body { flex:1; min-width:0; }
+  .rpp-item-name { font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rpp-item-meta { font-size:10px; color:var(--muted); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rpp-item-price { font-size:11px; color:var(--green); margin-top:2px; font-weight:600; }
+  .rpp-item-remove { background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px; padding:2px 4px; flex-shrink:0; transition:color 0.15s; }
+  .rpp-item-remove:hover { color:var(--red); }
+  .rpp-footer { padding:10px 14px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:7px; flex-shrink:0; }
+  .btn-whatsapp {
+    background:#25d366; color:white; border:none; border-radius:4px;
+    padding:9px 14px; font-family:'Barlow Condensed',sans-serif; font-weight:700;
+    font-size:14px; letter-spacing:0.5px; cursor:pointer; transition:background 0.2s;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .btn-whatsapp:hover { background:#1da851; }
+  .btn-rpp-clear { background:none; border:1px solid var(--border); color:var(--muted); border-radius:4px; padding:7px 14px; font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:13px; cursor:pointer; transition:all 0.15s; }
+  .btn-rpp-clear:hover { border-color:var(--red); color:var(--red); }
+
+  /* ── MODAL ── */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:9998; align-items:center; justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--panel); border:1px solid var(--accent); border-radius:8px; padding:28px; width:580px; max-width:95vw; max-height:90vh; overflow-y:auto; }
+  .modal h2 { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:800; color:var(--accent); margin-bottom:6px; }
+  .modal p { font-size:13px; color:var(--muted); margin-bottom:16px; line-height:1.5; }
+  .modal textarea { width:100%; height:280px; background:var(--navy); border:1px solid var(--border); border-radius:4px; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:11px; padding:12px; resize:vertical; outline:none; line-height:1.6; margin-bottom:12px; }
+  .modal textarea:focus { border-color:var(--accent); }
+  .modal-actions { display:flex; gap:10px; justify-content:flex-end; }
+  .btn-cancel { background:transparent; border:1px solid var(--border); color:var(--muted); padding:8px 20px; border-radius:4px; cursor:pointer; font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:14px; }
+  .btn-cancel:hover { border-color:var(--muted); }
+  .btn-parse { background:var(--accent); border:none; color:white; padding:8px 20px; border-radius:4px; cursor:pointer; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:14px; letter-spacing:0.5px; }
+  .btn-parse:hover { background:var(--accent2); }
+  .parse-result { font-family:'JetBrains Mono',monospace; font-size:11px; padding:8px 12px; border-radius:4px; margin-bottom:10px; display:none; }
+  .parse-result.ok { background:#052e16; border:1px solid var(--green); color:var(--green); display:block; }
+  .parse-result.err { background:#450a0a; border:1px solid var(--red); color:var(--red); display:block; }
+
+  /* ── LOADING / TOAST ── */
+  .loading-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.93); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; }
+  .loading-overlay.hidden { display:none; }
+  .loading-spin { width:44px; height:44px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .loading-text { font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:700; color:var(--accent); letter-spacing:1px; }
+  .loading-sub { font-size:11px; color:var(--muted); margin-top:-8px; }
+  .toast-msg { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--navy2); border:1px solid var(--accent); border-radius:6px; padding:8px 16px; font-size:13px; color:var(--text); z-index:8000; pointer-events:none; opacity:0; transition:opacity 0.3s; white-space:nowrap; max-width:90vw; overflow:hidden; text-overflow:ellipsis; }
+  .toast-msg.show { opacity:1; }
+
+  /* ── CLUSTER ── */
+  .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background-color:rgba(249,115,22,0.2) !important; }
+  .marker-cluster-small div, .marker-cluster-medium div, .marker-cluster-large div { background-color:rgba(249,115,22,0.85) !important; color:white !important; font-family:'Barlow Condensed',sans-serif !important; font-weight:700 !important; font-size:13px !important; }
 
   @media (max-width: 720px) {
-    /* HEADER */
-    header { padding: 0 10px; height: 48px; gap: 6px; }
-    .logo { font-size: 16px; }
-    .logo-sub { display: none; }
-    .admin-tag { font-size: 9px; padding: 1px 4px; }
-    .btn-routes { font-size: 12px; padding: 5px 9px; }
-    .btn-routes svg { display: none; }
-    .total-badge { display: none; }
-    .last-update { display: none; }
-    .legend { display: none; }
-    .btn-update { font-size: 12px; padding: 5px 10px; }
-
-    /* ROUTES DROPDOWN: full screen width */
-    .routes-wrapper { position: static; }
-    .routes-dropdown {
-      position: fixed;
-      top: 48px;
-      left: 0;
-      right: 0;
-      width: 100%;
-      max-height: 70vh;
-      overflow-y: auto;
-      border-radius: 0 0 8px 8px;
-      border-left: none;
-      border-right: none;
-    }
-
-    /* LAYOUT: mapa arriba, lista abajo */
-    .main { flex-direction: column-reverse; height: calc(100vh - 48px); }
-    #map { width: 100%; height: 52%; flex: none; }
-    .sidebar {
-      width: 100%;
-      height: 48%;
-      border-right: none;
-      border-top: 2px solid var(--border);
-      flex-shrink: 0;
-    }
-
-    /* SIDEBAR CONTENT */
-    .sidebar-top { padding: 7px; gap: 5px; }
-    .search-box { padding: 6px 10px; font-size: 13px; }
-    .filter-btn { padding: 2px 6px; font-size: 9px; }
-    .sort-row { gap: 5px; }
-    .sort-label { font-size: 10px; }
-    .sort-select { font-size: 11px; }
-    .stats-row { gap: 4px; }
-    .stat-chip { padding: 4px 5px; }
-    .stat-chip .sv { font-size: 12px; }
-    .stat-chip .sl { font-size: 8px; }
-    .route-banner { padding: 4px 8px; }
-    .route-banner-name { font-size: 11px; }
-    .btn-clear-route { font-size: 10px; padding: 1px 6px; }
-
-    /* STATION CARDS */
-    .station-card { padding: 7px 9px; }
-    .station-name { font-size: 13px; }
-    .station-meta { font-size: 10px; }
-    .station-zone { font-size: 9px; }
-    .price-badge { font-size: 13px; min-width: 44px; }
+    header { padding:0 10px; height:48px; gap:6px; }
+    .logo { font-size:16px; } .logo-sub { display:none; }
+    .admin-tag { font-size:9px; padding:1px 4px; }
+    .btn-routes { font-size:12px; padding:5px 9px; }
+    .btn-routes svg { display:none; }
+    .total-badge,.last-update,.legend,.btn-refresh { display:none; }
+    .btn-update { font-size:12px; padding:5px 10px; }
+    .routes-wrapper { position:static; }
+    .routes-dropdown { position:fixed; top:48px; left:0; right:0; width:100%; max-height:70vh; overflow-y:auto; border-radius:0 0 8px 8px; border-left:none; border-right:none; }
+    .main { flex-direction:column-reverse; height:calc(100vh - 48px); }
+    #map { width:100%; height:52%; flex:none; }
+    .sidebar { width:100%; height:48%; border-right:none; border-top:2px solid var(--border); flex-shrink:0; }
+    .sidebar-top { padding:7px; gap:5px; }
+    .search-box { padding:6px 10px; font-size:13px; }
+    .filter-btn { padding:2px 6px; font-size:9px; }
+    .stats-row { gap:4px; }
+    .stat-chip { padding:4px 6px; }
+    .stat-chip .sv { font-size:11px; }
+    .station-card { padding:7px 9px; }
+    .station-name { font-size:12px; }
+    .price-badge { font-size:12px; min-width:50px; }
+    .btn-add-plan { display:none; }
+    /* Route plan panel: slide from bottom on mobile */
+    .rpp-panel { right:0; top:auto; bottom:-70vh; width:100%; height:70vh; border-left:none; border-top:2px solid var(--accent); border-right:none; transition:bottom 0.3s ease; }
+    .rpp-panel.open { bottom:0; right:0; }
+    .rpp-tab { bottom:0; right:16px; writing-mode:horizontal-tb; transform:none; border-radius:6px 6px 0 0; padding:8px 14px; }
+    .rpp-tab.panel-open { bottom:70vh; }
+    .rpp-tab-badge { transform:none; }
   }
-
-  /* POPUP MAP */
-  .leaflet-popup-content-wrapper {
-    background: var(--navy2) !important;
-    border: 1px solid var(--accent) !important;
-    border-radius: 6px !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
-    color: var(--text) !important;
-  }
-  .leaflet-popup-tip { background: var(--navy2) !important; }
-  .popup-inner { font-family: 'Barlow', sans-serif; min-width: 200px; }
-  .popup-name { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 800; color: var(--accent); margin-bottom: 4px; }
-  .popup-price { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 600; margin: 6px 0; }
-  .popup-row { font-size: 12px; color: #94a3b8; margin: 2px 0; }
-  .popup-row b { color: var(--text); }
-
-  .zone-header {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--muted);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 8px 6px 4px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 4px;
-  }
-  .no-results { text-align: center; color: var(--muted); font-size: 13px; padding: 32px 16px; }
 </style>
 </head>
 <body>
 
 <header>
-  <!-- Rutas GPS (izquierda) -->
   <div class="routes-wrapper">
     <button class="btn-routes" id="btnRoutes" onclick="toggleRoutes()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
@@ -549,26 +307,31 @@
     </div>
   </div>
 
-  <!-- Logo -->
-  <div class="logo">ADMI<span>LOGISTIC</span><span class="logo-sub" style="font-weight:400;font-size:15px;color:var(--muted)"> · Gasolineras</span> <span class="admin-tag">ADMIN</span></div>
+  <div class="logo">
+    ADMI<span>LOGISTIC</span>
+    <span class="admin-tag">ADMIN</span>
+    <span class="logo-sub" style="font-weight:400;font-size:14px;color:var(--muted)"> · Fleet Prices</span>
+  </div>
 
-  <!-- Derecha -->
   <div class="header-right">
     <div class="legend">
-      <span><span class="legend-dot" style="background:var(--green)"></span>Barato</span>
-      <span><span class="legend-dot" style="background:var(--yellow)"></span>Medio</span>
-      <span><span class="legend-dot" style="background:var(--red)"></span>Caro</span>
+      <span><span class="legend-dot" style="background:var(--cheap)"></span>Barato</span>
+      <span><span class="legend-dot" style="background:var(--mid)"></span>Medio</span>
+      <span><span class="legend-dot" style="background:var(--exp)"></span>Caro</span>
     </div>
+    <span class="last-update" id="lastUpdate">—</span>
     <div class="total-badge" id="totalBadge">— estaciones</div>
-    <div class="last-update" id="lastUpdate">—</div>
-    <button class="btn-update" onclick="openModal()">⬆ Actualizar precios</button>
+    <button class="btn-refresh" onclick="refreshData()" title="Recargar precios desde API">↻ API</button>
+    <button class="btn-update" onclick="openModal()">+ Añadir manual</button>
   </div>
 </header>
 
 <div class="main">
   <div class="sidebar">
     <div class="sidebar-top">
-      <input class="search-box" id="searchBox" type="text" placeholder="🔍  Buscar estación, localidad, vía..." oninput="if(typeof renderList==='function'){renderList();updateMarkers();}" onkeyup="if(typeof renderList==='function'){renderList();updateMarkers();}">
+      <input class="search-box" id="searchBox" type="text" placeholder="🔍  Buscar estación, localidad, provincia..."
+        oninput="if(typeof renderList==='function'){renderList();updateMarkers();}"
+        onkeyup="if(typeof renderList==='function'){renderList();updateMarkers();}">
       <div class="filters" id="zoneFilters"></div>
       <div id="routeBanner" style="display:none" class="route-banner">
         <span class="route-banner-name" id="routeBannerName"></span>
@@ -577,760 +340,828 @@
       <div class="sort-row">
         <span class="sort-label">Ordenar:</span>
         <select class="sort-select" id="sortSelect" onchange="renderList()">
-          <option value="price_asc">Precio ↑ (más barato primero)</option>
-          <option value="price_desc">Precio ↓ (más caro primero)</option>
+          <option value="price_asc">Mejor precio ↑</option>
+          <option value="price_desc">Peor precio ↓</option>
           <option value="name_asc">Nombre A-Z</option>
-          <option value="zone_asc">Zona</option>
+          <option value="zone_asc">Zona/CC.AA.</option>
         </select>
       </div>
-      <div class="stats-row" id="statsRow"></div>
+      <div class="stats-row" id="statsRow">
+        <div class="stat-chip"><div class="sv green">—</div><div class="sl">Mín mejor €/l</div></div>
+        <div class="stat-chip"><div class="sv yellow">—</div><div class="sl">Media €/l</div></div>
+        <div class="stat-chip"><div class="sv red">—</div><div class="sl">Máx surtidor €/l</div></div>
+      </div>
     </div>
     <div class="station-list" id="stationList"></div>
   </div>
   <div id="map"></div>
 </div>
 
-<!-- MODAL ACTUALIZAR -->
-<div class="modal-overlay" id="modalOverlay">
+<!-- ROUTE PLAN PANEL -->
+<div class="rpp-panel" id="rppPanel">
+  <div class="rpp-header">
+    <span class="rpp-title">🗺 RUTA DE REPOSTAJE</span>
+    <span class="rpp-count" id="rppCount">0 paradas</span>
+  </div>
+  <div class="rpp-inputs">
+    <input id="rppRouteName" class="rpp-input" placeholder="Nombre ruta (ej: Pinto → Barcelona)" />
+    <div class="rpp-tank-row">
+      <span class="rpp-tank-label">Litros depósito:</span>
+      <input id="rppTankL" class="rpp-tank-input" type="number" value="300" min="50" max="1000" step="50"
+        onchange="renderRoutePlan()" />
+      <span class="rpp-tank-unit">L</span>
+    </div>
+  </div>
+  <div class="rpp-stations" id="rppStations">
+    <div class="rpp-empty">Sin paradas seleccionadas.<br>Usa <b>+ Añadir a ruta</b> en los popups del mapa.</div>
+  </div>
+  <div class="rpp-footer">
+    <button class="btn-whatsapp" onclick="generateWhatsApp()">📲 Copiar instrucciones para WhatsApp</button>
+    <button class="btn-rpp-clear" onclick="clearRoutePlan()">🗑 Limpiar ruta</button>
+  </div>
+</div>
+<button class="rpp-tab" id="rppTab" onclick="toggleRPP()">
+  <span class="rpp-tab-badge" id="rppTabBadge">0</span>
+  RUTA ▶
+</button>
+
+<!-- MODAL AÑADIR MANUAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
   <div class="modal">
-    <h2>⬆ Actualizar precios</h2>
-    <p>Pega aquí la tabla de precios (columnas separadas por tabulador). El sistema detectará automáticamente los precios y actualizará el mapa.</p>
+    <h2>Añadir estaciones manuales</h2>
+    <p>Pega filas separadas por tabuladores:<br>
+    <code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green)">Nombre · Vía · Localidad · Provincia · Precio · Zona</code><br>
+    Complementan los datos de la API durante esta sesión.</p>
     <div id="parseResult" class="parse-result"></div>
-    <textarea id="pasteArea" placeholder="Pega aquí el texto con los datos...
-Ejemplo:
-ANDAMUR La Junquera	AP-7, N-II	La Junquera	Girona	1,603	ZONA JUNQUERA
-..."></textarea>
+    <textarea id="pasteArea" placeholder="GALP Mi Estación	A-4	Sevilla	Sevilla	1,589	ANDALUCÍA"></textarea>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
-      <button class="btn-parse" onclick="parseAndUpdate()">Procesar y actualizar</button>
+      <button class="btn-parse" onclick="parseAndUpdate()">Añadir estaciones</button>
     </div>
   </div>
 </div>
 
-<script>
-// ── RUTAS GPS ──────────────────────────────────────────────────────────────────
-const ROUTE_GPS = [
-  {
-    label: 'Base Pinto',
-    icon: '🏠',
-    routes: [
-      { name: 'Zona base · Pinto', via: 'Mosaico Marítimo', routeId: 'base', url: 'https://maps.google.com/maps?q=Pinto,Madrid,España' }
-    ]
-  },
-  {
-    label: 'Pinto ↔ Barcelona',
-    icon: '🟡',
-    routes: [
-      { name: '→ Pinto → Barcelona', via: 'A-2 sin peaje', routeId: 'pinto-bcn', url: 'https://www.google.com/maps/dir/?api=1&origin=Pinto,Madrid,España&destination=Barcelona,España&waypoints=Guadalajara,España|Calatayud,Zaragoza,España|Lleida,España&travelmode=driving' },
-      { name: '← Barcelona → Pinto', via: 'A-2 sin peaje', routeId: 'bcn-pinto', url: 'https://www.google.com/maps/dir/?api=1&origin=Barcelona,España&destination=Pinto,Madrid,España&waypoints=Lleida,España|Calatayud,Zaragoza,España|Guadalajara,España&travelmode=driving' }
-    ]
-  },
-  {
-    label: 'Barcelona ↔ Valencia',
-    icon: '🔴',
-    routes: [
-      { name: '→ Barcelona → Valencia', via: 'AP-7 libre (desde El Vendrell)', routeId: 'bcn-val', url: 'https://www.google.com/maps/dir/?api=1&origin=Barcelona,España&destination=Valencia,España&waypoints=Tarragona,España|Cambrils,España|Vinaròs,España&travelmode=driving' },
-      { name: '← Valencia → Barcelona', via: 'AP-7 libre (hasta El Vendrell)', routeId: 'val-bcn', url: 'https://www.google.com/maps/dir/?api=1&origin=Valencia,España&destination=Barcelona,España&waypoints=Sagunto,España|Vinaròs,España|Cambrils,España&travelmode=driving' }
-    ]
-  },
-  {
-    label: 'Pinto ↔ Alicante',
-    icon: '🔵',
-    routes: [
-      { name: '→ Pinto → Alicante', via: 'A-3 + A-31 sin peaje', routeId: 'pinto-ali', url: 'https://www.google.com/maps/dir/?api=1&origin=Pinto,Madrid,España&destination=Alicante,España&waypoints=Castillo+de+Garcimuñoz,Cuenca,España|La+Roda,Albacete,España|Villena,Alicante,España&travelmode=driving' },
-      { name: '← Alicante → Pinto', via: 'A-31 + A-4 vía Ontigola', routeId: 'ali-pinto', url: 'https://www.google.com/maps/dir/?api=1&origin=Alicante,España&destination=Pinto,Madrid,España&waypoints=Villena,Alicante,España|La+Roda,Albacete,España|Ontigola,Toledo,España&travelmode=driving' }
-    ]
-  },
-  {
-    label: 'Pinto ↔ Huelva',
-    icon: '🟠',
-    routes: [
-      { name: '→ Pinto → Huelva', via: 'A-5 + A-66 + A-49', routeId: 'pinto-hue', url: 'https://www.google.com/maps/dir/?api=1&origin=Pinto,Madrid,España&destination=Huelva,España&waypoints=Oropesa,Toledo,España|Mérida,Badajoz,España|Fuente+de+Cantos,Badajoz,España&travelmode=driving' },
-      { name: '← Huelva → Pinto', via: 'A-49 + A-66 + A-5', routeId: 'hue-pinto', url: 'https://www.google.com/maps/dir/?api=1&origin=Huelva,España&destination=Pinto,Madrid,España&waypoints=Fuente+de+Cantos,Badajoz,España|Mérida,Badajoz,España|Oropesa,Toledo,España&travelmode=driving' }
-    ]
-  },
-  {
-    label: 'Alicante ↔ Molina de Segura',
-    icon: '🌊',
-    routes: [
-      { name: '→ Alicante → Molina', via: 'A-7 libre + A-30', routeId: 'ali-mol', url: 'https://www.google.com/maps/dir/?api=1&origin=Alicante,España&destination=Molina+de+Segura,Murcia,España&waypoints=Elche,Alicante,España|Granja+de+Rocamora,Alicante,España&travelmode=driving' },
-      { name: '← Molina → Alicante', via: 'A-30 + A-7 libre', routeId: 'mol-ali', url: 'https://www.google.com/maps/dir/?api=1&origin=Molina+de+Segura,Murcia,España&destination=Alicante,España&waypoints=Granja+de+Rocamora,Alicante,España|Elche,Alicante,España&travelmode=driving' }
-    ]
-  }
-];
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loading-spin"></div>
+  <div class="loading-text">CARGANDO PRECIOS</div>
+  <div class="loading-sub">API Ministerio de Energía · tiempo real</div>
+</div>
+<div id="toastMsg" class="toast-msg"></div>
 
-const ROUTE_STATION_FILTER = {
-  'base': ['Pinto|Madrid','Parla|Madrid'],
-  'pinto-bcn': ['Pinto|Madrid','Alcalá de Henares|Madrid','Torrejón de Ardoz|Madrid','Perales De Tajuña|Madrid','Madrid|Madrid','Torremocha del Campo|Guadalajara','Calatayud|Zaragoza','La Muela|Zaragoza','Alfajarín|Zaragoza','Candasnos|Huesca','Cadrete|Zaragoza','El Bruc|Barcelona','Castellbisbal|Barcelona','Molins de Rei|Barcelona','El Prat de Llobregat|Barcelona','Barcelona|Barcelona','Granollers|Barcelona','Sant Esteve de Sesrovires|Barcelona','Torrefarrera|Lérida','Lérida|Lérida','La Junquera|Girona','Llers|Girona','Aiguaviva|Girona','Riudellots de la Selva|Girona'],
-  'bcn-pinto': ['Pinto|Madrid','Alcalá de Henares|Madrid','Torrejón de Ardoz|Madrid','Perales De Tajuña|Madrid','Madrid|Madrid','Torremocha del Campo|Guadalajara','Calatayud|Zaragoza','La Muela|Zaragoza','Alfajarín|Zaragoza','Candasnos|Huesca','El Bruc|Barcelona','Castellbisbal|Barcelona','Molins de Rei|Barcelona','El Prat de Llobregat|Barcelona','Barcelona|Barcelona','Granollers|Barcelona','Torrefarrera|Lérida','Lérida|Lérida','La Junquera|Girona','Llers|Girona'],
-  'bcn-val': ['Barcelona|Barcelona','El Prat de Llobregat|Barcelona','Castellbisbal|Barcelona','Rodonya|Tarragona','Masos de Comarruga|Tarragona',"L'Hospitalet De L'Infant|Tarragona",'Vila-Seca|Tarragona','Constantí|Tarragona',"L'Ametlla de Mar|Tarragona",'Ribera de Cabanes|Castellón','Burriana|Castellón','El Puig de Santa María|Valencia','Torrent|Valencia','Ribarroja del Turia|Valencia','Beneixida|Valencia'],
-  'val-bcn': ['Barcelona|Barcelona','El Prat de Llobregat|Barcelona','Castellbisbal|Barcelona','Rodonya|Tarragona','Masos de Comarruga|Tarragona',"L'Hospitalet De L'Infant|Tarragona",'Vila-Seca|Tarragona','Constantí|Tarragona',"L'Ametlla de Mar|Tarragona",'Ribera de Cabanes|Castellón','Burriana|Castellón','El Puig de Santa María|Valencia','Torrent|Valencia','Ribarroja del Turia|Valencia','Beneixida|Valencia'],
-  'pinto-ali': ['Pinto|Madrid','Perales De Tajuña|Madrid','Madrid|Madrid','Villarubio|Cuenca','Tébar|Cuenca','Castillo de Garcimuñoz|Cuenca','Villargordo del Gabriel|Valencia','Fuente La Higuera|Valencia','Beneixida|Valencia','Torrellano|Alicante','Agost|Alicante'],
-  'ali-pinto': ['Torrellano|Alicante','Agost|Alicante','Fuente La Higuera|Valencia','Castillo de Garcimuñoz|Cuenca','Tébar|Cuenca','Villargordo del Gabriel|Valencia','La Consolación|Ciudad Real','Puerto Lapice|Ciudad Real','Pinto|Madrid','Parla|Madrid','Madrid|Madrid'],
-  'pinto-hue': ['Pinto|Madrid','Madrid|Madrid','El Casar de Talavera|Toledo','Calera y Chozas|Toledo','Peraleda de la Mata|Cáceres','Cáceres|Cáceres','Mérida|Badajoz','Badajoz|Badajoz','Gibraleón|Huelva','Moguer|Huelva','Rosal de la Frontera|Huelva','Valencina de la Concepción|Sevilla','Salteras|Sevilla','Los Palacios y Villafranca|Sevilla','Dos Hermanas|Sevilla','La Campana|Sevilla','Alcalá de Guadaira|Sevilla'],
-  'hue-pinto': ['Pinto|Madrid','Madrid|Madrid','El Casar de Talavera|Toledo','Calera y Chozas|Toledo','Peraleda de la Mata|Cáceres','Cáceres|Cáceres','Mérida|Badajoz','Badajoz|Badajoz','Gibraleón|Huelva','Moguer|Huelva','Rosal de la Frontera|Huelva','Valencina de la Concepción|Sevilla','Salteras|Sevilla','Los Palacios y Villafranca|Sevilla','Dos Hermanas|Sevilla','La Campana|Sevilla','Alcalá de Guadaira|Sevilla'],
-  'ali-mol': ['Torrellano|Alicante','Agost|Alicante','Pedreguer|Alicante','Lorca|Murcia','Totana|Murcia','Molina de Segura|Murcia','Ceuti|Murcia','San Javier|Murcia'],
-  'mol-ali': ['Torrellano|Alicante','Agost|Alicante','Pedreguer|Alicante','Lorca|Murcia','Totana|Murcia','Molina de Segura|Murcia','Ceuti|Murcia','San Javier|Murcia']
+<script>
+// ── CONFIGURACIÓN ─────────────────────────────────────────────────────────────
+const API_URL = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/';
+const GALP_DISCOUNT = 0.16;
+const LIST_MAX = 250;
+const ANDAMUR_NEARBY_KM = 5;
+const BRANDS_FILTER = ['GALP', 'REPSOL', 'CAMPSA', 'PETRONOR', 'ANDAMUR'];
+
+// ── PROVINCE → ZONA ───────────────────────────────────────────────────────────
+const PROVINCE_TO_ZONE = {
+  'Almería':'ANDALUCÍA','Cádiz':'ANDALUCÍA','Córdoba':'ANDALUCÍA','Granada':'ANDALUCÍA',
+  'Huelva':'ANDALUCÍA','Jaén':'ANDALUCÍA','Málaga':'ANDALUCÍA','Sevilla':'ANDALUCÍA',
+  'Huesca':'ARAGÓN','Teruel':'ARAGÓN','Zaragoza':'ARAGÓN',
+  'Asturias':'ASTURIAS','Illes Balears':'BALEARES','Islas Baleares':'BALEARES',
+  'Las Palmas':'CANARIAS','Santa Cruz de Tenerife':'CANARIAS','Cantabria':'CANTABRIA',
+  'Ávila':'CASTILLA Y LEÓN','Burgos':'CASTILLA Y LEÓN','León':'CASTILLA Y LEÓN',
+  'Palencia':'CASTILLA Y LEÓN','Salamanca':'CASTILLA Y LEÓN','Segovia':'CASTILLA Y LEÓN',
+  'Soria':'CASTILLA Y LEÓN','Valladolid':'CASTILLA Y LEÓN','Zamora':'CASTILLA Y LEÓN',
+  'Albacete':'CASTILLA-LA MANCHA','Ciudad Real':'CASTILLA-LA MANCHA',
+  'Cuenca':'CASTILLA-LA MANCHA','Guadalajara':'CASTILLA-LA MANCHA','Toledo':'CASTILLA-LA MANCHA',
+  'Barcelona':'CATALUÑA','Girona':'CATALUÑA','Lleida':'CATALUÑA','Lérida':'CATALUÑA','Tarragona':'CATALUÑA',
+  'Ceuta':'CEUTA','Badajoz':'EXTREMADURA','Cáceres':'EXTREMADURA',
+  'A Coruña':'GALICIA','La Coruña':'GALICIA','Lugo':'GALICIA','Ourense':'GALICIA','Pontevedra':'GALICIA',
+  'La Rioja':'LA RIOJA','Madrid':'C. DE MADRID','Melilla':'MELILLA','Murcia':'MURCIA','Navarra':'NAVARRA',
+  'Álava':'PAÍS VASCO','Guipúzcoa':'PAÍS VASCO','Vizcaya':'PAÍS VASCO',
+  'Alicante':'C. VALENCIANA','Castellón':'C. VALENCIANA','Valencia':'C. VALENCIANA'
 };
 
+// ── CORREDORES DE RUTA [latMin, lngMin, latMax, lngMax] ───────────────────────
+const ROUTE_CORRIDORS = {
+  'base':[40.10,-4.05,40.55,-3.35], 'pinto-bcn':[40.10,-3.90,42.10,2.55],
+  'bcn-pinto':[40.10,-3.90,42.10,2.55], 'bcn-val':[39.25,-0.75,41.55,2.35],
+  'val-bcn':[39.25,-0.75,41.55,2.35], 'pinto-ali':[38.05,-3.90,40.55,-0.30],
+  'ali-pinto':[38.05,-3.90,40.55,-0.30], 'pinto-hue':[36.85,-7.65,40.55,-3.40],
+  'hue-pinto':[36.85,-7.65,40.55,-3.40], 'ali-mol':[37.40,-2.15,38.95,0.30],
+  'mol-ali':[37.40,-2.15,38.95,0.30]
+};
+
+// ── DATOS DE RESPALDO ─────────────────────────────────────────────────────────
+const COORDS_FALLBACK = {
+  "La Junquera|Girona":[42.4192,2.8726],"Llers|Girona":[42.3800,2.8500],
+  "Imárcoain|Navarra":[42.7580,-1.6130],"Huércal-Overa|Almería":[37.3890,-1.9450],
+  "Guarromán|Jaén":[38.1750,-3.6850],"Lorca|Murcia":[37.6710,-1.7040],
+  "Huetor Tajar|Granada":[37.2060,-4.0430],"Castillo de Garcimuñoz|Cuenca":[39.7180,-2.3390],
+  "Calera y Chozas|Toledo":[39.8970,-5.1180],"Puerto Lapice|Ciudad Real":[39.3120,-3.4670],
+  "Ribarroja del Turia|Valencia":[39.5360,-0.5980],"Torrent|Valencia":[39.4340,-0.4670],
+  "Agost|Alicante":[38.4380,-0.6580],"Torrellano|Alicante":[38.2670,-0.6800],
+  "Burriana|Castellón":[39.8870,-0.0680],"Alcalá de Henares|Madrid":[40.4817,-3.3636],
+  "Parla|Madrid":[40.2390,-3.7680],"Pinto|Madrid":[40.2490,-3.6940],
+  "La Muela|Zaragoza":[41.5950,-1.0970],"Candasnos|Huesca":[41.5080,0.0260],
+  "El Bruc|Barcelona":[41.5810,1.7330],"Castellbisbal|Barcelona":[41.4680,1.9780],
+  "Barcelona|Barcelona":[41.3851,2.1734],"Aiguaviva|Girona":[41.8760,2.8120],
+  "Rodonya|Tarragona":[41.2530,1.3920],"Sarracín|Burgos":[42.2940,-3.6500],
+  "Medina del Campo|Valladolid":[41.3100,-4.9140],"Guitiriz|Lugo":[43.1840,-7.8750],
+  "Silleda|Pontevedra":[42.6970,-8.2380]
+};
+
+const RAW_DATA_FALLBACK = `ANDAMUR La Junquera	AP-7, N-II	La Junquera	Girona	1,603	CATALUÑA
+ANDAMUR El Límite	A-7	Huércal-Overa	Almería	1,560	ANDALUCÍA
+ANDAMUR Guarromán	A-4	Guarromán	Jaén	1,589	ANDALUCÍA
+ANDAMUR Lorca	A-7	Lorca	Murcia	1,570	MURCIA
+GALP Pinto - Eboli I	M-506	Pinto	Madrid	1,595	C. DE MADRID
+GALP Alcalá Henares I	A-2	Alcalá de Henares	Madrid	1,596	C. DE MADRID
+GALP Zaragoza I	A-2	La Muela	Zaragoza	1,599	ARAGÓN
+GALP Monegros I	AP-2	Candasnos	Huesca	1,600	ARAGÓN
+GALP El Bruc	A-2	El Bruc	Barcelona	1,584	CATALUÑA
+GALP Porta de Barcelona Sur	AP-7	Castellbisbal	Barcelona	1,584	CATALUÑA
+GALP Gironès Norte	AP-7	Aiguaviva	Girona	1,642	CATALUÑA
+GALP Ribarroja Del Turia	AP-7, A-3	Ribarroja del Turia	Valencia	1,540	C. VALENCIANA
+GALP Torrent I	A-7	Torrent	Valencia	1,589	C. VALENCIANA
+GALP Agost - AP7	AP-7	Agost	Alicante	1,616	C. VALENCIANA
+GALP Castillo de Garcimuñoz	A-3	Castillo de Garcimuñoz	Cuenca	1,595	CASTILLA-LA MANCHA
+GALP Calera y Chozas	A-5	Calera y Chozas	Toledo	1,603	CASTILLA-LA MANCHA
+GALP Puerto Lápice I	A-4	Puerto Lapice	Ciudad Real	1,601	CASTILLA-LA MANCHA
+GALP Sarracín I	A-1	Sarracín	Burgos	1,675	CASTILLA Y LEÓN
+GALP Medina Del Campo	A-6	Medina del Campo	Valladolid	1,675	CASTILLA Y LEÓN
+GALP Guitiriz I	A-6	Guitiriz	Lugo	1,668	GALICIA
+GALP Silleda	AP-53	Silleda	Pontevedra	1,674	GALICIA
+GALP Alt Camp I	AP-2	Rodonya	Tarragona	1,586	CATALUÑA`;
+
+// ── RUTAS GPS ─────────────────────────────────────────────────────────────────
+const ROUTE_GPS = [
+  { label:'Base Pinto', icon:'🏠', routes:[{ name:'Zona base · Pinto', via:'Mosaico Marítimo', routeId:'base', url:'https://maps.google.com/maps?q=Pinto,Madrid,España' }] },
+  { label:'Pinto ↔ Barcelona', icon:'🟡', routes:[
+    { name:'→ Pinto → Barcelona', via:'A-2 sin peaje', routeId:'pinto-bcn', url:'https://www.google.com/maps/dir/?api=1&origin=Pinto,Madrid,España&destination=Barcelona,España&waypoints=Guadalajara,España|Calatayud,Zaragoza,España|Lleida,España&travelmode=driving' },
+    { name:'← Barcelona → Pinto', via:'A-2 sin peaje', routeId:'bcn-pinto', url:'https://www.google.com/maps/dir/?api=1&origin=Barcelona,España&destination=Pinto,Madrid,España&waypoints=Lleida,España|Calatayud,Zaragoza,España|Guadalajara,España&travelmode=driving' }
+  ]},
+  { label:'Barcelona ↔ Valencia', icon:'🔴', routes:[
+    { name:'→ Barcelona → Valencia', via:'AP-7 libre', routeId:'bcn-val', url:'https://www.google.com/maps/dir/?api=1&origin=Barcelona,España&destination=Valencia,España&waypoints=Tarragona,España|Vinaròs,España&travelmode=driving' },
+    { name:'← Valencia → Barcelona', via:'AP-7 libre', routeId:'val-bcn', url:'https://www.google.com/maps/dir/?api=1&origin=Valencia,España&destination=Barcelona,España&waypoints=Vinaròs,España|Tarragona,España&travelmode=driving' }
+  ]},
+  { label:'Pinto ↔ Alicante', icon:'🔵', routes:[
+    { name:'→ Pinto → Alicante', via:'A-3 + A-31 sin peaje', routeId:'pinto-ali', url:'https://www.google.com/maps/dir/?api=1&origin=Pinto,Madrid,España&destination=Alicante,España&waypoints=Castillo+de+Garcimuñoz,Cuenca,España|Villena,Alicante,España&travelmode=driving' },
+    { name:'← Alicante → Pinto', via:'A-31 + A-4', routeId:'ali-pinto', url:'https://www.google.com/maps/dir/?api=1&origin=Alicante,España&destination=Pinto,Madrid,España&waypoints=Villena,Alicante,España|La+Roda,Albacete,España&travelmode=driving' }
+  ]},
+  { label:'Pinto ↔ Huelva', icon:'🟠', routes:[
+    { name:'→ Pinto → Huelva', via:'A-5 + A-66 + A-49', routeId:'pinto-hue', url:'https://www.google.com/maps/dir/?api=1&origin=Pinto,Madrid,España&destination=Huelva,España&waypoints=Oropesa,Toledo,España|Mérida,Badajoz,España&travelmode=driving' },
+    { name:'← Huelva → Pinto', via:'A-49 + A-66 + A-5', routeId:'hue-pinto', url:'https://www.google.com/maps/dir/?api=1&origin=Huelva,España&destination=Pinto,Madrid,España&waypoints=Mérida,Badajoz,España|Oropesa,Toledo,España&travelmode=driving' }
+  ]},
+  { label:'Alicante ↔ Molina de Segura', icon:'🌊', routes:[
+    { name:'→ Alicante → Molina', via:'A-7 libre + A-30', routeId:'ali-mol', url:'https://www.google.com/maps/dir/?api=1&origin=Alicante,España&destination=Molina+de+Segura,Murcia,España&waypoints=Elche,Alicante,España&travelmode=driving' },
+    { name:'← Molina → Alicante', via:'A-30 + A-7 libre', routeId:'mol-ali', url:'https://www.google.com/maps/dir/?api=1&origin=Molina+de+Segura,Murcia,España&destination=Alicante,España&waypoints=Elche,Alicante,España&travelmode=driving' }
+  ]}
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let stations = [];
+let markers = {};
+let clusterGroup;
+let map;
+let activeZone = 'TODAS';
 let activeRoute = null;
 let activeRouteName = '';
+let selectedId = null;
+let dataSource = 'api';
+let priceMinMax = { min: 0, max: 0 };
+let routePlan = []; // IDs de estaciones en la ruta de repostaje
+
+// ── UTILIDADES ────────────────────────────────────────────────────────────────
+function distanceKm(lat1, lng1, lat2, lng2) {
+  const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLng = (lng2-lng1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function parseApiNum(str) {
+  if (!str || !str.trim()) return null;
+  const n = parseFloat(str.trim().replace(',', '.'));
+  return isNaN(n) ? null : n;
+}
+
+function fmtPrice(p) {
+  if (p == null) return '—';
+  return p.toFixed(3).replace('.', ',') + ' €/l';
+}
+
+function getTankL() {
+  return parseInt(document.getElementById('rppTankL')?.value || 300) || 300;
+}
+
+function isBrandMatch(r) {
+  const u = (r||'').toUpperCase();
+  return BRANDS_FILTER.some(b => u.includes(b));
+}
+
+function getBrandType(r) {
+  const u = (r||'').toUpperCase();
+  if (u.includes('GALP')) return 'galp';
+  if (u.includes('ANDAMUR')) return 'andamur';
+  if (u.includes('REPSOL')||u.includes('CAMPSA')||u.includes('PETRONOR')) return 'repsol';
+  return 'other';
+}
+
+function getBrandColor(bt) {
+  if (bt==='galp') return '#0066cc';
+  if (bt==='andamur') return '#f59e0b';
+  if (bt==='repsol') return '#e30613';
+  return '#64748b';
+}
+
+function zoneFromProvincia(p) {
+  if (!p) return 'OTRAS';
+  if (PROVINCE_TO_ZONE[p]) return PROVINCE_TO_ZONE[p];
+  const key = Object.keys(PROVINCE_TO_ZONE).find(k => k.toLowerCase()===p.toLowerCase());
+  return key ? PROVINCE_TO_ZONE[key] : 'OTRAS';
+}
+
+function showLoading(show) {
+  document.getElementById('loadingOverlay').classList.toggle('hidden', !show);
+}
+
+let toastTimer;
+function showToast(msg, ms=4000) {
+  const el = document.getElementById('toastMsg');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), ms);
+}
+
+function updateLastUpdate() {
+  const n = new Date();
+  document.getElementById('lastUpdate').textContent = 'Act: ' + n.toLocaleDateString('es-ES') + ' ' + n.toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit'});
+}
+
+// ── API MINETUR ───────────────────────────────────────────────────────────────
+async function fetchMinetur() {
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), 20000);
+  try {
+    const r = await fetch(API_URL, { signal: ctrl.signal });
+    clearTimeout(tid);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } catch(e) { clearTimeout(tid); throw e; }
+}
+
+function parseMinetur(data) {
+  const result = [];
+  (data.ListaEESSPrecio || []).forEach((e, idx) => {
+    const rotulo = (e['Rótulo']||'').trim();
+    if (!isBrandMatch(rotulo)) return;
+    const precioA = parseApiNum(e['Precio Gasoleo A']);
+    if (!precioA || precioA < 0.5 || precioA > 4) return;
+    const lat = parseApiNum(e['Latitud']);
+    const lng = parseApiNum(e['Longitud (WGS84)']);
+    if (!lat || !lng) return;
+    result.push({
+      id: idx, name: rotulo, rotulo, brandType: getBrandType(rotulo),
+      via: (e['Dirección']||'').trim(), localidad: (e['Localidad']||'').trim(),
+      provincia: (e['Provincia']||'').trim(), cp: (e['C.P.']||'').trim(),
+      zone: zoneFromProvincia((e['Provincia']||'').trim()),
+      price: precioA, lat, lng, ideess: e['IDEESS']||'', fromApi: true
+    });
+  });
+  return result;
+}
+
+function parseRawFallback(raw) {
+  const result = [];
+  raw.trim().split('\n').forEach((line, idx) => {
+    const p = line.split('\t');
+    if (p.length < 5) return;
+    const name=p[0].trim(), via=p[1].trim(), localidad=p[2].trim(), provincia=p[3].trim();
+    const price = parseFloat(p[4].replace(',', '.'));
+    const zone = p[5] ? p[5].trim() : zoneFromProvincia(provincia);
+    if (isNaN(price)) return;
+    const key = `${localidad}|${provincia}`;
+    let coords = COORDS_FALLBACK[key] || null;
+    if (!coords) { const fb = Object.keys(COORDS_FALLBACK).find(k=>k.startsWith(localidad+'|')); coords = fb ? COORDS_FALLBACK[fb] : null; }
+    const j = () => (Math.random()-0.5)*0.008;
+    result.push({ id: 50000+idx, name, via, localidad, provincia, price, zone,
+      rotulo: name.toUpperCase(), brandType: getBrandType(name), cp:'', fromApi:false,
+      lat: coords ? coords[0]+j() : null, lng: coords ? coords[1]+j() : null });
+  });
+  return result;
+}
+
+async function loadStations(forceRefresh=false) {
+  showLoading(true);
+  try {
+    if (!forceRefresh) {
+      const cached = sessionStorage.getItem('minetur_data');
+      const ts = parseInt(sessionStorage.getItem('minetur_ts')||'0');
+      if (cached && Date.now()-ts < 30*60*1000) { dataSource='api'; return parseMinetur(JSON.parse(cached)); }
+    } else {
+      sessionStorage.removeItem('minetur_data');
+      sessionStorage.removeItem('minetur_ts');
+    }
+    const data = await fetchMinetur();
+    try { sessionStorage.setItem('minetur_data', JSON.stringify(data)); sessionStorage.setItem('minetur_ts', Date.now().toString()); } catch(e) {}
+    dataSource='api';
+    return parseMinetur(data);
+  } catch(e) {
+    console.warn('API MINETUR no disponible:', e.message);
+    dataSource='local';
+    showToast('⚠ API no disponible · datos locales');
+    return parseRawFallback(RAW_DATA_FALLBACK);
+  } finally { showLoading(false); }
+}
+
+async function refreshData() {
+  stations = await loadStations(true);
+  computeAllPrices();
+  updatePriceMinMax();
+  buildZones(); renderList(); rebuildMarkers(); updateLastUpdate();
+  showToast(`↻ ${stations.length} estaciones actualizadas`);
+}
+
+// ── PRECIOS / COMPARADOR ──────────────────────────────────────────────────────
+function findNearestAndamur(station) {
+  if (station.brandType==='andamur') return null;
+  let nearest=null, minDist=ANDAMUR_NEARBY_KM;
+  for (const s of stations) {
+    if (s.brandType!=='andamur'||!s.lat) continue;
+    const d = distanceKm(station.lat, station.lng, s.lat, s.lng);
+    if (d < minDist) { minDist=d; nearest=s; }
+  }
+  return nearest ? { station: nearest, distM: minDist*1000 } : null;
+}
+
+function computePrices(station) {
+  if (!station.price) return null;
+  const r = {};
+  if (station.brandType==='galp') { r.surtidor=station.price; r.galp=+(station.price-GALP_DISCOUNT).toFixed(3); r.solred=station.price; }
+  else if (station.brandType==='repsol') { r.surtidor=station.price; r.solred=station.price; }
+  else if (station.brandType==='andamur') { r.surtidor=station.price; r.andamur=station.price; }
+  else { r.surtidor=station.price; r.solred=station.price; }
+  if (station.lat && station.brandType!=='andamur') {
+    const nb = findNearestAndamur(station);
+    if (nb) r.andamurNearby = { price:nb.station.price, name:nb.station.name, distM:nb.distM };
+  }
+  const opts=[];
+  if (r.galp!=null) opts.push({label:'Tarjeta Galp', price:r.galp});
+  if (r.solred!=null && r.galp==null) opts.push({label:'Tarjeta Solred', price:r.solred});
+  if (r.andamur!=null) opts.push({label:'Andamur', price:r.andamur});
+  if (r.andamurNearby) opts.push({label:'Andamur cercano', price:r.andamurNearby.price});
+  if (opts.length) { const best=opts.reduce((a,b)=>a.price<b.price?a:b); r.best=best.price; r.bestLabel=best.label; }
+  return r;
+}
+
+function computeAllPrices() { stations.forEach(s => { s.priceData=computePrices(s); }); }
+
+function updatePriceMinMax() {
+  const prices = stations.filter(s=>s.priceData&&s.priceData.best).map(s=>s.priceData.best);
+  if (!prices.length) return;
+  priceMinMax = { min:Math.min(...prices), max:Math.max(...prices) };
+}
+
+function priceClass(bp) {
+  const range = priceMinMax.max-priceMinMax.min;
+  if (!bp||range===0) return 'mid';
+  const pct = (bp-priceMinMax.min)/range;
+  if (pct<0.33) return 'cheap'; if (pct<0.66) return 'mid'; return 'exp';
+}
+
+function getMostExpensiveInCorridor(routeId) {
+  if (!routeId) return null;
+  const inCorridor = stations.filter(s => stationMatchesRoute(s, routeId) && s.price);
+  if (!inCorridor.length) return null;
+  return inCorridor.reduce((a,b) => a.price > b.price ? a : b);
+}
+
+// ── FILTROS Y RUTAS ───────────────────────────────────────────────────────────
+function stationMatchesRoute(s, routeId) {
+  const c = ROUTE_CORRIDORS[routeId];
+  if (c && s.lat!=null) {
+    const [lamin,lnmin,lamax,lnmax] = c;
+    if (s.lat>=lamin && s.lat<=lamax && s.lng>=lnmin && s.lng<=lnmax) return true;
+  }
+  return false;
+}
 
 function filterByRoute(routeId, routeName) {
-  activeRoute = routeId;
-  activeRouteName = routeName;
-  activeZone = 'TODAS';
+  activeRoute=routeId; activeRouteName=routeName; activeZone='TODAS';
   document.getElementById('routesDropdown').classList.remove('open');
   document.getElementById('btnRoutes').classList.remove('open');
-  buildZones();
-  renderList();
-  updateMarkers();
-  const banner = document.getElementById('routeBanner');
-  if (banner) { document.getElementById('routeBannerName').textContent = routeName; banner.style.display = 'flex'; }
-  const visible = filteredStations().filter(s => s.lat);
-  if (visible.length > 0 && map) map.fitBounds(L.latLngBounds(visible.map(s => [s.lat, s.lng])), { padding: [40, 40] });
+  buildZones(); renderList(); updateMarkers();
+  const banner=document.getElementById('routeBanner');
+  if (banner) { document.getElementById('routeBannerName').textContent=routeName; banner.style.display='flex'; }
+  const vis=filteredStations().filter(s=>s.lat);
+  if (vis.length&&map) map.fitBounds(L.latLngBounds(vis.map(s=>[s.lat,s.lng])),{padding:[40,40]});
 }
 
 function clearRouteFilter() {
-  activeRoute = null;
-  activeRouteName = '';
-  const banner = document.getElementById('routeBanner');
-  if (banner) banner.style.display = 'none';
-  buildZones();
-  renderList();
-  updateMarkers();
-  if (map) map.setView([40.4, -3.7], 6);
+  activeRoute=null; activeRouteName='';
+  const b=document.getElementById('routeBanner'); if(b) b.style.display='none';
+  buildZones(); renderList(); updateMarkers();
+  if (map) map.setView([40.4,-3.7],6);
 }
 
 function buildRoutesList() {
-  const container = document.getElementById('routesList');
-  container.innerHTML = ROUTE_GPS.map(group => `
+  document.getElementById('routesList').innerHTML = ROUTE_GPS.map(g => `
     <div class="route-group">
-      <div class="rg-header">${group.icon} ${group.label}</div>
-      ${group.routes.map(r => `
-        <div class="route-link" onclick="filterByRoute('${r.routeId}', '${r.name}')">
-          <span class="route-link-name">
-            ${r.name}
-            <span class="route-via">${r.via}</span>
-          </span>
+      <div class="rg-header">${g.icon} ${g.label}</div>
+      ${g.routes.map(r=>`
+        <div class="route-link" onclick="filterByRoute('${r.routeId}','${r.name}')">
+          <span class="route-link-name">${r.name}<span class="route-via">${r.via}</span></span>
           <a class="gps-badge" href="${r.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">GPS ↗</a>
-        </div>
-      `).join('')}
-    </div>
-  `).join('');
+        </div>`).join('')}
+    </div>`).join('');
 }
 
 function toggleRoutes() {
-  const dd = document.getElementById('routesDropdown');
-  const btn = document.getElementById('btnRoutes');
-  const isOpen = dd.classList.toggle('open');
-  btn.classList.toggle('open', isOpen);
+  const dd=document.getElementById('routesDropdown'), btn=document.getElementById('btnRoutes');
+  btn.classList.toggle('open', dd.classList.toggle('open'));
 }
 
 document.addEventListener('click', e => {
-  const wrapper = document.querySelector('.routes-wrapper');
-  if (wrapper && !wrapper.contains(e.target)) {
+  const w=document.querySelector('.routes-wrapper');
+  if (w&&!w.contains(e.target)) {
     document.getElementById('routesDropdown').classList.remove('open');
     document.getElementById('btnRoutes').classList.remove('open');
   }
 });
 
-// ── DATA ───────────────────────────────────────────────────────────────────────
-const RAW_DATA = `ANDAMUR La Junquera	AP-7, N-II	La Junquera	Girona	1,603	ZONA JUNQUERA
-ANDAMUR La Junquera-Llers	AP-7, N-II	Llers	Girona	1,603	ZONA JUNQUERA
-GM FUEL Servei Carrer 3	B-10	Barcelona	Barcelona	1,547	ZONA JUNQUERA
-NIEVES Parets	N-152	Parets del Valles	Barcelona	1,660	ZONA JUNQUERA
-Renova Oil Incoenergy	N-230	Torrefarrera	Lérida	1,554	ZONA JUNQUERA
-ANDAMUR Pamplona	AP15, N-121-A	Imárcoain	Navarra	1,614	ZONA IRÚN
-ANDAMUR San Román - Araia	A-1	San Román de San Millán	Álava	1,605	ZONA IRÚN
-Merkaoil	AP-8, GI-2638	Lezo	Guipúzcoa	1,592	ZONA IRÚN
-EUROCAM Nanclares de Oca	A-1	Nanclares de la Oca	Álava	1,592	ZONA IRÚN
-Gexa	AP-8, GI-636	Oiartzun	Guipúzcoa	1,597	ZONA IRÚN
-ANDAMUR El Límite	A-7	Huércal-Overa	Almería	1,560	ANDALUCIA
-ANDAMUR Guarromán	A-4	Guarromán	Jaén	1,589	ANDALUCIA
-Las Cuartillas	N-630	Valencina de la Concepción	Sevilla	1,553	ANDALUCIA
-Magdaoil	A-92	Alcalá de Guadaira	Sevilla	1,536	ANDALUCIA
-Ruta 4	A-4	La Campana	Sevilla	1,534	ANDALUCIA
-TJ Oil	M-630	Salteras	Sevilla	1,531	ANDALUCIA
-BQP Villanueva Food and Fuel	A-4	Écija	Sevilla	1,555	ANDALUCIA
-HAFESA OIL Almerimar	A-7	El Ejido	Almería	1,547	ANDALUCIA
-GALP Huétor Tájar	A-92	Huetor Tajar	Granada	1,604	ANDALUCIA
-VALCARCE Láchar	A-92	Láchar	Granada	1,552	ANDALUCIA
-VALCARCE Gor	A-92	Gor	Granada	1,552	ANDALUCIA
-CARBURANTES A92	A-92	Darro	Granada	1,552	ANDALUCIA
-El Fresno	A-7	Los Barrios	Cadiz	1,536	ANDALUCIA
-NIEVES Algeciras	A-7	Los Barrios	Cádiz	1,670	ANDALUCIA
-GALP Jerez	A-381	Jerez de la Frontera	Cádiz	1,597	ANDALUCIA
-GALP Puerto Real	CA-35	Puerto Real	Cádiz	1,629	ANDALUCIA
-AREA 117 Benamejí	N-331	Benamejí	Córdoba	1,543	ANDALUCIA
-DEOIL Gibraleon	N-431	Gibraleón	Huelva	1,560	ANDALUCIA
-GALP Rosal de La Frontera	N-433	Rosal de la Frontera	Huelva	1,630	ANDALUCIA
-Platero	A-494	Moguer	Huelva	1,548	ANDALUCIA
-GALP Estepona	A-7	Estepona	Málaga	1,594	ANDALUCIA
-AREA 117 Humilladero I	A-92	Humilladero	Málaga	1,545	ANDALUCIA
-AREA 117 Humilladero II	A-92	Humilladero	Málaga	1,545	ANDALUCIA
-GALP Málaga - El Viso	A-357	Málaga	Málaga	1,600	ANDALUCIA
-GALP Málaga - El Limonar	A-7	Málaga	Málaga	1,623	ANDALUCIA
-AGLA La Isla	A-8053	Dos Hermanas	Sevilla	1,551	ANDALUCIA
-GALP Los Palacios	AP-4	Los Palacios y Villafranca	Sevilla	1,590	ANDALUCIA
-ANDAMUR Lorca	A-7	Lorca	Murcia	1,570	MURCIA
-Sierra Espuña Trade	A-7	Totana	Murcia	1,542	MURCIA
-Agetrans	A-7	Totana	Murcia	1,540	MURCIA
-La Cañada	A-30	Molina de Segura	Murcia	1,542	MURCIA
-Mill Enterprise	MU-533	Ceuti	Murcia	1,540	MURCIA
-Grupo Caliche	AP-7	San Javier	Murcia	1,569	MURCIA
-MAGNAOIL Vía de la Plata	A-5	Mérida	Badajoz	1,603	EXTREMADURA
-MAGNAOIL El Nevero	A-5	Badajoz	Badajoz	1,603	EXTREMADURA
-GALP Cáceres - Ctra. A Trujillo	N-521	Cáceres	Cáceres	1,678	EXTREMADURA
-GALP Peraleda de la Mata	A-5	Peraleda de la Mata	Cáceres	1,683	EXTREMADURA
-AREA 117 Torremocha del Campo	A-2	Torremocha del Campo	Guadalajara	1,543	CASTILLA-LA MANCHA
-VALCARCE Área de Uclés 90	A-3	Villarubio	Cuenca	1,544	CASTILLA-LA MANCHA
-BEROIL Tébar	A-3	Tébar	Cuenca	1,605	CASTILLA-LA MANCHA
-GALP Castillo de Garcimuñoz	A-3	Castillo de Garcimuñoz	Cuenca	1,595	CASTILLA-LA MANCHA
-VALCARCE El Casar de Talavera	A-5, N-502	El Casar de Talavera	Toledo	1,543	CASTILLA-LA MANCHA
-GALP Calera y Chozas	A-5	Calera y Chozas	Toledo	1,603	CASTILLA-LA MANCHA
-GALP Puerto Lápice I	A-4	Puerto Lapice	Ciudad Real	1,601	CASTILLA-LA MANCHA
-GALP Puerto Lápice II	A-4	Puerto Lapice	Ciudad Real	1,601	CASTILLA-LA MANCHA
-ATENOIL Valdepeñas	A-4	La Consolación	Ciudad Real	1,535	CASTILLA-LA MANCHA
-ATENOIL Valdepeñas II MD	A-4	La Consolación	Ciudad Real	1,535	CASTILLA-LA MANCHA
-ALZ El Oliveral	AP-7, A-3	Ribarroja del Turia	Valencia	1,539	COMUNIDAD VALENCIANA
-GALP Ribarroja Del Turia	AP-7, A-3	Ribarroja del Turia	Valencia	1,540	COMUNIDAD VALENCIANA
-GALP Beneixida	N-340	Beneixida	Valencia	1,542	COMUNIDAD VALENCIANA
-GALP Fuente La Higuera	A-35	Fuente La Higuera	Valencia	1,560	COMUNIDAD VALENCIANA
-GALP Fuente La Higuera II	A-35	Fuente La Higuera	Valencia	1,560	COMUNIDAD VALENCIANA
-GALP Torrent I	A-7	Torrent	Valencia	1,589	COMUNIDAD VALENCIANA
-GALP Torrent II	A-7	Torrent	Valencia	1,589	COMUNIDAD VALENCIANA
-GALP El Puig	A-7	El Puig de Santa María	Valencia	1,590	COMUNIDAD VALENCIANA
-GALP Villargordo Cabriel I	A-3	Villargordo del Gabriel	Valencia	1,595	COMUNIDAD VALENCIANA
-GALP Villargordo Cabriel II	A-3	Villargordo del Gabriel	Valencia	1,595	COMUNIDAD VALENCIANA
-GALP Agost - AP7 Dir.Murcia	AP-7	Agost	Alicante	1,616	COMUNIDAD VALENCIANA
-GALP Agost - AP7 Dir.Valencia	AP-7	Agost	Alicante	1,616	COMUNIDAD VALENCIANA
-GALP Elche I	A-70	Torrellano	Alicante	1,593	COMUNIDAD VALENCIANA
-GALP Elche II	A-70	Torrellano	Alicante	1,594	COMUNIDAD VALENCIANA
-GALP San Antonio I	AP-7	Pedreguer	Alicante	1,595	COMUNIDAD VALENCIANA
-GALP San Antonio II	AP-7	Pedreguer	Alicante	1,595	COMUNIDAD VALENCIANA
-ENI La Ribera Norte	AP-7	Ribera de Cabanes	Castellón	1,546	COMUNIDAD VALENCIANA
-ENI La Ribera Sur (Dir Valencia)	AP-7	Ribera de Cabanes	Castellón	1,546	COMUNIDAD VALENCIANA
-GALP La Plana I	AP-7	Burriana	Castellón	1,598	COMUNIDAD VALENCIANA
-GALP La Plana II	AP-7	Burriana	Castellón	1,598	COMUNIDAD VALENCIANA
-GHC Ganesha Combustibles	A-3	Madrid	Madrid	1,543	COMUNIDAD DE MADRID
-VALCARCE Torrejón de Ardoz	M-206	Torrejón de Ardoz	Madrid	1,541	COMUNIDAD DE MADRID
-GALP Alcalá Henares I	A-2	Alcalá de Henares	Madrid	1,596	COMUNIDAD DE MADRID
-GALP Alcalá Henares II	A-2	Alcalá de Henares	Madrid	1,596	COMUNIDAD DE MADRID
-GALP Parla	A-42	Parla	Madrid	1,617	COMUNIDAD DE MADRID
-ATENOIL Parla II	M-408	Parla	Madrid	1,535	COMUNIDAD DE MADRID
-GALP Pinto - Eboli I	M-506	Pinto	Madrid	1,595	COMUNIDAD DE MADRID
-GALP Pinto - Eboli II	M-506	Pinto	Madrid	1,595	COMUNIDAD DE MADRID
-GALP Perales De Tajuña	A-3, N-III	Perales De Tajuña	Madrid	1,597	COMUNIDAD DE MADRID
-ENI San Sebastián de los Reyes I MD	A-1	San Sebastian de los Reyes	Madrid	1,535	COMUNIDAD DE MADRID
-ENI San Sebastián de los Reyes II MI	N-1	Fuente del Fresno	Madrid	1,535	COMUNIDAD DE MADRID
-GALP S.S.de los Reyes-Jarama	A-1	San Sebastián de los Reyes	Madrid	1,596	COMUNIDAD DE MADRID
-AVIA Castillo Benavente	A-6	Benavente	Zamora	1,625	CASTILLA Y LEÓN
-AVIA Castillo El Burgo	A-231	El Burgo Ranero	León	1,617	CASTILLA Y LEÓN
-GALP Villadangos - Dir. Astorga	N-120	Villadangos del Paramo	León	1,680	CASTILLA Y LEÓN
-VALCARCE Aranda	N-1	Aranda de Duero	Burgos	1,619	CASTILLA Y LEÓN
-BEROIL Estépar	N-620	Estépar	Burgos	1,636	CASTILLA Y LEÓN
-BEROIL Miranda de Ebro	AP-1	Miranda de Ebro	Burgos	1,636	CASTILLA Y LEÓN
-GALP Villatoro	N-627	Burgos	Burgos	1,675	CASTILLA Y LEÓN
-GALP Sarracín I	A-1	Sarracín	Burgos	1,675	CASTILLA Y LEÓN
-GALP Sarracín II	A-1	Sarracín	Burgos	1,675	CASTILLA Y LEÓN
-GALP Los Balbases	A-62	Los Balbases	Burgos	1,677	CASTILLA Y LEÓN
-Bernal	A-62	Aldehuela de la Bóveda	Salamanca	1,599	CASTILLA Y LEÓN
-GALP Aldehuela de la Bóveda	A-62	Aldehuela de la Bóveda	Salamanca	1,683	CASTILLA Y LEÓN
-GALP Villacastín Dir. Coruña	N-6	Villacastin	Segovia	1,598	CASTILLA Y LEÓN
-GALP Villacastín Dir. Madrid	N-6	Villacastin	Segovia	1,598	CASTILLA Y LEÓN
-GALP Martin Muñoz de la Dehesa-Arevalo	A-6	Martín Muñoz de la Dehesa	Segovia	1,619	CASTILLA Y LEÓN
-GALP Medina Del Campo	A-6	Medina del Campo	Valladolid	1,675	CASTILLA Y LEÓN
-San Lamberto	A-2	Zaragoza	Zaragoza	1,538	ARAGÓN
-ALFA ENERGY Alfajarín	AP-2, N-II	Alfajarín	Zaragoza	1,547	ARAGÓN
-HAFESA OIL Cadrete	N-330	Cadrete	Zaragoza	1,547	ARAGÓN
-AVIA Gallur	N-232	Gallur	Zaragoza	1,543	ARAGÓN
-PETROBIL Valdeherrera	A-202	Calatayud	Zaragoza	1,545	ARAGÓN
-GALP Zaragoza I	A-2	La Muela	Zaragoza	1,599	ARAGÓN
-GALP Zaragoza II	A-2	La Muela	Zaragoza	1,599	ARAGÓN
-GALP Monegros I	AP-2	Candasnos	Huesca	1,600	ARAGÓN
-GALP Monegros II	AP-2	Candasnos	Huesca	1,600	ARAGÓN
-ANDAMUR La Junquera	AP-7, N-II	La Junquera	Girona	1,603	CATALUÑA
-ANDAMUR La Junquera-Llers	AP-7, N-II	Llers	Girona	1,603	CATALUÑA
-GM FUEL Servei Carrer 3	B-10	Barcelona	Barcelona	1,547	CATALUÑA
-Renova Oil Incoenergy	N-230	Torrefarrera	Lérida	1,554	CATALUÑA
-NIEVES Lérida	N-II	Lérida	Lérida	1,695	CATALUÑA
-NIEVES Parets	N-152	Parets del Valles	Barcelona	1,660	CATALUÑA
-GALP El Prat de Llobregat-Vertix	C-31	El Prat de Llobregat	Barcelona	1,583	CATALUÑA
-GALP Molins de Rei	B-23	Molins de Rei	Barcelona	1,583	CATALUÑA
-GALP Granollers	BP-5002	Granollers	Barcelona	1,608	CATALUÑA
-GALP Porta de Barcelona Sur	AP-7	Castellbisbal	Barcelona	1,584	CATALUÑA
-GM FUEL La Gornal	N-340	Castellet i Gonal	Barcelona	1,536	CATALUÑA
-PRIMER Area Truck Service	C-153	Vic	Barcelona	1,541	CATALUÑA
-GALP Barcelona	B-10	Barcelona	Barcelona	1,583	CATALUÑA
-GALP El Bruc	A-2	El Bruc	Barcelona	1,584	CATALUÑA
-NIEVES Sesrovires	AP-7, A2	Sant Esteve de Sesrovires	Barcelona	1,635	CATALUÑA
-NIEVES Zona Franca	B-10	Barcelona	Barcelona	1,635	CATALUÑA
-GALP Gironès Norte	AP-7	Aiguaviva	Girona	1,642	CATALUÑA
-GALP Gironès Sur	AP-7	Riudellots de la Selva	Girona	1,642	CATALUÑA
-GALP Jonquera - Tramuntana	N-II	La Junquera	Girona	1,646	CATALUÑA
-GM FUEL Coma-Ruga	N-340	Masos de Comarruga	Tarragona	1,538	CATALUÑA
-GALP Alt Camp I	AP-2	Rodonya	Tarragona	1,586	CATALUÑA
-GALP Alt Camp II	AP-2	Rodonya	Tarragona	1,586	CATALUÑA
-ALAS Hospitalet De L'Infant	N-340	L'Hospitalet De L'Infant	Tarragona	1,541	CATALUÑA
-ALAS Vila-Seca	AP-7	Vila-Seca	Tarragona	1,544	CATALUÑA
-ALAS Constantí	C-14	Constantí	Tarragona	1,544	CATALUÑA
-ALAS L'Ametlla de Mar	N-340	L'Ametlla de Mar	Tarragona	1,564	CATALUÑA
-ANDAMUR Pamplona	AP15, N-121-A	Imárcoain	Navarra	1,614	NAVARRA
-NOIL Bera de Bidasoa	N-121-A	Bera	Navarra	1,597	NAVARRA
-EUROCAM Tudela	A-68	Tudela	Navarra	1,592	NAVARRA
-EUROCAM Pamplona-Agustinos	AP-15	Pamplona	Navarra	1,598	NAVARRA
-GALP Ziordia	A-1	Ziordia	Navarra	1,665	NAVARRA
-GALP Alsasua Dir. Madrid	A-1	Altsasu Alsasu	Navarra	1,642	NAVARRA
-GALP Alsasua Dir. Irún	A-1	Altsasu Alsasu	Navarra	1,665	NAVARRA
-ANDAMUR San Román - Araia	A-1	San Román de San Millán	Álava	1,605	PAIS VASCO
-Merkaoil	AP-8, GI-2638	Lezo	Guipúzcoa	1,592	PAIS VASCO
-Gexa	AP-8, GI-636	Oiartzun	Guipúzcoa	1,597	PAIS VASCO
-EUROCAM Nanclares de Oca	A-1	Nanclares de la Oca	Álava	1,592	PAIS VASCO
-GALP Irún	A-15, NA-700	Irun	Guipúzcoa	1,668	PAIS VASCO
-GALP Lasarte	A-1	Lasarte	Guipúzcoa	1,666	PAIS VASCO
-EUROCAM Logroño	AP-68	Logroño	La Rioja	1,599	LA RIOJA
-BEROIL San Asensio	N-232	San Asensio	La Rioja	1,636	LA RIOJA
-Empresoil	A-8	Gijón	Asturias	1,621	ASTURIAS
-GALP De la Vega I	A-8	Posada de Llanes	Asturias	1,687	ASTURIAS
-GALP De la Vega II	A-8	Posada de Llanes	Asturias	1,687	ASTURIAS
-Cetanoil	LC-221	Cecebre	A Coruña	1,617	GALICIA
-GALP Guitiriz I	A-6	Guitiriz	Lugo	1,668	GALICIA
-GALP Guitiriz II	A-6	Guitiriz	Lugo	1,668	GALICIA
-GALP Monforte de Lemos	N-120, LU-933	Monforte de Lemos	Lugo	1,684	GALICIA
-GALP Barbadanes - Dir. Celanova	OU-540	Barbadas	Ourense	1,678	GALICIA
-El Sol	A-55, N-550	Mos	Pontevedra	1,618	GALICIA
-Sertuy	A-55, N-550	Guillarey	Pontevedra	1,623	GALICIA
-GALP Meis	AG-41	Meis (San Martin)	Pontevedra	1,698	GALICIA
-GALP Silleda	AP-53	Silleda	Pontevedra	1,674	GALICIA`;
-
-const COORDS = {
-  "La Junquera|Girona": [42.4192, 2.8726],
-  "Llers|Girona": [42.3800, 2.8500],
-  "Barcelona|Barcelona": [41.3851, 2.1734],
-  "Parets del Valles|Barcelona": [41.5680, 2.2270],
-  "Torrefarrera|Lérida": [41.6985, 0.6485],
-  "Imárcoain|Navarra": [42.7580, -1.6130],
-  "San Román de San Millán|Álava": [42.8500, -2.5500],
-  "Lezo|Guipúzcoa": [43.3270, -1.8900],
-  "Nanclares de la Oca|Álava": [42.8580, -2.9580],
-  "Oiartzun|Guipúzcoa": [43.2960, -1.8680],
-  "Huércal-Overa|Almería": [37.3890, -1.9450],
-  "Guarromán|Jaén": [38.1750, -3.6850],
-  "Valencina de la Concepción|Sevilla": [37.4150, -6.0700],
-  "Alcalá de Guadaira|Sevilla": [37.3380, -5.8480],
-  "La Campana|Sevilla": [37.5620, -5.4090],
-  "Salteras|Sevilla": [37.4380, -6.1950],
-  "Écija|Sevilla": [37.5430, -5.0830],
-  "El Ejido|Almería": [36.7780, -2.8090],
-  "Huetor Tajar|Granada": [37.2060, -4.0430],
-  "Láchar|Granada": [37.2120, -3.9790],
-  "Gor|Granada": [37.3820, -2.9670],
-  "Darro|Granada": [37.3500, -3.1500],
-  "Los Barrios|Cadiz": [36.1900, -5.5070],
-  "Los Barrios|Cádiz": [36.1900, -5.5070],
-  "Jerez de la Frontera|Cádiz": [36.6850, -6.1360],
-  "Puerto Real|Cádiz": [36.5260, -6.1920],
-  "Benamejí|Córdoba": [37.2680, -4.5500],
-  "Gibraleón|Huelva": [37.3840, -6.9700],
-  "Rosal de la Frontera|Huelva": [37.9870, -7.2180],
-  "Moguer|Huelva": [37.2730, -6.8390],
-  "Estepona|Málaga": [36.4270, -5.1460],
-  "Humilladero|Málaga": [37.1060, -4.6970],
-  "Málaga|Málaga": [36.7213, -4.4214],
-  "Dos Hermanas|Sevilla": [37.2960, -5.9230],
-  "Los Palacios y Villafranca|Sevilla": [37.1600, -5.9280],
-  "Lorca|Murcia": [37.6710, -1.7040],
-  "Totana|Murcia": [37.7700, -1.5010],
-  "Molina de Segura|Murcia": [38.0580, -1.2130],
-  "Ceuti|Murcia": [38.0820, -1.2660],
-  "San Javier|Murcia": [37.8060, -0.8350],
-  "Mérida|Badajoz": [38.9170, -6.3420],
-  "Badajoz|Badajoz": [38.8794, -6.9706],
-  "Cáceres|Cáceres": [39.4752, -6.3724],
-  "Peraleda de la Mata|Cáceres": [39.8460, -5.5000],
-  "Torremocha del Campo|Guadalajara": [40.9820, -2.5090],
-  "Villarubio|Cuenca": [39.9600, -2.9300],
-  "Tébar|Cuenca": [39.6630, -2.1960],
-  "Castillo de Garcimuñoz|Cuenca": [39.7180, -2.3390],
-  "El Casar de Talavera|Toledo": [39.9150, -4.7080],
-  "Calera y Chozas|Toledo": [39.8970, -5.1180],
-  "Puerto Lapice|Ciudad Real": [39.3120, -3.4670],
-  "La Consolación|Ciudad Real": [38.7500, -3.3500],
-  "Ribarroja del Turia|Valencia": [39.5360, -0.5980],
-  "Beneixida|Valencia": [39.0730, -0.4670],
-  "Fuente La Higuera|Valencia": [38.8260, -0.8890],
-  "Torrent|Valencia": [39.4340, -0.4670],
-  "El Puig de Santa María|Valencia": [39.5830, -0.2880],
-  "Villargordo del Gabriel|Valencia": [39.4720, -1.6470],
-  "Agost|Alicante": [38.4380, -0.6580],
-  "Torrellano|Alicante": [38.2670, -0.6800],
-  "Pedreguer|Alicante": [38.7830, 0.0440],
-  "Ribera de Cabanes|Castellón": [40.1610, 0.1440],
-  "Burriana|Castellón": [39.8870, -0.0680],
-  "Madrid|Madrid": [40.4168, -3.7038],
-  "Torrejón de Ardoz|Madrid": [40.4590, -3.4790],
-  "Alcalá de Henares|Madrid": [40.4817, -3.3636],
-  "Parla|Madrid": [40.2390, -3.7680],
-  "Pinto|Madrid": [40.2490, -3.6940],
-  "Perales De Tajuña|Madrid": [40.2540, -3.3630],
-  "San Sebastian de los Reyes|Madrid": [40.5490, -3.6270],
-  "Fuente del Fresno|Madrid": [40.5490, -3.6470],
-  "San Sebastián de los Reyes|Madrid": [40.5490, -3.6270],
-  "Benavente|Zamora": [42.0010, -5.6780],
-  "El Burgo Ranero|León": [42.4190, -5.2240],
-  "Villadangos del Paramo|León": [42.5270, -5.7720],
-  "Aranda de Duero|Burgos": [41.6680, -3.6900],
-  "Estépar|Burgos": [42.3400, -3.7680],
-  "Miranda de Ebro|Burgos": [42.6880, -2.9450],
-  "Burgos|Burgos": [42.3439, -3.6969],
-  "Sarracín|Burgos": [42.2940, -3.6500],
-  "Los Balbases|Burgos": [42.1820, -3.8820],
-  "Aldehuela de la Bóveda|Salamanca": [40.9500, -6.1120],
-  "Villacastin|Segovia": [40.7630, -4.4220],
-  "Martín Muñoz de la Dehesa|Segovia": [40.9480, -4.5930],
-  "Medina del Campo|Valladolid": [41.3100, -4.9140],
-  "Zaragoza|Zaragoza": [41.6488, -0.8891],
-  "Alfajarín|Zaragoza": [41.6730, -0.7270],
-  "Cadrete|Zaragoza": [41.5830, -0.9700],
-  "Gallur|Zaragoza": [41.8680, -1.3180],
-  "Calatayud|Zaragoza": [41.3540, -1.6440],
-  "La Muela|Zaragoza": [41.5950, -1.0970],
-  "Candasnos|Huesca": [41.5080, 0.0260],
-  "Aiguaviva|Girona": [41.8760, 2.8120],
-  "Riudellots de la Selva|Girona": [41.8940, 2.7980],
-  "Lérida|Lérida": [41.6176, 0.6200],
-  "El Prat de Llobregat|Barcelona": [41.3270, 2.0960],
-  "Molins de Rei|Barcelona": [41.4130, 1.9940],
-  "Granollers|Barcelona": [41.6070, 2.2870],
-  "Castellbisbal|Barcelona": [41.4680, 1.9780],
-  "Castellet i Gonal|Barcelona": [41.2530, 1.6690],
-  "Vic|Barcelona": [41.9300, 2.2540],
-  "El Bruc|Barcelona": [41.5810, 1.7330],
-  "Sant Esteve de Sesrovires|Barcelona": [41.4560, 1.8640],
-  "Masos de Comarruga|Tarragona": [41.1640, 1.5340],
-  "Rodonya|Tarragona": [41.2530, 1.3920],
-  "L'Hospitalet De L'Infant|Tarragona": [40.9760, 0.9090],
-  "Vila-Seca|Tarragona": [41.1100, 1.1390],
-  "Constantí|Tarragona": [41.1490, 1.1640],
-  "L'Ametlla de Mar|Tarragona": [40.8810, 0.7850],
-  "Bera|Navarra": [43.2720, -1.7020],
-  "Tudela|Navarra": [42.0570, -1.6060],
-  "Pamplona|Navarra": [42.8125, -1.6458],
-  "Ziordia|Navarra": [42.8710, -2.2760],
-  "Altsasu Alsasu|Navarra": [42.8990, -2.1810],
-  "Irun|Guipúzcoa": [43.3390, -1.7890],
-  "Lasarte|Guipúzcoa": [43.2710, -2.0170],
-  "Logroño|La Rioja": [42.4627, -2.4450],
-  "San Asensio|La Rioja": [42.5270, -2.8190],
-  "Gijón|Asturias": [43.5322, -5.6611],
-  "Posada de Llanes|Asturias": [43.4100, -4.7320],
-  "Cecebre|A Coruña": [43.2260, -8.3350],
-  "Guitiriz|Lugo": [43.1840, -7.8750],
-  "Monforte de Lemos|Lugo": [42.5240, -7.5190],
-  "Barbadas|Ourense": [42.2970, -7.8840],
-  "Mos|Pontevedra": [42.1610, -8.5640],
-  "Guillarey|Pontevedra": [42.2050, -8.5980],
-  "Meis (San Martin)|Pontevedra": [42.5020, -8.6680],
-  "Silleda|Pontevedra": [42.6970, -8.2380]
-};
-
-// ── STATE ─────────────────────────────────────────────────────────────────────
-let stations = [];
-let markers = {};
-let map;
-let activeZone = 'TODAS';
-let selectedId = null;
-
-function parseRaw(raw) {
-  const lines = raw.trim().split('\n');
-  const result = [];
-  lines.forEach((line, idx) => {
-    const parts = line.split('\t');
-    if (parts.length >= 5) {
-      const name = parts[0].trim();
-      const via = parts[1].trim();
-      const localidad = parts[2].trim();
-      const provincia = parts[3].trim();
-      const priceStr = parts[4].trim().replace(',', '.');
-      const zone = parts[5] ? parts[5].trim() : 'OTRAS';
-      const price = parseFloat(priceStr);
-      if (isNaN(price)) return;
-      const key = `${localidad}|${provincia}`;
-      let coords = COORDS[key] || null;
-      if (!coords) {
-        const fallback = Object.keys(COORDS).find(k => k.startsWith(localidad + '|'));
-        coords = fallback ? COORDS[fallback] : null;
-      }
-      const jitter = () => (Math.random() - 0.5) * 0.008;
-      result.push({
-        id: idx,
-        name, via, localidad, provincia, price, zone,
-        lat: coords ? coords[0] + jitter() : null,
-        lng: coords ? coords[1] + jitter() : null
-      });
-    }
-  });
-  return result;
-}
-
-function priceClass(price, min, max) {
-  const range = max - min;
-  if (range === 0) return 'mid';
-  const pct = (price - min) / range;
-  if (pct < 0.33) return 'cheap';
-  if (pct < 0.66) return 'mid';
-  return 'exp';
-}
-
-function getMinMax() {
-  const prices = stations.map(s => s.price);
-  return { min: Math.min(...prices), max: Math.max(...prices) };
-}
-
-function makeMarkerIcon(cls) {
-  const colors = { cheap: '#22c55e', mid: '#eab308', exp: '#ef4444' };
-  const c = colors[cls] || '#f97316';
-  return L.divIcon({
-    className: '',
-    html: `<svg width="20" height="28" viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg">
-      <path d="M10 0C4.477 0 0 4.477 0 10c0 7.18 10 18 10 18s10-10.82 10-18C20 4.477 15.523 0 10 0z" fill="${c}" opacity="0.95"/>
-      <circle cx="10" cy="10" r="4" fill="white" opacity="0.9"/>
-    </svg>`,
-    iconSize: [20, 28],
-    iconAnchor: [10, 28],
-    popupAnchor: [0, -28]
-  });
-}
-
+// ── ZONES ─────────────────────────────────────────────────────────────────────
 function buildZones() {
-  const zones = ['TODAS', ...new Set(stations.map(s => s.zone))].sort((a, b) => a === 'TODAS' ? -1 : a.localeCompare(b));
+  const base = activeRoute ? filteredStations(true) : stations;
+  const zones = ['TODAS',...new Set(base.map(s=>s.zone))].sort((a,b)=>a==='TODAS'?-1:a.localeCompare(b));
   const container = document.getElementById('zoneFilters');
   container.innerHTML = '';
   zones.forEach(z => {
-    const btn = document.createElement('button');
-    btn.className = 'filter-btn' + (z === activeZone ? ' active' : '');
-    btn.textContent = z;
-    btn.onclick = () => { activeZone = z; buildZones(); renderList(); updateMarkers(); };
+    const btn=document.createElement('button');
+    btn.className='filter-btn'+(z===activeZone?' active':'');
+    btn.textContent=z;
+    btn.onclick=()=>{ activeZone=z; buildZones(); renderList(); updateMarkers(); };
     container.appendChild(btn);
   });
 }
 
-function filteredStations() {
-  const q = document.getElementById('searchBox').value.toLowerCase();
+function filteredStations(skipZone=false) {
+  const q=document.getElementById('searchBox').value.toLowerCase().trim();
   return stations.filter(s => {
-    const matchZone = activeZone === 'TODAS' || s.zone === activeZone;
-    const matchQ = !q || s.name.toLowerCase().includes(q) || s.localidad.toLowerCase().includes(q) || s.via.toLowerCase().includes(q) || s.provincia.toLowerCase().includes(q);
-    const matchRoute = !activeRoute || (ROUTE_STATION_FILTER[activeRoute] || []).includes(`${s.localidad}|${s.provincia}`);
-    return matchZone && matchQ && matchRoute;
+    const mZ=skipZone||activeZone==='TODAS'||s.zone===activeZone;
+    const mQ=!q||s.name.toLowerCase().includes(q)||s.localidad.toLowerCase().includes(q)||s.provincia.toLowerCase().includes(q)||s.via.toLowerCase().includes(q)||(s.cp&&s.cp.includes(q));
+    const mR=!activeRoute||stationMatchesRoute(s,activeRoute);
+    return mZ&&mQ&&mR;
   });
 }
 
 function sortedStations(list) {
-  const sort = document.getElementById('sortSelect').value;
-  return [...list].sort((a, b) => {
-    if (sort === 'price_asc') return a.price - b.price;
-    if (sort === 'price_desc') return b.price - a.price;
-    if (sort === 'name_asc') return a.name.localeCompare(b.name);
-    if (sort === 'zone_asc') return a.zone.localeCompare(b.zone) || a.price - b.price;
+  const sort=document.getElementById('sortSelect').value;
+  return [...list].sort((a,b)=>{
+    if (sort==='price_asc') { const pa=(a.priceData&&a.priceData.best)||a.price||99, pb=(b.priceData&&b.priceData.best)||b.price||99; return pa-pb; }
+    if (sort==='price_desc') { const pa=(a.priceData&&a.priceData.best)||a.price||0, pb=(b.priceData&&b.priceData.best)||b.price||0; return pb-pa; }
+    if (sort==='name_asc') return a.name.localeCompare(b.name);
+    if (sort==='zone_asc') return a.zone.localeCompare(b.zone)||((a.priceData&&a.priceData.best||a.price||99)-(b.priceData&&b.priceData.best||b.price||99));
     return 0;
   });
 }
 
+// ── RENDER ────────────────────────────────────────────────────────────────────
 function renderList() {
-  const { min, max } = getMinMax();
-  const list = sortedStations(filteredStations());
-  const container = document.getElementById('stationList');
-  container.innerHTML = '';
-  document.getElementById('totalBadge').textContent = `${list.length} estaciones`;
+  const list=sortedStations(filteredStations());
+  const container=document.getElementById('stationList');
+  container.innerHTML='';
+  document.getElementById('totalBadge').textContent=`${list.length} estaciones`;
 
-  if (list.length) {
-    const prices = list.map(s => s.price);
-    const avg = (prices.reduce((a,b) => a+b,0) / prices.length).toFixed(3).replace('.',',');
-    const lo = Math.min(...prices).toFixed(3).replace('.',',');
-    const hi = Math.max(...prices).toFixed(3).replace('.',',');
-    document.getElementById('statsRow').innerHTML = `
-      <div class="stat-chip"><div class="sv green">${lo}</div><div class="sl">Mínimo €/l</div></div>
+  const withP=list.filter(s=>s.priceData&&s.priceData.best);
+  if (withP.length) {
+    const bp=withP.map(s=>s.priceData.best), pp=list.filter(s=>s.price).map(s=>s.price);
+    const lo=Math.min(...bp).toFixed(3).replace('.',','), avg=(bp.reduce((a,b)=>a+b,0)/bp.length).toFixed(3).replace('.',',');
+    const hiPump=pp.length?Math.max(...pp).toFixed(3).replace('.',','):'—';
+    document.getElementById('statsRow').innerHTML=`
+      <div class="stat-chip"><div class="sv green">${lo}</div><div class="sl">Mín mejor €/l</div></div>
       <div class="stat-chip"><div class="sv yellow">${avg}</div><div class="sl">Media €/l</div></div>
-      <div class="stat-chip"><div class="sv red">${hi}</div><div class="sl">Máximo €/l</div></div>
-    `;
+      <div class="stat-chip"><div class="sv red">${hiPump}</div><div class="sl">Máx surtidor €/l</div></div>`;
   }
 
-  if (!list.length) {
-    container.innerHTML = '<div class="no-results">Sin resultados</div>';
-    return;
-  }
+  if (!list.length) { container.innerHTML='<div class="no-results">Sin resultados</div>'; return; }
 
-  let lastZone = null;
-  const sort = document.getElementById('sortSelect').value;
+  const displayList=list.slice(0,LIST_MAX);
+  let lastZone=null;
+  const sort=document.getElementById('sortSelect').value;
 
-  list.forEach(s => {
-    if (sort === 'zone_asc' && s.zone !== lastZone) {
-      const h = document.createElement('div');
-      h.className = 'zone-header';
-      h.textContent = s.zone;
-      container.appendChild(h);
-      lastZone = s.zone;
+  displayList.forEach(s => {
+    if (sort==='zone_asc'&&s.zone!==lastZone) {
+      const h=document.createElement('div'); h.className='zone-header'; h.textContent=s.zone;
+      container.appendChild(h); lastZone=s.zone;
     }
-    const cls = priceClass(s.price, min, max);
-    const card = document.createElement('div');
-    card.className = 'station-card' + (s.id === selectedId ? ' selected' : '');
-    card.dataset.id = s.id;
-    card.innerHTML = `
+    const p=s.priceData, bp=(p&&p.best!=null)?p.best:s.price, cls=priceClass(bp);
+    const inPlan=routePlan.includes(s.id);
+    const card=document.createElement('div');
+    card.className='station-card'+(s.id===selectedId?' selected':'')+(inPlan?' in-plan':'');
+    card.dataset.id=s.id;
+    card.innerHTML=`
+      <div class="brand-dot" style="background:${getBrandColor(s.brandType)}"></div>
       <div class="station-info">
         <div class="station-name">${s.name}</div>
-        <div class="station-meta">${s.via} · ${s.localidad}, ${s.provincia}</div>
+        <div class="station-meta">${s.via?s.via+' · ':''}${s.localidad}, ${s.provincia}</div>
         <div class="station-zone">${s.zone}</div>
       </div>
-      <div class="price-badge ${cls}">${s.price.toFixed(3).replace('.',',')} €</div>
+      <div class="price-badge ${cls}">${bp!=null?bp.toFixed(3).replace('.',','):'—'}<span class="pb-label">${p&&p.bestLabel?p.bestLabel:''}</span></div>
+      <button class="btn-add-plan${inPlan?' in-plan':''}" onclick="event.stopPropagation();togglePlanFromCard(${s.id})" title="${inPlan?'Quitar de ruta':'Añadir a ruta'}">${inPlan?'✓':'+'}</button>
     `;
-    card.onclick = () => selectStation(s.id);
+    card.onclick=()=>selectStation(s.id);
     container.appendChild(card);
+  });
+
+  if (list.length>LIST_MAX) {
+    const ov=document.createElement('div'); ov.className='list-overflow';
+    ov.textContent=`Mostrando ${LIST_MAX} de ${list.length} · Busca para filtrar`;
+    container.appendChild(ov);
+  }
+}
+
+function makePopupHtml(s) {
+  const p=s.priceData;
+  const pClass=p&&p.best?priceClass(p.best):'mid';
+  const pColor=pClass==='cheap'?'var(--green)':pClass==='mid'?'var(--yellow)':'var(--red)';
+
+  // Ahorro psicológico
+  let savingsHtml='';
+  if (p && p.best!=null && p.surtidor!=null) {
+    const savingsPerL = p.surtidor - p.best;
+    if (savingsPerL > 0.001) {
+      const tankL = getTankL();
+      const savingsTotal = (savingsPerL * tankL).toFixed(2);
+      savingsHtml=`<span class="popup-savings">💰 Ahorras ${savingsTotal}€ en ${tankL}L</span>`;
+    }
+  }
+
+  let compareHtml='';
+  if (p) {
+    const rows=[];
+    rows.push(`<tr><td>⛽ Surtidor</td><td class="pc-price">${fmtPrice(p.surtidor)}</td></tr>`);
+    if (p.galp!=null) {
+      const isBest=p.bestLabel==='Tarjeta Galp';
+      rows.push(`<tr${isBest?' class="pc-best"':''}><td>${isBest?'🏆 ':''}Tarjeta Galp <span style="font-size:10px;color:var(--muted)">(-${GALP_DISCOUNT.toFixed(2)}€)</span></td><td class="pc-price">${fmtPrice(p.galp)}</td></tr>`);
+    }
+    if (p.solred!=null&&p.galp==null) {
+      const isBest=p.bestLabel==='Tarjeta Solred';
+      rows.push(`<tr${isBest?' class="pc-best"':''}><td>${isBest?'🏆 ':''}Tarjeta Solred</td><td class="pc-price">${fmtPrice(p.solred)}</td></tr>`);
+    }
+    if (p.andamur!=null) rows.push(`<tr><td>Andamur</td><td class="pc-price">${fmtPrice(p.andamur)}</td></tr>`);
+    if (p.andamurNearby) {
+      const d=p.andamurNearby.distM<1000?`${Math.round(p.andamurNearby.distM)}m`:`${(p.andamurNearby.distM/1000).toFixed(1)}km`;
+      const isBest=p.bestLabel==='Andamur cercano';
+      rows.push(`<tr${isBest?' class="pc-best"':''}><td>${isBest?'🏆 ':''}Andamur (${d})</td><td class="pc-price">${fmtPrice(p.andamurNearby.price)}</td></tr>`);
+    }
+    compareHtml=`
+      <table class="popup-compare">
+        <thead><tr><th>Opción de pago</th><th>€/l</th></tr></thead>
+        <tbody>${rows.join('')}</tbody>
+      </table>
+      ${p.bestLabel?`<div class="popup-best"><span class="popup-best-label">✅ Mejor: ${p.bestLabel}</span> · ${fmtPrice(p.best)}${savingsHtml}</div>`:''}
+    `;
+  }
+
+  const inPlan=routePlan.includes(s.id);
+  const sourceNote=s.fromApi?`<div class="popup-api-note">Precio en tiempo real · API MINETUR</div>`:`<div class="popup-api-note">Precio local</div>`;
+
+  return `
+    <div class="popup-inner">
+      <div class="popup-name">${s.name}</div>
+      ${p&&p.surtidor?`<div class="popup-price" style="color:${pColor}">${fmtPrice(p.surtidor)}</div>`:''}
+      <div class="popup-row"><b>Dir:</b> ${s.via||'—'}</div>
+      <div class="popup-row"><b>Localidad:</b> ${s.localidad}, ${s.provincia}${s.cp?' ('+s.cp+')':''}</div>
+      ${sourceNote}
+      ${compareHtml}
+      <a href="https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}" target="_blank" rel="noopener" class="popup-gmaps">📍 Ver en Google Maps</a>
+      <button onclick="togglePlanFromPopup(${s.id})" class="popup-add-route${inPlan?' in-plan':''}" id="rppBtn-${s.id}">${inPlan?'✓ En ruta de repostaje':'+ Añadir a ruta de repostaje'}</button>
+    </div>
+  `;
+}
+
+function makeMarkerIcon(cls) {
+  const colors={cheap:'#22c55e',mid:'#eab308',exp:'#ef4444'};
+  const c=colors[cls]||'#f97316';
+  return L.divIcon({
+    className:'',
+    html:`<svg width="20" height="28" viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg"><path d="M10 0C4.477 0 0 4.477 0 10c0 7.18 10 18 10 18s10-10.82 10-18C20 4.477 15.523 0 10 0z" fill="${c}" opacity="0.95"/><circle cx="10" cy="10" r="4" fill="white" opacity="0.9"/></svg>`,
+    iconSize:[20,28], iconAnchor:[10,28], popupAnchor:[0,-30]
   });
 }
 
 function selectStation(id) {
-  selectedId = id;
-  const s = stations.find(x => x.id === id);
-  if (!s) return;
+  selectedId=id;
+  const s=stations.find(x=>x.id===id); if(!s) return;
   renderList();
-  if (s.lat && map) {
-    map.setView([s.lat, s.lng], 12, { animate: true });
-    if (markers[id]) markers[id].openPopup();
-  }
+  if (s.lat&&map) { map.setView([s.lat,s.lng],14,{animate:true}); if(markers[id]) markers[id].openPopup(); }
+}
+
+// ── MARKERS + CLUSTER ─────────────────────────────────────────────────────────
+function rebuildMarkers() {
+  clusterGroup.clearLayers();
+  markers={};
+  const visible=new Set(filteredStations().map(s=>s.id));
+  stations.forEach(s => {
+    if (!s.lat) return;
+    const cls=s.priceData&&s.priceData.best?priceClass(s.priceData.best):'mid';
+    const m=L.marker([s.lat,s.lng],{icon:makeMarkerIcon(cls)});
+    // Popup dinámico: se recalcula al abrirse (recoge tank L y plan actuales)
+    m.bindPopup(()=>makePopupHtml(s), {maxWidth:290});
+    m.on('click',()=>{
+      selectedId=s.id; renderList();
+      setTimeout(()=>{ const card=document.querySelector(`[data-id="${s.id}"]`); if(card) card.scrollIntoView({behavior:'smooth',block:'center'}); },150);
+    });
+    markers[s.id]=m;
+    if (visible.has(s.id)) clusterGroup.addLayer(m);
+  });
 }
 
 function updateMarkers() {
-  const { min, max } = getMinMax();
-  const visible = new Set(filteredStations().map(s => s.id));
-  stations.forEach(s => {
-    if (!s.lat || !markers[s.id]) return;
-    if (visible.has(s.id)) {
-      markers[s.id].setIcon(makeMarkerIcon(priceClass(s.price, min, max)));
-      if (!map.hasLayer(markers[s.id])) markers[s.id].addTo(map);
-    } else {
-      if (map.hasLayer(markers[s.id])) map.removeLayer(markers[s.id]);
+  const visible=new Set(filteredStations().map(s=>s.id));
+  const toAdd=[], toRemove=[];
+  stations.forEach(s=>{
+    if (!s.lat||!markers[s.id]) return;
+    const inC=clusterGroup.hasLayer(markers[s.id]);
+    if (visible.has(s.id)&&!inC) toAdd.push(markers[s.id]);
+    else if (!visible.has(s.id)&&inC) toRemove.push(markers[s.id]);
+  });
+  if (toRemove.length) clusterGroup.removeLayers(toRemove);
+  if (toAdd.length) clusterGroup.addLayers(toAdd);
+}
+
+// ── ROUTE PLAN ────────────────────────────────────────────────────────────────
+function toggleRPP() {
+  const panel=document.getElementById('rppPanel'), tab=document.getElementById('rppTab');
+  const open=panel.classList.toggle('open');
+  tab.classList.toggle('panel-open', open);
+}
+
+function togglePlanFromPopup(id) {
+  if (routePlan.includes(id)) {
+    routePlan=routePlan.filter(x=>x!==id);
+  } else {
+    routePlan.push(id);
+    // Abrir panel si no está abierto
+    const panel=document.getElementById('rppPanel');
+    if (!panel.classList.contains('open')) {
+      panel.classList.add('open');
+      document.getElementById('rppTab').classList.add('panel-open');
     }
-  });
+  }
+  renderRoutePlan();
+  // Actualizar botón dentro del popup abierto
+  const btn=document.getElementById(`rppBtn-${id}`);
+  if (btn) {
+    const inPlan=routePlan.includes(id);
+    btn.textContent=inPlan?'✓ En ruta de repostaje':'+ Añadir a ruta de repostaje';
+    btn.classList.toggle('in-plan', inPlan);
+  }
+  renderList();
 }
 
-function rebuildMarkers() {
-  const { min, max } = getMinMax();
-  Object.values(markers).forEach(m => map.removeLayer(m));
-  markers = {};
-  stations.forEach(s => {
-    if (!s.lat) return;
-    const cls = priceClass(s.price, min, max);
-    const m = L.marker([s.lat, s.lng], { icon: makeMarkerIcon(cls) });
-    m.bindPopup(`
-      <div class="popup-inner">
-        <div class="popup-name">${s.name}</div>
-        <div class="popup-price" style="color:${cls==='cheap'?'#22c55e':cls==='mid'?'#eab308':'#ef4444'}">${s.price.toFixed(3).replace('.',',')} €/l</div>
-        <div class="popup-row"><b>Vía:</b> ${s.via}</div>
-        <div class="popup-row"><b>Localidad:</b> ${s.localidad}, ${s.provincia}</div>
-        <div class="popup-row"><b>Zona:</b> ${s.zone}</div>
-        <a href="https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}" target="_blank" rel="noopener" style="display:block;margin-top:8px;background:#1a73e8;color:#fff;text-align:center;padding:5px 8px;border-radius:4px;font-size:12px;font-weight:600;text-decoration:none;">&#128205; Ver en Google Maps</a>
+function togglePlanFromCard(id) {
+  togglePlanFromPopup(id);
+}
+
+function removeFromPlan(id) {
+  routePlan=routePlan.filter(x=>x!==id);
+  renderRoutePlan();
+  renderList();
+}
+
+function clearRoutePlan() {
+  routePlan=[];
+  renderRoutePlan();
+  renderList();
+}
+
+function renderRoutePlan() {
+  const countEl=document.getElementById('rppCount');
+  const badgeEl=document.getElementById('rppTabBadge');
+  const container=document.getElementById('rppStations');
+  countEl.textContent=`${routePlan.length} parada${routePlan.length!==1?'s':''}`;
+  badgeEl.textContent=routePlan.length;
+  badgeEl.classList.toggle('show', routePlan.length>0);
+
+  if (!routePlan.length) {
+    container.innerHTML='<div class="rpp-empty">Sin paradas seleccionadas.<br>Usa <b>+ Añadir a ruta</b> en los popups del mapa.</div>';
+    return;
+  }
+  const tankL=getTankL();
+  container.innerHTML=routePlan.map((id, i) => {
+    const s=stations.find(x=>x.id===id); if(!s) return '';
+    const p=s.priceData;
+    const bestP=p&&p.best?p.best:s.price;
+    const savingsPerL=p&&p.surtidor&&p.best?p.surtidor-p.best:0;
+    const savingsTotal=savingsPerL>0.001?(savingsPerL*tankL).toFixed(2):null;
+    const priceInfo=p&&p.bestLabel?`💳 ${p.bestLabel} · ${fmtPrice(bestP)}${savingsTotal?` · 💰${savingsTotal}€`:''}`:(bestP?fmtPrice(bestP):'');
+    return `
+      <div class="rpp-item">
+        <div class="rpp-item-num">${i+1}</div>
+        <div class="rpp-item-body">
+          <div class="rpp-item-name">${s.name}</div>
+          <div class="rpp-item-meta">${s.via?s.via+' · ':''}${s.localidad}, ${s.provincia}</div>
+          ${priceInfo?`<div class="rpp-item-price">${priceInfo}</div>`:''}
+        </div>
+        <button class="rpp-item-remove" onclick="removeFromPlan(${id})" title="Quitar parada">✕</button>
       </div>
-    `, { maxWidth: 240 });
-    m.on('click', () => {
-      selectedId = s.id;
-      renderList();
-      setTimeout(() => {
-        const card = document.querySelector(`[data-id="${s.id}"]`);
-        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 100);
-    });
-    markers[s.id] = m;
-    m.addTo(map);
-  });
+    `;
+  }).join('');
 }
 
-function updateLastUpdate() {
-  const now = new Date();
-  document.getElementById('lastUpdate').textContent = 'Act: ' + now.toLocaleDateString('es-ES') + ' ' + now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+function generateWhatsApp() {
+  if (!routePlan.length) { showToast('⚠ Añade paradas a la ruta primero'); return; }
+  const planStations=routePlan.map(id=>stations.find(s=>s.id===id)).filter(Boolean);
+  const routeName=(document.getElementById('rppRouteName').value.trim()||'RUTA').toUpperCase();
+  const tankL=getTankL();
+  let text=`🚛 INSTRUCCIONES ADMILOGISTIC - RUTA ${routeName}\n\n`;
+
+  planStations.forEach((s, i) => {
+    const p=s.priceData;
+    const bestP=p&&p.best?p.best:s.price;
+    const bestLabel=p&&p.bestLabel?p.bestLabel:null;
+    const savingsPerL=p&&p.surtidor&&p.best?p.surtidor-p.best:0;
+    const savingsTotal=savingsPerL>0.001?(savingsPerL*tankL).toFixed(2):null;
+    const ordinal=i===0?'1ª':i===1?'2ª':i===2?'3ª':`${i+1}ª`;
+    text+=`📍 ${ordinal} Parada: ${s.name} (${s.via||s.localidad})\n`;
+    text+=`   📌 ${s.localidad}, ${s.provincia}\n`;
+    if (bestLabel) text+=`   💳 Usar Tarjeta: ${bestLabel}\n`;
+    if (bestP!=null) text+=`   💰 Precio Actual: ${fmtPrice(bestP)}${savingsTotal?' (ahorras '+savingsTotal+'€ en '+tankL+'L)':''}\n`;
+    if (s.lat&&s.lng) text+=`   🔗 Google Maps: https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}\n`;
+    text+='\n';
+  });
+
+  // Advertencia: estación más cara del corredor activo
+  const worstStation=getMostExpensiveInCorridor(activeRoute);
+  if (worstStation && !routePlan.includes(worstStation.id)) {
+    text+=`⚠️ Nota: Evitar repostar en ${worstStation.name} (${worstStation.localidad}, ${worstStation.provincia}) · ${fmtPrice(worstStation.price)} surtidor\n\n`;
+  }
+
+  text+=`---\nGenerado con AdmiLogistic Fleet Manager`;
+
+  // Copiar al portapapeles
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(() => showToast('✓ Instrucciones copiadas · Pega en WhatsApp con Ctrl+V', 5000))
+      .catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta=document.createElement('textarea');
+  ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+  document.body.removeChild(ta);
+  showToast('✓ Instrucciones copiadas · Pega en WhatsApp con Ctrl+V', 5000);
 }
 
 // ── MODAL ─────────────────────────────────────────────────────────────────────
-function openModal() {
-  document.getElementById('modalOverlay').classList.add('open');
-  document.getElementById('pasteArea').value = '';
-  document.getElementById('parseResult').className = 'parse-result';
-}
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('open');
-}
+function openModal() { document.getElementById('modalOverlay').classList.add('open'); document.getElementById('pasteArea').value=''; document.getElementById('parseResult').className='parse-result'; }
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
 
 function parseAndUpdate() {
-  const text = document.getElementById('pasteArea').value.trim();
-  if (!text) { showResult('err', 'Campo vacío.'); return; }
-  const newStations = parseFromPaste(text);
-  if (!newStations.length) { showResult('err', 'No se detectaron filas válidas.'); return; }
-  let updated = 0, added = 0;
-  newStations.forEach(ns => {
-    const existing = stations.find(s => s.name.toLowerCase() === ns.name.toLowerCase() && s.localidad.toLowerCase() === ns.localidad.toLowerCase());
-    if (existing) { existing.price = ns.price; updated++; }
-    else { ns.id = stations.length + Math.random(); stations.push(ns); added++; }
+  const text=document.getElementById('pasteArea').value.trim();
+  if (!text) { showResult('err','Campo vacío.'); return; }
+  let updated=0, added=0;
+  text.split('\n').forEach((line,idx)=>{
+    const p=line.split('\t');
+    if (p.length<5) return;
+    const name=p[0].trim(), via=p[1]?p[1].trim():'', localidad=p[2]?p[2].trim():'', provincia=p[3]?p[3].trim():'';
+    const price=parseFloat(p[4].replace(',','.'));
+    const zone=p[5]?p[5].trim():zoneFromProvincia(provincia);
+    if (!name||isNaN(price)||price<0.5||price>4) return;
+    const key=`${localidad}|${provincia}`;
+    let coords=COORDS_FALLBACK[key]||null;
+    if (!coords) { const fb=Object.keys(COORDS_FALLBACK).find(k=>k.startsWith(localidad+'|')); coords=fb?COORDS_FALLBACK[fb]:null; }
+    const j=()=>(Math.random()-0.5)*0.008;
+    const existing=stations.find(s=>s.name.toLowerCase()===name.toLowerCase()&&s.localidad.toLowerCase()===localidad.toLowerCase());
+    if (existing) { existing.price=price; existing.priceData=computePrices(existing); updated++; }
+    else { const ns={id:Date.now()+idx,name,via,localidad,provincia,price,zone,rotulo:name.toUpperCase(),brandType:getBrandType(name),cp:'',fromApi:false,lat:coords?coords[0]+j():null,lng:coords?coords[1]+j():null}; ns.priceData=computePrices(ns); stations.push(ns); added++; }
   });
-  showResult('ok', `✓ ${updated} actualizadas, ${added} nuevas. Total: ${stations.length}`);
-  activeZone = 'TODAS';
-  buildZones();
-  renderList();
-  rebuildMarkers();
-  updateLastUpdate();
-  setTimeout(closeModal, 2000);
-}
-
-function parseFromPaste(text) {
-  const result = [];
-  text.split('\n').forEach((line, idx) => {
-    const parts = line.split('\t');
-    if (parts.length < 5) return;
-    const name = parts[0].trim();
-    const via = parts[1] ? parts[1].trim() : '';
-    const localidad = parts[2] ? parts[2].trim() : '';
-    const provincia = parts[3] ? parts[3].trim() : '';
-    const priceStr = parts[4] ? parts[4].trim().replace(',', '.') : '';
-    const zone = parts[5] ? parts[5].trim() : 'OTRAS';
-    const price = parseFloat(priceStr);
-    if (!name || isNaN(price) || price < 1 || price > 3) return;
-    const key = `${localidad}|${provincia}`;
-    let coords = COORDS[key] || null;
-    if (!coords) {
-      const fallback = Object.keys(COORDS).find(k => k.startsWith(localidad + '|'));
-      coords = fallback ? COORDS[fallback] : null;
-    }
-    const jitter = () => (Math.random() - 0.5) * 0.008;
-    result.push({ id: idx + Date.now(), name, via, localidad, provincia, price, zone,
-      lat: coords ? coords[0] + jitter() : null,
-      lng: coords ? coords[1] + jitter() : null });
-  });
-  return result;
+  if (updated+added===0) { showResult('err','Sin filas válidas. Formato: Nombre\\tVía\\tLocalidad\\tProvincia\\tPrecio'); return; }
+  showResult('ok',`✓ ${updated} actualizadas, ${added} nuevas. Total: ${stations.length}`);
+  updatePriceMinMax(); activeZone='TODAS'; buildZones(); renderList(); rebuildMarkers(); updateLastUpdate();
+  setTimeout(closeModal, 2200);
 }
 
 function showResult(type, msg) {
-  const el = document.getElementById('parseResult');
-  el.className = 'parse-result ' + type;
-  el.textContent = msg;
+  const el=document.getElementById('parseResult'); el.className='parse-result '+type; el.textContent=msg;
 }
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
   buildRoutesList();
-  stations = parseRaw(RAW_DATA);
-  map = L.map('map', { center: [40.4, -3.7], zoom: 6, zoomControl: true });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap © CARTO',
-    subdomains: 'abcd',
-    maxZoom: 19
-  }).addTo(map);
-  buildZones();
-  renderList();
-  rebuildMarkers();
-  updateLastUpdate();
-  document.getElementById('searchBox').addEventListener('input', () => {
-    renderList();
-    updateMarkers();
-  });
+  map=L.map('map',{center:[40.4,-3.7],zoom:6,zoomControl:true});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',subdomains:'abcd',maxZoom:19}).addTo(map);
+  clusterGroup=L.markerClusterGroup({chunkedLoading:true,maxClusterRadius:50,showCoverageOnHover:false});
+  map.addLayer(clusterGroup);
+
+  stations=await loadStations();
+  computeAllPrices();
+  updatePriceMinMax();
+  buildZones(); renderList(); rebuildMarkers(); updateLastUpdate();
+
+  if (dataSource==='api') showToast(`✓ ${stations.length} estaciones · GALP, Repsol, Campsa, Petronor, Andamur`);
+
+  document.getElementById('searchBox').addEventListener('input',()=>{ renderList(); updateMarkers(); });
 });
 </script>
 </body>
