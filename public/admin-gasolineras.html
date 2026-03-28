@@ -376,7 +376,7 @@
     <div class="rpp-empty">Sin paradas seleccionadas.<br>Usa <b>+ Añadir a ruta</b> en los popups del mapa.</div>
   </div>
   <div class="rpp-footer">
-    <button class="btn-whatsapp" onclick="generateWhatsApp()">📲 Copiar instrucciones para WhatsApp</button>
+    <button class="btn-whatsapp" onclick="generateWhatsApp()">📋 Copiar Instrucciones</button>
     <button class="btn-rpp-clear" onclick="clearRoutePlan()">🗑 Limpiar ruta</button>
   </div>
 </div>
@@ -1065,40 +1065,55 @@ function renderRoutePlan() {
   }).join('');
 }
 
+function cardEmoji(bestLabel) {
+  if (!bestLabel) return '';
+  const l=bestLabel.toLowerCase();
+  if (l.includes('galp')) return '🟧 GALP';
+  if (l.includes('andamur')) return '🟦 ANDAMUR';
+  return '🟥 SOLRED';
+}
+
 function generateWhatsApp() {
   if (!routePlan.length) { showToast('⚠ Añade paradas a la ruta primero'); return; }
   const planStations=routePlan.map(id=>stations.find(s=>s.id===id)).filter(Boolean);
   const routeName=(document.getElementById('rppRouteName').value.trim()||'RUTA').toUpperCase();
   const tankL=getTankL();
-  let text=`🚛 INSTRUCCIONES ADMILOGISTIC - RUTA ${routeName}\n\n`;
+  const ordinals=['1ª','2ª','3ª','4ª','5ª','6ª','7ª','8ª','9ª','10ª'];
+  let text=`🚛 PLAN DE REPOSTAJE ADMILOGISTIC\n`;
+  if (routeName!=='RUTA') text+=`📌 RUTA: ${routeName}\n`;
+  text+=`\n`;
 
   planStations.forEach((s, i) => {
     const p=s.priceData;
-    const bestP=p&&p.best?p.best:s.price;
+    const bestP=p&&p.best!=null?p.best:s.price;
     const bestLabel=p&&p.bestLabel?p.bestLabel:null;
     const savingsPerL=p&&p.surtidor&&p.best?p.surtidor-p.best:0;
     const savingsTotal=savingsPerL>0.001?(savingsPerL*tankL).toFixed(2):null;
-    const ordinal=i===0?'1ª':i===1?'2ª':i===2?'3ª':`${i+1}ª`;
-    text+=`📍 ${ordinal} Parada: ${s.name} (${s.via||s.localidad})\n`;
-    text+=`   📌 ${s.localidad}, ${s.provincia}\n`;
-    if (bestLabel) text+=`   💳 Usar Tarjeta: ${bestLabel}\n`;
-    if (bestP!=null) text+=`   💰 Precio Actual: ${fmtPrice(bestP)}${savingsTotal?' (ahorras '+savingsTotal+'€ en '+tankL+'L)':''}\n`;
-    if (s.lat&&s.lng) text+=`   🔗 Google Maps: https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}\n`;
-    text+='\n';
+    const ord=ordinals[i]||`${i+1}ª`;
+    const via=s.via&&s.via.trim()?s.via:s.localidad;
+    text+=`📍 ${ord} PARADA: ${s.name} (${via})\n`;
+    if (bestLabel) text+=`💳 TARJETA: ${cardEmoji(bestLabel)}\n`;
+    if (bestP!=null) {
+      text+=`💰 PRECIO: ${fmtPrice(bestP)} €/L`;
+      if (savingsTotal) text+=` (ahorras ${savingsTotal}€ en ${tankL}L)`;
+      text+=`\n`;
+    }
+    if (s.lat&&s.lng) text+=`🗺️ GPS: https://www.google.com/maps?q=${s.lat},${s.lng}\n`;
+    text+=`\n`;
   });
 
-  // Advertencia: estación más cara del corredor activo
+  text+=`⚠️ Nota: No repostar fuera de estos puntos.\n`;
+
+  // Advertencia extra: estación más cara del corredor activo
   const worstStation=getMostExpensiveInCorridor(activeRoute);
   if (worstStation && !routePlan.includes(worstStation.id)) {
-    text+=`⚠️ Nota: Evitar repostar en ${worstStation.name} (${worstStation.localidad}, ${worstStation.provincia}) · ${fmtPrice(worstStation.price)} surtidor\n\n`;
+    text+=`🚫 Evitar: ${worstStation.name} (${worstStation.localidad}) · ${fmtPrice(worstStation.price)} surtidor\n`;
   }
-
-  text+=`---\nGenerado con AdmiLogistic Fleet Manager`;
 
   // Copiar al portapapeles
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text)
-      .then(() => showToast('✓ Instrucciones copiadas · Pega en WhatsApp con Ctrl+V', 5000))
+      .then(() => showToast('✅ Copiado con éxito · Pega en WhatsApp con Ctrl+V', 4000))
       .catch(() => fallbackCopy(text));
   } else {
     fallbackCopy(text);
@@ -1110,7 +1125,7 @@ function fallbackCopy(text) {
   ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
   document.body.appendChild(ta); ta.select(); document.execCommand('copy');
   document.body.removeChild(ta);
-  showToast('✓ Instrucciones copiadas · Pega en WhatsApp con Ctrl+V', 5000);
+  showToast('✅ Copiado con éxito · Pega en WhatsApp con Ctrl+V', 4000);
 }
 
 // ── MODAL ─────────────────────────────────────────────────────────────────────
