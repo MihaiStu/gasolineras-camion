@@ -147,6 +147,7 @@
   }
   .popup-add-route:hover { border-color:var(--green); color:var(--green); background:rgba(34,197,94,0.06); }
   .popup-add-route.in-plan { border-color:var(--green); color:var(--green); background:rgba(34,197,94,0.1); }
+  .badge-pactado { display:inline-block; background:#1e3a8a; color:#93c5fd; border-radius:3px; padding:1px 5px; font-size:9px; font-family:'Barlow Condensed',sans-serif; font-weight:700; letter-spacing:0.5px; margin-left:5px; vertical-align:middle; }
 
   /* ── ROUTE PLAN PANEL ── */
   .rpp-panel {
@@ -465,6 +466,16 @@ const COORDS_FALLBACK = {
   "Silleda|Pontevedra":[42.6970,-8.2380]
 };
 
+// ── PRECIOS PACTADOS ANDAMUR ─────────────────────────────────────────────────
+// Estos precios son contractuales y tienen prioridad sobre la API del Ministerio.
+// Modifica esta lista para actualizar precios pactados sin tocar la API.
+const ANDAMUR_PACTADOS = [
+  { name:'ANDAMUR La Junquera', via:'AP-7, N-II', localidad:'La Junquera',   provincia:'Girona',  price:1.603 },
+  { name:'ANDAMUR El Límite',   via:'A-7',        localidad:'Huércal-Overa', provincia:'Almería', price:1.560 },
+  { name:'ANDAMUR Guarromán',   via:'A-4',        localidad:'Guarromán',     provincia:'Jaén',    price:1.589 },
+  { name:'ANDAMUR Lorca',       via:'A-7',        localidad:'Lorca',         provincia:'Murcia',  price:1.570 },
+];
+
 const RAW_DATA_FALLBACK = `ANDAMUR La Junquera	AP-7, N-II	La Junquera	Girona	1,603	CATALUÑA
 ANDAMUR El Límite	A-7	Huércal-Overa	Almería	1,560	ANDALUCÍA
 ANDAMUR Guarromán	A-4	Guarromán	Jaén	1,589	ANDALUCÍA
@@ -646,13 +657,44 @@ function parseRawFallback(raw) {
   return result;
 }
 
+// ── FUSIÓN PRECIOS MANUALES ───────────────────────────────────────────────────
+// Aplica ANDAMUR_PACTADOS sobre el array de estaciones:
+// - Si la estación existe en API → sobreescribe precio y marca manualPrice:true
+// - Si no existe en API → la inyecta con coordenadas del fallback
+function applyManualPrices(apiStations) {
+  const result = [...apiStations];
+  ANDAMUR_PACTADOS.forEach((m, mIdx) => {
+    const normLoc  = m.localidad.toLowerCase();
+    const normProv = m.provincia.toLowerCase();
+    const match = result.find(s =>
+      s.brandType === 'andamur' &&
+      s.localidad.toLowerCase() === normLoc &&
+      s.provincia.toLowerCase() === normProv
+    );
+    if (match) {
+      match.price = m.price;
+      match.manualPrice = true;
+    } else {
+      const key = `${m.localidad}|${m.provincia}`;
+      let coords = COORDS_FALLBACK[key] || null;
+      if (!coords) { const fb = Object.keys(COORDS_FALLBACK).find(k=>k.startsWith(m.localidad+'|')); coords = fb ? COORDS_FALLBACK[fb] : null; }
+      const j = () => (Math.random()-0.5)*0.008;
+      result.push({ id:90000+mIdx, name:m.name, via:m.via, localidad:m.localidad, provincia:m.provincia,
+        price:m.price, zone:zoneFromProvincia(m.provincia), rotulo:m.name.toUpperCase(),
+        brandType:'andamur', cp:'', fromApi:false, manualPrice:true,
+        lat:coords?coords[0]+j():null, lng:coords?coords[1]+j():null });
+    }
+  });
+  return result;
+}
+
 async function loadStations(forceRefresh=false) {
   showLoading(true);
   try {
     if (!forceRefresh) {
       const cached = sessionStorage.getItem('minetur_data');
       const ts = parseInt(sessionStorage.getItem('minetur_ts')||'0');
-      if (cached && Date.now()-ts < 30*60*1000) { dataSource='api'; return parseMinetur(JSON.parse(cached)); }
+      if (cached && Date.now()-ts < 30*60*1000) { dataSource='api'; return applyManualPrices(parseMinetur(JSON.parse(cached))); }
     } else {
       sessionStorage.removeItem('minetur_data');
       sessionStorage.removeItem('minetur_ts');
@@ -660,12 +702,12 @@ async function loadStations(forceRefresh=false) {
     const data = await fetchMinetur();
     try { sessionStorage.setItem('minetur_data', JSON.stringify(data)); sessionStorage.setItem('minetur_ts', Date.now().toString()); } catch(e) {}
     dataSource='api';
-    return parseMinetur(data);
+    return applyManualPrices(parseMinetur(data));
   } catch(e) {
     console.warn('API MINETUR no disponible:', e.message);
     dataSource='local';
     showToast('⚠ API no disponible · datos locales');
-    return parseRawFallback(RAW_DATA_FALLBACK);
+    return applyManualPrices(parseRawFallback(RAW_DATA_FALLBACK));
   } finally { showLoading(false); }
 }
 
@@ -698,7 +740,7 @@ function computePrices(station) {
   else { r.surtidor=station.price; r.solred=station.price; }
   if (station.lat && station.brandType!=='andamur') {
     const nb = findNearestAndamur(station);
-    if (nb) r.andamurNearby = { price:nb.station.price, name:nb.station.name, distM:nb.distM };
+    if (nb) r.andamurNearby = { price:nb.station.price, name:nb.station.name, distM:nb.distM, manualPrice:!!nb.station.manualPrice };
   }
   const opts=[];
   if (r.galp!=null) opts.push({label:'Tarjeta Galp', price:r.galp});
@@ -859,7 +901,7 @@ function renderList() {
       <div class="station-info">
         <div class="station-name">${s.name}</div>
         <div class="station-meta">${s.via?s.via+' · ':''}${s.localidad}, ${s.provincia}</div>
-        <div class="station-zone">${s.zone}</div>
+        <div class="station-zone">${s.zone}${s.manualPrice?'<span class="badge-pactado">PRECIO PACTADO</span>':''}</div>
       </div>
       <div class="price-badge ${cls}">${bp!=null?bp.toFixed(3).replace('.',','):'—'}<span class="pb-label">${p&&p.bestLabel?p.bestLabel:''}</span></div>
       <button class="btn-add-plan${inPlan?' in-plan':''}" onclick="event.stopPropagation();togglePlanFromCard(${s.id})" title="${inPlan?'Quitar de ruta':'Añadir a ruta'}">${inPlan?'✓':'+'}</button>
@@ -903,11 +945,15 @@ function makePopupHtml(s) {
       const isBest=p.bestLabel==='Tarjeta Solred';
       rows.push(`<tr${isBest?' class="pc-best"':''}><td>${isBest?'🏆 ':''}Tarjeta Solred</td><td class="pc-price">${fmtPrice(p.solred)}</td></tr>`);
     }
-    if (p.andamur!=null) rows.push(`<tr><td>Andamur</td><td class="pc-price">${fmtPrice(p.andamur)}</td></tr>`);
+    if (p.andamur!=null) {
+      const pTag=s.manualPrice?` <span style="font-size:9px;color:#93c5fd;font-weight:700;">PACTADO</span>`:'';
+      rows.push(`<tr><td>Andamur${pTag}</td><td class="pc-price">${fmtPrice(p.andamur)}</td></tr>`);
+    }
     if (p.andamurNearby) {
       const d=p.andamurNearby.distM<1000?`${Math.round(p.andamurNearby.distM)}m`:`${(p.andamurNearby.distM/1000).toFixed(1)}km`;
       const isBest=p.bestLabel==='Andamur cercano';
-      rows.push(`<tr${isBest?' class="pc-best"':''}><td>${isBest?'🏆 ':''}Andamur (${d})</td><td class="pc-price">${fmtPrice(p.andamurNearby.price)}</td></tr>`);
+      const pactadoTag=p.andamurNearby.manualPrice?` <span style="font-size:9px;color:#93c5fd;font-weight:700;">PACTADO</span>`:'';
+      rows.push(`<tr${isBest?' class="pc-best"':''}><td>${isBest?'🏆 ':''}Andamur (${d})${pactadoTag}</td><td class="pc-price">${fmtPrice(p.andamurNearby.price)}</td></tr>`);
     }
     compareHtml=`
       <table class="popup-compare">
