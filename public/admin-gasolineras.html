@@ -148,6 +148,8 @@
   .popup-add-route:hover { border-color:var(--green); color:var(--green); background:rgba(34,197,94,0.06); }
   .popup-add-route.in-plan { border-color:var(--green); color:var(--green); background:rgba(34,197,94,0.1); }
   .badge-pactado { display:inline-block; background:#1e3a8a; color:#93c5fd; border-radius:3px; padding:1px 5px; font-size:9px; font-family:'Barlow Condensed',sans-serif; font-weight:700; letter-spacing:0.5px; margin-left:5px; vertical-align:middle; }
+  .station-card.pactada { border-left:3px solid #f59e0b; }
+  .star-badge { font-size:10px; margin-right:3px; }
 
   /* ── ROUTE PLAN PANEL ── */
   .rpp-panel {
@@ -449,6 +451,7 @@ const ROUTE_CORRIDORS = {
 
 // ── DATOS DE RESPALDO ─────────────────────────────────────────────────────────
 const COORDS_FALLBACK = {
+  // Ya existentes
   "La Junquera|Girona":[42.4192,2.8726],"Llers|Girona":[42.3800,2.8500],
   "Imárcoain|Navarra":[42.7580,-1.6130],"Huércal-Overa|Almería":[37.3890,-1.9450],
   "Guarromán|Jaén":[38.1750,-3.6850],"Lorca|Murcia":[37.6710,-1.7040],
@@ -463,17 +466,278 @@ const COORDS_FALLBACK = {
   "Barcelona|Barcelona":[41.3851,2.1734],"Aiguaviva|Girona":[41.8760,2.8120],
   "Rodonya|Tarragona":[41.2530,1.3920],"Sarracín|Burgos":[42.2940,-3.6500],
   "Medina del Campo|Valladolid":[41.3100,-4.9140],"Guitiriz|Lugo":[43.1840,-7.8750],
-  "Silleda|Pontevedra":[42.6970,-8.2380]
+  "Silleda|Pontevedra":[42.6970,-8.2380],
+  // Nuevas (GASOLINERAS_PACTADAS)
+  "San Román de San Millán|Álava":[42.8678,-2.2453],
+  "Parets del Valles|Barcelona":[41.5666,2.2256],
+  "Torrefarrera|Lérida":[41.6750,0.6750],
+  "Lezo|Guipúzcoa":[43.3143,-1.8886],
+  "Nanclares de la Oca|Álava":[42.8508,-2.9189],
+  "Oiartzun|Guipúzcoa":[43.2944,-1.9314],
+  "Valencina de la Concepción|Sevilla":[37.4119,-6.0758],
+  "Alcalá de Guadaira|Sevilla":[37.3380,-5.8389],
+  "La Campana|Sevilla":[37.5831,-5.3964],
+  "Salteras|Sevilla":[37.4564,-6.1456],
+  "Sevilla|Sevilla":[37.3891,-5.9845],
+  "Écija|Sevilla":[37.5406,-5.0822],
+  "El Ejido|Almería":[36.7769,-2.8150],
+  "Láchar|Granada":[37.2069,-3.9956],
+  "Gor|Granada":[37.3861,-2.9900],
+  "Darro|Granada":[37.3906,-3.2153],
+  "Los Barrios|Cádiz":[36.1786,-5.4939],
+  "Los Barrios|Cadiz":[36.1786,-5.4939],
+  "Benamejí|Córdoba":[37.2706,-4.5428],
+  "Gibraleón|Huelva":[37.3819,-6.9706],
+  "Moguer|Huelva":[37.2783,-6.8406],
+  "Humilladero|Málaga":[37.1075,-4.6811],
+  "Dos Hermanas|Sevilla":[37.2831,-5.9200],
+  "Jerez de la Frontera|Cádiz":[36.6866,-6.1369],
+  "Puerto Real|Cádiz":[36.5264,-6.1903],
+  "Rosal de la Frontera|Huelva":[37.9858,-7.2131],
+  "Estepona|Málaga":[36.4272,-5.1453],
+  "Málaga|Málaga":[36.7192,-4.4194],
+  "Los Palacios y Villafranca|Sevilla":[37.1617,-5.9233],
+  "Cáceres|Cáceres":[39.4753,-6.3724],
+  "Peraleda de la Mata|Cáceres":[39.8339,-5.4817],
+  "Totana|Murcia":[37.7708,-1.5019],
+  "Molina de Segura|Murcia":[38.0614,-1.2133],
+  "Ceuti|Murcia":[38.0847,-1.2703],
+  "San Javier|Murcia":[37.8025,-0.8369],
+  "Mérida|Badajoz":[38.9160,-6.3404],
+  "Badajoz|Badajoz":[38.8794,-6.9706],
+  "Torremocha del Campo|Guadalajara":[40.9947,-2.5044],
+  "Villarubio|Cuenca":[39.9069,-2.7806],
+  "Tébar|Cuenca":[39.5861,-1.9906],
+  "El Casar de Talavera|Toledo":[39.9617,-4.8994],
+  "La Consolación|Ciudad Real":[38.7778,-3.3856],
+  "Ribera de Cabanes|Castellón":[40.1503,0.2358],
+  "Madrid|Madrid":[40.3697,-3.5989],
+  "Torrejón de Ardoz|Madrid":[40.4600,-3.4669],
+  "San Sebastian de los Reyes|Madrid":[40.5503,-3.6275],
+  "San Sebastián de los Reyes|Madrid":[40.5503,-3.6275],
+  "Fuente del Fresno|Madrid":[40.5831,-3.6358],
+  "Perales De Tajuña|Madrid":[40.3453,-3.3408],
+  "Benavente|Zamora":[42.0025,-5.6786],
+  "El Burgo Ranero|León":[42.3631,-5.1536],
+  "Villadangos del Paramo|León":[42.5169,-5.7578],
+  "Aranda de Duero|Burgos":[41.6694,-3.6892],
+  "Estépar|Burgos":[42.2714,-4.0156],
+  "Miranda de Ebro|Burgos":[42.6847,-2.9447],
+  "Burgos|Burgos":[42.3325,-3.6792],
+  "Los Balbases|Burgos":[42.1831,-3.8564],
+  "Aldehuela de la Bóveda|Salamanca":[40.8197,-6.2828],
+  "Villacastin|Segovia":[40.7714,-4.4242],
+  "Martín Muñoz de la Dehesa|Segovia":[41.0764,-4.7228],
+  "Zaragoza|Zaragoza":[41.6200,-0.9200],
+  "Alfajarín|Zaragoza":[41.6231,-0.7386],
+  "Cadrete|Zaragoza":[41.5831,-1.0100],
+  "Gallur|Zaragoza":[41.8767,-1.3194],
+  "Calatayud|Zaragoza":[41.3569,-1.6428],
+  "Lérida|Lérida":[41.6176,0.6200],
+  "Castellet i Gonal|Barcelona":[41.2547,1.5522],
+  "Vic|Barcelona":[41.9297,2.2542],
+  "Sant Esteve de Sesrovires|Barcelona":[41.4481,1.8694],
+  "Molins de Rei|Barcelona":[41.4175,2.0169],
+  "Granollers|Barcelona":[41.6081,2.2872],
+  "El Prat de Llobregat|Barcelona":[41.3217,2.0931],
+  "Riudellots de la Selva|Girona":[41.8897,2.8239],
+  "L'Hospitalet Del Infant|Tarragona":[40.9775,0.9256],
+  "L'Hospitalet De L'Infant|Tarragona":[40.9775,0.9256],
+  "Masos de Comarruga|Tarragona":[41.1867,1.5547],
+  "Vila-Seca|Tarragona":[41.1078,1.1678],
+  "Constantí|Tarragona":[41.1525,1.1742],
+  "L'Ametlla de Mar|Tarragona":[40.8878,0.7878],
+  "Bera|Navarra":[43.2786,-1.6822],
+  "Tudela|Navarra":[42.0600,-1.6053],
+  "Pamplona|Navarra":[42.8188,-1.6440],
+  "Ziordia|Navarra":[42.8983,-2.1964],
+  "Altsasu Alsasu|Navarra":[42.9011,-2.1669],
+  "Logroño|La Rioja":[42.4661,-2.4450],
+  "San Asensio|La Rioja":[42.5056,-2.7233],
+  "Gijón|Asturias":[43.5322,-5.6611],
+  "Posada de Llanes|Asturias":[43.4167,-4.7517],
+  "Cecebre|A Coruña":[43.2358,-8.3264],
+  "Monforte de Lemos|Lugo":[42.5231,-7.5122],
+  "Barbadas|Ourense":[42.3197,-7.8839],
+  "Mos|Pontevedra":[42.2022,-8.6308],
+  "Guillarey|Pontevedra":[42.1500,-8.5831],
+  "Meis (San Martin)|Pontevedra":[42.5156,-8.6961],
+  "Irun|Guipúzcoa":[43.3375,-1.7886],
+  "Lasarte|Guipúzcoa":[43.2822,-2.0144],
+  "Beneixida|Valencia":[39.0781,-0.4333],
+  "Fuente La Higuera|Valencia":[38.7900,-0.8533],
+  "El Puig de Santa María|Valencia":[39.5822,-0.3053],
+  "Villargordo del Gabriel|Valencia":[39.4958,-1.3947],
+  "Pedreguer|Alicante":[38.7867,0.0247]
 };
 
-// ── PRECIOS PACTADOS ANDAMUR ─────────────────────────────────────────────────
-// Estos precios son contractuales y tienen prioridad sobre la API del Ministerio.
-// Modifica esta lista para actualizar precios pactados sin tocar la API.
-const ANDAMUR_PACTADOS = [
-  { name:'ANDAMUR La Junquera', via:'AP-7, N-II', localidad:'La Junquera',   provincia:'Girona',  price:1.603 },
-  { name:'ANDAMUR El Límite',   via:'A-7',        localidad:'Huércal-Overa', provincia:'Almería', price:1.560 },
-  { name:'ANDAMUR Guarromán',   via:'A-4',        localidad:'Guarromán',     provincia:'Jaén',    price:1.589 },
-  { name:'ANDAMUR Lorca',       via:'A-7',        localidad:'Lorca',         provincia:'Murcia',  price:1.570 },
+// ── GASOLINERAS PACTADAS (prioridad absoluta sobre API) ───────────────────────
+// Precio contractual — edita aquí para actualizar sin tocar nada más.
+// brandHint: 'galp'|'andamur'|'other'  (other = no está en API, se inyecta)
+const GASOLINERAS_PACTADAS = [
+  // ANDAMUR
+  {name:'ANDAMUR La Junquera',      via:'AP-7, N-II',      localidad:'La Junquera',            provincia:'Girona',      price:1.529},
+  {name:'ANDAMUR La Junquera-Llers',via:'AP-7, N-II',      localidad:'Llers',                  provincia:'Girona',      price:1.529},
+  {name:'ANDAMUR Pamplona',         via:'AP15, N-121-A',   localidad:'Imárcoain',              provincia:'Navarra',     price:1.525},
+  {name:'ANDAMUR San Román - Araia',via:'A-1',             localidad:'San Román de San Millán',provincia:'Álava',       price:1.514},
+  {name:'ANDAMUR El Límite',        via:'A-7',             localidad:'Huércal-Overa',          provincia:'Almería',     price:1.483},
+  {name:'ANDAMUR Guarromán',        via:'A-4',             localidad:'Guarromán',              provincia:'Jaén',        price:1.492},
+  {name:'ANDAMUR Lorca',            via:'A-7',             localidad:'Lorca',                  provincia:'Murcia',      price:1.493},
+  // GALP
+  {name:'GALP Huétor Tájar',        via:'A-92',            localidad:'Huetor Tajar',           provincia:'Granada',     price:1.527},
+  {name:'GALP Jerez',               via:'A-381',           localidad:'Jerez de la Frontera',   provincia:'Cádiz',       price:1.519},
+  {name:'GALP Puerto Real',         via:'CA-35',           localidad:'Puerto Real',            provincia:'Cádiz',       price:1.536},
+  {name:'GALP Rosal de La Frontera',via:'N-433',           localidad:'Rosal de la Frontera',   provincia:'Huelva',      price:1.538},
+  {name:'GALP Estepona',            via:'A-7',             localidad:'Estepona',               provincia:'Málaga',      price:1.516},
+  {name:'GALP Málaga - El Viso',    via:'A-357',           localidad:'Málaga',                 provincia:'Málaga',      price:1.522},
+  {name:'GALP Málaga - El Limonar', via:'A-7',             localidad:'Málaga',                 provincia:'Málaga',      price:1.530},
+  {name:'GALP Los Palacios',        via:'AP-4',            localidad:'Los Palacios y Villafranca',provincia:'Sevilla',  price:1.512},
+  {name:'GALP Cáceres',             via:'N-521',           localidad:'Cáceres',                provincia:'Cáceres',     price:1.585},
+  {name:'GALP Peraleda de la Mata', via:'A-5',             localidad:'Peraleda de la Mata',    provincia:'Cáceres',     price:1.590},
+  {name:'GALP Castillo de Garcimuñoz',via:'A-3',           localidad:'Castillo de Garcimuñoz', provincia:'Cuenca',      price:1.517},
+  {name:'GALP Calera y Chozas',     via:'A-5',             localidad:'Calera y Chozas',        provincia:'Toledo',      price:1.525},
+  {name:'GALP Puerto Lápice I',     via:'A-4',             localidad:'Puerto Lapice',          provincia:'Ciudad Real', price:1.523},
+  {name:'GALP Puerto Lápice II',    via:'A-4',             localidad:'Puerto Lapice',          provincia:'Ciudad Real', price:1.523},
+  {name:'GALP Ribarroja Del Turia', via:'AP-7, A-3',       localidad:'Ribarroja del Turia',    provincia:'Valencia',    price:1.453},
+  {name:'GALP Beneixida',           via:'N-340',           localidad:'Beneixida',              provincia:'Valencia',    price:1.454},
+  {name:'GALP Fuente La Higuera',   via:'A-35',            localidad:'Fuente La Higuera',      provincia:'Valencia',    price:1.474},
+  {name:'GALP Fuente La Higuera II',via:'A-35',            localidad:'Fuente La Higuera',      provincia:'Valencia',    price:1.474},
+  {name:'GALP Torrent I',           via:'A-7',             localidad:'Torrent',                provincia:'Valencia',    price:1.512},
+  {name:'GALP Torrent II',          via:'A-7',             localidad:'Torrent',                provincia:'Valencia',    price:1.512},
+  {name:'GALP El Puig',             via:'A-7',             localidad:'El Puig de Santa María', provincia:'Valencia',    price:1.513},
+  {name:'GALP Villargordo Cabriel I', via:'A-3',           localidad:'Villargordo del Gabriel',provincia:'Valencia',    price:1.517},
+  {name:'GALP Villargordo Cabriel II',via:'A-3',           localidad:'Villargordo del Gabriel',provincia:'Valencia',    price:1.517},
+  {name:'GALP Agost - AP7 Dir.Murcia',  via:'AP-7',        localidad:'Agost',                  provincia:'Alicante',    price:1.523},
+  {name:'GALP Agost - AP7 Dir.Valencia',via:'AP-7',        localidad:'Agost',                  provincia:'Alicante',    price:1.523},
+  {name:'GALP Elche I',             via:'A-70',            localidad:'Torrellano',             provincia:'Alicante',    price:1.515},
+  {name:'GALP Elche II',            via:'A-70',            localidad:'Torrellano',             provincia:'Alicante',    price:1.516},
+  {name:'GALP San Antonio I',       via:'AP-7',            localidad:'Pedreguer',              provincia:'Alicante',    price:1.517},
+  {name:'GALP San Antonio II',      via:'AP-7',            localidad:'Pedreguer',              provincia:'Alicante',    price:1.517},
+  {name:'GALP La Plana I',          via:'AP-7',            localidad:'Burriana',               provincia:'Castellón',   price:1.520},
+  {name:'GALP La Plana II',         via:'AP-7',            localidad:'Burriana',               provincia:'Castellón',   price:1.520},
+  {name:'GALP Alcalá Henares I',    via:'A-2',             localidad:'Alcalá de Henares',      provincia:'Madrid',      price:1.518},
+  {name:'GALP Alcalá Henares II',   via:'A-2',             localidad:'Alcalá de Henares',      provincia:'Madrid',      price:1.518},
+  {name:'GALP Parla',               via:'A-42',            localidad:'Parla',                  provincia:'Madrid',      price:1.525},
+  {name:'GALP Pinto - Eboli I',     via:'M-506',           localidad:'Pinto',                  provincia:'Madrid',      price:1.517},
+  {name:'GALP Pinto - Eboli II',    via:'M-506',           localidad:'Pinto',                  provincia:'Madrid',      price:1.517},
+  {name:'GALP Perales De Tajuña',   via:'A-3, N-III',      localidad:'Perales De Tajuña',      provincia:'Madrid',      price:1.519},
+  {name:'GALP S.S.de los Reyes-Jarama',via:'A-1',          localidad:'San Sebastián de los Reyes',provincia:'Madrid',   price:1.518},
+  {name:'GALP Villadangos',         via:'N-120',           localidad:'Villadangos del Paramo', provincia:'León',        price:1.588},
+  {name:'GALP Villatoro',           via:'N-627',           localidad:'Burgos',                 provincia:'Burgos',      price:1.583},
+  {name:'GALP Sarracín I',          via:'A-1',             localidad:'Sarracín',               provincia:'Burgos',      price:1.583},
+  {name:'GALP Sarracín II',         via:'A-1',             localidad:'Sarracín',               provincia:'Burgos',      price:1.583},
+  {name:'GALP Los Balbases',        via:'A-62',            localidad:'Los Balbases',           provincia:'Burgos',      price:1.585},
+  {name:'GALP Aldehuela de la Bóveda',via:'A-62',          localidad:'Aldehuela de la Bóveda', provincia:'Salamanca',   price:1.591},
+  {name:'GALP Villacastín Dir. Coruña',via:'N-6',          localidad:'Villacastin',            provincia:'Segovia',     price:1.521},
+  {name:'GALP Villacastín Dir. Madrid',via:'N-6',          localidad:'Villacastin',            provincia:'Segovia',     price:1.521},
+  {name:'GALP Martin Muñoz',        via:'A-6',             localidad:'Martín Muñoz de la Dehesa',provincia:'Segovia',   price:1.527},
+  {name:'GALP Medina Del Campo',    via:'A-6',             localidad:'Medina del Campo',       provincia:'Valladolid',  price:1.583},
+  {name:'GALP Zaragoza I',          via:'A-2',             localidad:'La Muela',               provincia:'Zaragoza',    price:1.521},
+  {name:'GALP Zaragoza II',         via:'A-2',             localidad:'La Muela',               provincia:'Zaragoza',    price:1.521},
+  {name:'GALP Monegros I',          via:'AP-2',            localidad:'Candasnos',              provincia:'Huesca',      price:1.522},
+  {name:'GALP Monegros II',         via:'AP-2',            localidad:'Candasnos',              provincia:'Huesca',      price:1.522},
+  {name:'GALP El Prat de Llobregat',via:'C-31',            localidad:'El Prat de Llobregat',   provincia:'Barcelona',   price:1.506},
+  {name:'GALP Molins de Rei',       via:'B-23',            localidad:'Molins de Rei',          provincia:'Barcelona',   price:1.505},
+  {name:'GALP Granollers',          via:'BP-5002',         localidad:'Granollers',             provincia:'Barcelona',   price:1.516},
+  {name:'GALP Porta de Barcelona Sur',via:'AP-7',          localidad:'Castellbisbal',          provincia:'Barcelona',   price:1.506},
+  {name:'GALP Barcelona',           via:'B-10',            localidad:'Barcelona',              provincia:'Barcelona',   price:1.505},
+  {name:'GALP El Bruc',             via:'A-2',             localidad:'El Bruc',                provincia:'Barcelona',   price:1.506},
+  {name:'GALP Gironès Norte',       via:'AP-7',            localidad:'Aiguaviva',              provincia:'Girona',      price:1.565},
+  {name:'GALP Gironès Sur',         via:'AP-7',            localidad:'Riudellots de la Selva', provincia:'Girona',      price:1.565},
+  {name:'GALP Jonquera - Tramuntana',via:'N-II',           localidad:'La Junquera',            provincia:'Girona',      price:1.568},
+  {name:'GALP Alt Camp I',          via:'AP-2',            localidad:'Rodonya',                provincia:'Tarragona',   price:1.509},
+  {name:'GALP Alt Camp II',         via:'AP-2',            localidad:'Rodonya',                provincia:'Tarragona',   price:1.509},
+  {name:'GALP Ziordia',             via:'A-1',             localidad:'Ziordia',                provincia:'Navarra',     price:1.572},
+  {name:'GALP Alsasua Dir. Madrid', via:'A-1',             localidad:'Altsasu Alsasu',         provincia:'Navarra',     price:1.564},
+  {name:'GALP Alsasua Dir. Irún',   via:'A-1',             localidad:'Altsasu Alsasu',         provincia:'Navarra',     price:1.572},
+  {name:'GALP Irún',                via:'A-15, NA-700',    localidad:'Irun',                   provincia:'Guipúzcoa',   price:1.575},
+  {name:'GALP Lasarte',             via:'A-1',             localidad:'Lasarte',                provincia:'Guipúzcoa',   price:1.573},
+  {name:'GALP De la Vega I',        via:'A-8',             localidad:'Posada de Llanes',       provincia:'Asturias',    price:1.575},
+  {name:'GALP De la Vega II',       via:'A-8',             localidad:'Posada de Llanes',       provincia:'Asturias',    price:1.575},
+  {name:'GALP Guitiriz I',          via:'A-6',             localidad:'Guitiriz',               provincia:'Lugo',        price:1.576},
+  {name:'GALP Guitiriz II',         via:'A-6',             localidad:'Guitiriz',               provincia:'Lugo',        price:1.576},
+  {name:'GALP Monforte de Lemos',   via:'N-120, LU-933',   localidad:'Monforte de Lemos',      provincia:'Lugo',        price:1.591},
+  {name:'GALP Barbadanes',          via:'OU-540',          localidad:'Barbadas',               provincia:'Ourense',     price:1.585},
+  {name:'GALP Meis',                via:'AG-41',           localidad:'Meis (San Martin)',       provincia:'Pontevedra',  price:1.605},
+  {name:'GALP Silleda',             via:'AP-53',           localidad:'Silleda',                provincia:'Pontevedra',  price:1.581},
+  // OTRAS REDES (se inyectan — no están en la API del Ministerio)
+  {name:'GM FUEL Servei Carrer 3',  via:'B-10',            localidad:'Barcelona',              provincia:'Barcelona',   price:1.453},
+  {name:'NIEVES Parets',            via:'N-152',           localidad:'Parets del Valles',      provincia:'Barcelona',   price:1.620},
+  {name:'Renova Oil Incoenergy',     via:'N-230',           localidad:'Torrefarrera',           provincia:'Lérida',      price:1.460},
+  {name:'Merkaoil',                  via:'AP-8, GI-2638',   localidad:'Lezo',                   provincia:'Guipúzcoa',   price:1.488},
+  {name:'EUROCAM Nanclares de Oca',  via:'A-1',             localidad:'Nanclares de la Oca',    provincia:'Álava',       price:1.486},
+  {name:'Gexa',                      via:'AP-8, GI-636',    localidad:'Oiartzun',               provincia:'Guipúzcoa',   price:1.491},
+  {name:'Las Cuartillas',            via:'N-630',           localidad:'Valencina de la Concepción',provincia:'Sevilla',  price:1.479},
+  {name:'Magdaoil',                  via:'A-92',            localidad:'Alcalá de Guadaira',     provincia:'Sevilla',     price:1.462},
+  {name:'Ruta 4',                    via:'A-4',             localidad:'La Campana',             provincia:'Sevilla',     price:1.460},
+  {name:'TJ Oil',                    via:'M-630',           localidad:'Salteras',               provincia:'Sevilla',     price:1.458},
+  {name:'ENI El Fantasma',           via:'AP-4',            localidad:'Sevilla',                provincia:'Sevilla',     price:1.471},
+  {name:'BQP Villanueva Food',       via:'A-4',             localidad:'Écija',                  provincia:'Sevilla',     price:1.481},
+  {name:'HAFESA OIL Almerimar',      via:'A-7',             localidad:'El Ejido',               provincia:'Almería',     price:1.478},
+  {name:'VALCARCE Láchar',           via:'A-92',            localidad:'Láchar',                 provincia:'Granada',     price:1.474},
+  {name:'VALCARCE Gor',              via:'A-92',            localidad:'Gor',                    provincia:'Granada',     price:1.474},
+  {name:'CARBURANTES A92',           via:'A-92',            localidad:'Darro',                  provincia:'Granada',     price:1.474},
+  {name:'El Fresno',                 via:'A-7',             localidad:'Los Barrios',            provincia:'Cádiz',       price:1.463},
+  {name:'NIEVES Algeciras',          via:'A-7',             localidad:'Los Barrios',            provincia:'Cádiz',       price:1.610},
+  {name:'AREA 117 Benamejí',         via:'N-331',           localidad:'Benamejí',               provincia:'Córdoba',     price:1.469},
+  {name:'DEOIL Gibraleon',           via:'N-431',           localidad:'Gibraleón',              provincia:'Huelva',      price:1.470},
+  {name:'Platero',                   via:'A-494',           localidad:'Moguer',                 provincia:'Huelva',      price:1.539},
+  {name:'AREA 117 Humilladero I',    via:'A-92',            localidad:'Humilladero',            provincia:'Málaga',      price:1.471},
+  {name:'AREA 117 Humilladero II',   via:'A-92',            localidad:'Humilladero',            provincia:'Málaga',      price:1.471},
+  {name:'AGLA La Isla',              via:'A-8053',          localidad:'Dos Hermanas',           provincia:'Sevilla',     price:1.493},
+  {name:'Sierra Espuña Trade',       via:'A-7',             localidad:'Totana',                 provincia:'Murcia',      price:1.455},
+  {name:'Agetrans',                  via:'A-7',             localidad:'Totana',                 provincia:'Murcia',      price:1.454},
+  {name:'La Cañada',                 via:'A-30',            localidad:'Molina de Segura',       provincia:'Murcia',      price:1.455},
+  {name:'Mill Enterprise',           via:'MU-533',          localidad:'Ceuti',                  provincia:'Murcia',      price:1.454},
+  {name:'Grupo Caliche',             via:'AP-7',            localidad:'San Javier',             provincia:'Murcia',      price:1.670},
+  {name:'MAGNAOIL Vía de la Plata',  via:'A-5',             localidad:'Mérida',                 provincia:'Badajoz',     price:1.545},
+  {name:'MAGNAOIL El Nevero',        via:'A-5',             localidad:'Badajoz',                provincia:'Badajoz',     price:1.550},
+  {name:'AREA 117 Torremocha',       via:'A-2',             localidad:'Torremocha del Campo',   provincia:'Guadalajara', price:1.485},
+  {name:'VALCARCE Área de Uclés',    via:'A-3',             localidad:'Villarubio',             provincia:'Cuenca',      price:1.484},
+  {name:'BEROIL Tébar',              via:'A-3',             localidad:'Tébar',                  provincia:'Cuenca',      price:1.508},
+  {name:'VALCARCE El Casar',         via:'A-5, N-502',      localidad:'El Casar de Talavera',   provincia:'Toledo',      price:1.485},
+  {name:'ATENOIL Valdepeñas',        via:'A-4',             localidad:'La Consolación',         provincia:'Ciudad Real', price:1.464},
+  {name:'ATENOIL Valdepeñas II',     via:'A-4',             localidad:'La Consolación',         provincia:'Ciudad Real', price:1.464},
+  {name:'ALZ El Oliveral',           via:'AP-7, A-3',       localidad:'Ribarroja del Turia',    provincia:'Valencia',    price:1.452},
+  {name:'ENI La Ribera Norte',       via:'AP-7',            localidad:'Ribera de Cabanes',      provincia:'Castellón',   price:1.459},
+  {name:'ENI La Ribera Sur',         via:'AP-7',            localidad:'Ribera de Cabanes',      provincia:'Castellón',   price:1.459},
+  {name:'GHC Ganesha',               via:'A-3',             localidad:'Madrid',                 provincia:'Madrid',      price:1.484},
+  {name:'VALCARCE Torrejón',         via:'M-206',           localidad:'Torrejón de Ardoz',      provincia:'Madrid',      price:1.483},
+  {name:'ATENOIL Parla II',          via:'M-408',           localidad:'Parla',                  provincia:'Madrid',      price:1.464},
+  {name:'ENI San Sebastián I',       via:'A-1',             localidad:'San Sebastian de los Reyes',provincia:'Madrid',   price:1.464},
+  {name:'ENI San Sebastián II',      via:'N-1',             localidad:'Fuente del Fresno',      provincia:'Madrid',      price:1.464},
+  {name:'AVIA Castillo Benavente',   via:'A-6',             localidad:'Benavente',              provincia:'Zamora',      price:1.589},
+  {name:'AVIA Castillo El Burgo',    via:'A-231',           localidad:'El Burgo Ranero',        provincia:'León',        price:1.589},
+  {name:'VALCARCE Aranda',           via:'N-1',             localidad:'Aranda de Duero',        provincia:'Burgos',      price:1.591},
+  {name:'BEROIL Estépar',            via:'N-620',           localidad:'Estépar',                provincia:'Burgos',      price:1.547},
+  {name:'BEROIL Miranda de Ebro',    via:'AP-1',            localidad:'Miranda de Ebro',        provincia:'Burgos',      price:1.547},
+  {name:'Bernal',                    via:'A-62',            localidad:'Aldehuela de la Bóveda', provincia:'Salamanca',   price:1.541},
+  {name:'San Lamberto',              via:'A-2',             localidad:'Zaragoza',               provincia:'Zaragoza',    price:1.451},
+  {name:'ALFA ENERGY Alfajarín',     via:'AP-2, N-II',      localidad:'Alfajarín',              provincia:'Zaragoza',    price:1.460},
+  {name:'HAFESA OIL Cadrete',        via:'N-330',           localidad:'Cadrete',                provincia:'Zaragoza',    price:1.522},
+  {name:'AVIA Gallur',               via:'N-232',           localidad:'Gallur',                 provincia:'Zaragoza',    price:1.453},
+  {name:'PETROBIL Valdeherrera',     via:'A-202',           localidad:'Calatayud',              provincia:'Zaragoza',    price:1.458},
+  {name:'NIEVES Lérida',             via:'N-II',            localidad:'Lérida',                 provincia:'Lérida',      price:1.625},
+  {name:'GM FUEL La Gornal',         via:'N-340',           localidad:'Castellet i Gonal',      provincia:'Barcelona',   price:1.442},
+  {name:'PRIMER Area Truck',         via:'C-153',           localidad:'Vic',                    provincia:'Barcelona',   price:1.437},
+  {name:'NIEVES Sesrovires',         via:'AP-7, A2',        localidad:'Sant Esteve de Sesrovires',provincia:'Barcelona', price:1.555},
+  {name:'NIEVES Zona Franca',        via:'B-10',            localidad:'Barcelona',              provincia:'Barcelona',   price:1.545},
+  {name:'ENI Hospitalet Sur',        via:'AP-7',            localidad:"L'Hospitalet Del Infant",provincia:'Tarragona',   price:1.471},
+  {name:'ENI Hospitalet Norte',      via:'AP-7',            localidad:"L'Hospitalet Del Infant",provincia:'Tarragona',   price:1.471},
+  {name:'GM FUEL Coma-Ruga',         via:'N-340',           localidad:'Masos de Comarruga',     provincia:'Tarragona',   price:1.443},
+  {name:'ALAS Hospitalet',           via:'N-340',           localidad:"L'Hospitalet De L'Infant",provincia:'Tarragona',  price:1.447},
+  {name:'ALAS Vila-Seca',            via:'AP-7',            localidad:'Vila-Seca',              provincia:'Tarragona',   price:1.469},
+  {name:'ALAS Constantí',            via:'C-14',            localidad:'Constantí',              provincia:'Tarragona',   price:1.469},
+  {name:'ALAS L\'Ametlla de Mar',    via:'N-340',           localidad:"L'Ametlla de Mar",       provincia:'Tarragona',   price:1.504},
+  {name:'NOIL Bera de Bidasoa',      via:'N-121-A',         localidad:'Bera',                   provincia:'Navarra',     price:1.490},
+  {name:'EUROCAM Tudela',            via:'A-68',            localidad:'Tudela',                 provincia:'Navarra',     price:1.494},
+  {name:'EUROCAM Pamplona',          via:'AP-15',           localidad:'Pamplona',               provincia:'Navarra',     price:1.492},
+  {name:'EUROCAM Logroño',           via:'AP-68',           localidad:'Logroño',                provincia:'La Rioja',    price:1.492},
+  {name:'BEROIL San Asensio',        via:'N-232',           localidad:'San Asensio',            provincia:'La Rioja',    price:1.547},
+  {name:'Empresoil',                 via:'A-8',             localidad:'Gijón',                  provincia:'Asturias',    price:1.566},
+  {name:'Cetanoil',                  via:'LC-221',          localidad:'Cecebre',                provincia:'A Coruña',    price:1.592},
+  {name:'El Sol',                    via:'A-55, N-550',     localidad:'Mos',                    provincia:'Pontevedra',  price:1.604},
+  {name:'Sertuy',                    via:'A-55, N-550',     localidad:'Guillarey',              provincia:'Pontevedra',  price:1.608},
 ];
 
 const RAW_DATA_FALLBACK = `ANDAMUR La Junquera	AP-7, N-II	La Junquera	Girona	1,603	CATALUÑA
@@ -657,33 +921,67 @@ function parseRawFallback(raw) {
   return result;
 }
 
-// ── FUSIÓN PRECIOS MANUALES ───────────────────────────────────────────────────
-// Aplica ANDAMUR_PACTADOS sobre el array de estaciones:
-// - Si la estación existe en API → sobreescribe precio y marca manualPrice:true
-// - Si no existe en API → la inyecta con coordenadas del fallback
-function applyManualPrices(apiStations) {
+// ── FUSIÓN PRECIOS PACTADOS ───────────────────────────────────────────────────
+// Aplica GASOLINERAS_PACTADAS sobre el array de la API:
+// - GALP/ANDAMUR: busca coincidencia brand+localidad+provincia → sobreescribe precio
+//   GALP: guarda apiSurtidor para comparar con tarjeta Galp en computePrices
+// - Otras redes: no están en la API → inyecta directamente
+function normalizeStr(s) {
+  return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,' ').replace(/\s+/g,' ').trim();
+}
+
+function pacBrand(name) {
+  const u = name.toUpperCase();
+  if (u.startsWith('GALP')) return 'galp';
+  if (u.startsWith('ANDAMUR')) return 'andamur';
+  return 'other';
+}
+
+function applyPactadas(apiStations) {
   const result = [...apiStations];
-  ANDAMUR_PACTADOS.forEach((m, mIdx) => {
-    const normLoc  = m.localidad.toLowerCase();
-    const normProv = m.provincia.toLowerCase();
-    const match = result.find(s =>
-      s.brandType === 'andamur' &&
-      s.localidad.toLowerCase() === normLoc &&
-      s.provincia.toLowerCase() === normProv
-    );
-    if (match) {
-      match.price = m.price;
-      match.manualPrice = true;
-    } else {
-      const key = `${m.localidad}|${m.provincia}`;
-      let coords = COORDS_FALLBACK[key] || null;
-      if (!coords) { const fb = Object.keys(COORDS_FALLBACK).find(k=>k.startsWith(m.localidad+'|')); coords = fb ? COORDS_FALLBACK[fb] : null; }
-      const j = () => (Math.random()-0.5)*0.008;
-      result.push({ id:90000+mIdx, name:m.name, via:m.via, localidad:m.localidad, provincia:m.provincia,
-        price:m.price, zone:zoneFromProvincia(m.provincia), rotulo:m.name.toUpperCase(),
-        brandType:'andamur', cp:'', fromApi:false, manualPrice:true,
-        lat:coords?coords[0]+j():null, lng:coords?coords[1]+j():null });
+  const injectedKeys = new Set(); // evitar duplicados en inyección
+
+  GASOLINERAS_PACTADAS.forEach((m, mIdx) => {
+    const brand = pacBrand(m.name);
+    const normLoc  = normalizeStr(m.localidad);
+    const normProv = normalizeStr(m.provincia);
+
+    if (brand === 'galp' || brand === 'andamur') {
+      // Buscar en API: mismo brand + localidad + provincia
+      const matches = result.filter(s =>
+        s.brandType === brand &&
+        normalizeStr(s.localidad) === normLoc &&
+        normalizeStr(s.provincia) === normProv
+      );
+      if (matches.length) {
+        matches.forEach(s => {
+          if (brand === 'galp' && !s.apiSurtidor) s.apiSurtidor = s.price; // guarda precio API original
+          s.price     = m.price;
+          s.manualPrice = true;
+          s.pactada   = true;
+        });
+        return; // no inyectar
+      }
     }
+
+    // Inyectar (no está en API o es otra red)
+    const injKey = `${normalizeStr(m.name)}|${normLoc}`;
+    if (injectedKeys.has(injKey)) return; // deduplicar
+    injectedKeys.add(injKey);
+    const key = `${m.localidad}|${m.provincia}`;
+    let coords = COORDS_FALLBACK[key] || null;
+    if (!coords) {
+      const fb = Object.keys(COORDS_FALLBACK).find(k => normalizeStr(k.split('|')[0]) === normLoc);
+      coords = fb ? COORDS_FALLBACK[fb] : null;
+    }
+    const j = () => (Math.random()-0.5)*0.008;
+    result.push({
+      id: 90000+mIdx, name:m.name, via:m.via, localidad:m.localidad, provincia:m.provincia,
+      price:m.price, zone:zoneFromProvincia(m.provincia), rotulo:m.name.toUpperCase(),
+      brandType:getBrandType(m.name), cp:'', fromApi:false,
+      manualPrice:true, pactada:true,
+      lat:coords?coords[0]+j():null, lng:coords?coords[1]+j():null
+    });
   });
   return result;
 }
@@ -694,7 +992,7 @@ async function loadStations(forceRefresh=false) {
     if (!forceRefresh) {
       const cached = sessionStorage.getItem('minetur_data');
       const ts = parseInt(sessionStorage.getItem('minetur_ts')||'0');
-      if (cached && Date.now()-ts < 30*60*1000) { dataSource='api'; return applyManualPrices(parseMinetur(JSON.parse(cached))); }
+      if (cached && Date.now()-ts < 30*60*1000) { dataSource='api'; return applyPactadas(parseMinetur(JSON.parse(cached))); }
     } else {
       sessionStorage.removeItem('minetur_data');
       sessionStorage.removeItem('minetur_ts');
@@ -702,12 +1000,12 @@ async function loadStations(forceRefresh=false) {
     const data = await fetchMinetur();
     try { sessionStorage.setItem('minetur_data', JSON.stringify(data)); sessionStorage.setItem('minetur_ts', Date.now().toString()); } catch(e) {}
     dataSource='api';
-    return applyManualPrices(parseMinetur(data));
+    return applyPactadas(parseMinetur(data));
   } catch(e) {
     console.warn('API MINETUR no disponible:', e.message);
     dataSource='local';
     showToast('⚠ API no disponible · datos locales');
-    return applyManualPrices(parseRawFallback(RAW_DATA_FALLBACK));
+    return applyPactadas(parseRawFallback(RAW_DATA_FALLBACK));
   } finally { showLoading(false); }
 }
 
@@ -734,19 +1032,33 @@ function findNearestAndamur(station) {
 function computePrices(station) {
   if (!station.price) return null;
   const r = {};
-  if (station.brandType==='galp') { r.surtidor=station.price; r.galp=+(station.price-GALP_DISCOUNT).toFixed(3); r.solred=station.price; }
-  else if (station.brandType==='repsol') { r.surtidor=station.price; r.solred=station.price; }
-  else if (station.brandType==='andamur') { r.surtidor=station.price; r.andamur=station.price; }
-  else { r.surtidor=station.price; r.solred=station.price; }
+
+  if (station.brandType==='galp') {
+    // Para GALP pactada: surtidor = precio API original, galp = surtidor-0.16, pactado = precio pactado
+    const surt = station.apiSurtidor || station.price;
+    r.surtidor = surt;
+    r.galp     = +(surt - GALP_DISCOUNT).toFixed(3);
+    r.solred   = surt;
+    if (station.manualPrice) r.pactado = station.price; // precio contractual
+  } else if (station.brandType==='repsol') {
+    r.surtidor=station.price; r.solred=station.price;
+  } else if (station.brandType==='andamur') {
+    r.surtidor=station.price; r.andamur=station.price;
+  } else {
+    r.surtidor=station.price; r.solred=station.price;
+  }
+
   if (station.lat && station.brandType!=='andamur') {
     const nb = findNearestAndamur(station);
     if (nb) r.andamurNearby = { price:nb.station.price, name:nb.station.name, distM:nb.distM, manualPrice:!!nb.station.manualPrice };
   }
+
   const opts=[];
-  if (r.galp!=null) opts.push({label:'Tarjeta Galp', price:r.galp});
-  if (r.solred!=null && r.galp==null) opts.push({label:'Tarjeta Solred', price:r.solred});
-  if (r.andamur!=null) opts.push({label:'Andamur', price:r.andamur});
-  if (r.andamurNearby) opts.push({label:'Andamur cercano', price:r.andamurNearby.price});
+  if (r.pactado!=null)  opts.push({label:'Precio Pactado', price:r.pactado});
+  if (r.galp!=null)     opts.push({label:'Tarjeta Galp',   price:r.galp});
+  if (r.solred!=null && r.galp==null && r.pactado==null) opts.push({label:'Tarjeta Solred', price:r.solred});
+  if (r.andamur!=null)  opts.push({label:'Andamur',        price:r.andamur});
+  if (r.andamurNearby)  opts.push({label:'Andamur cercano',price:r.andamurNearby.price});
   if (opts.length) { const best=opts.reduce((a,b)=>a.price<b.price?a:b); r.best=best.price; r.bestLabel=best.label; }
   return r;
 }
@@ -894,12 +1206,12 @@ function renderList() {
     const p=s.priceData, bp=(p&&p.best!=null)?p.best:s.price, cls=priceClass(bp);
     const inPlan=routePlan.includes(s.id);
     const card=document.createElement('div');
-    card.className='station-card'+(s.id===selectedId?' selected':'')+(inPlan?' in-plan':'');
+    card.className='station-card'+(s.id===selectedId?' selected':'')+(inPlan?' in-plan':'')+(s.pactada?' pactada':'');
     card.dataset.id=s.id;
     card.innerHTML=`
       <div class="brand-dot" style="background:${getBrandColor(s.brandType)}"></div>
       <div class="station-info">
-        <div class="station-name">${s.name}</div>
+        <div class="station-name">${s.pactada?'<span class="star-badge">⭐</span>':''}${s.name}</div>
         <div class="station-meta">${s.via?s.via+' · ':''}${s.localidad}, ${s.provincia}</div>
         <div class="station-zone">${s.zone}${s.manualPrice?'<span class="badge-pactado">PRECIO PACTADO</span>':''}</div>
       </div>
@@ -965,7 +1277,11 @@ function makePopupHtml(s) {
   }
 
   const inPlan=routePlan.includes(s.id);
-  const sourceNote=s.fromApi?`<div class="popup-api-note">Precio en tiempo real · API MINETUR</div>`:`<div class="popup-api-note">Precio local</div>`;
+  const sourceNote=s.pactada
+    ? `<div class="popup-api-note" style="color:#93c5fd;">⭐ Precio pactado AdmiLogistic${s.apiSurtidor?' · Surtidor API: '+fmtPrice(s.apiSurtidor):''}</div>`
+    : s.fromApi
+      ? `<div class="popup-api-note">Precio en tiempo real · API MINETUR</div>`
+      : `<div class="popup-api-note">Precio local</div>`;
 
   return `
     <div class="popup-inner">
@@ -981,12 +1297,16 @@ function makePopupHtml(s) {
   `;
 }
 
-function makeMarkerIcon(cls) {
+function makeMarkerIcon(cls, pactada=false) {
   const colors={cheap:'#22c55e',mid:'#eab308',exp:'#ef4444'};
   const c=colors[cls]||'#f97316';
+  const star = pactada
+    ? `<text x="10" y="13" text-anchor="middle" font-size="9" fill="#fbbf24" font-family="sans-serif">★</text>`
+    : `<circle cx="10" cy="10" r="4" fill="white" opacity="0.9"/>`;
+  const ring = pactada ? `<circle cx="10" cy="10" r="9" fill="none" stroke="#fbbf24" stroke-width="1.5" opacity="0.9"/>` : '';
   return L.divIcon({
     className:'',
-    html:`<svg width="20" height="28" viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg"><path d="M10 0C4.477 0 0 4.477 0 10c0 7.18 10 18 10 18s10-10.82 10-18C20 4.477 15.523 0 10 0z" fill="${c}" opacity="0.95"/><circle cx="10" cy="10" r="4" fill="white" opacity="0.9"/></svg>`,
+    html:`<svg width="20" height="28" viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg"><path d="M10 0C4.477 0 0 4.477 0 10c0 7.18 10 18 10 18s10-10.82 10-18C20 4.477 15.523 0 10 0z" fill="${c}" opacity="0.95"/>${ring}${star}</svg>`,
     iconSize:[20,28], iconAnchor:[10,28], popupAnchor:[0,-30]
   });
 }
@@ -1006,7 +1326,7 @@ function rebuildMarkers() {
   stations.forEach(s => {
     if (!s.lat) return;
     const cls=s.priceData&&s.priceData.best?priceClass(s.priceData.best):'mid';
-    const m=L.marker([s.lat,s.lng],{icon:makeMarkerIcon(cls)});
+    const m=L.marker([s.lat,s.lng],{icon:makeMarkerIcon(cls,!!s.pactada)});
     // Popup dinámico: se recalcula al abrirse (recoge tank L y plan actuales)
     m.bindPopup(()=>makePopupHtml(s), {maxWidth:290});
     m.on('click',()=>{
@@ -1113,9 +1433,17 @@ function renderRoutePlan() {
 
 function cardEmoji(bestLabel) {
   if (!bestLabel) return '';
-  const l=bestLabel.toLowerCase();
-  if (l.includes('galp')) return '🟧 GALP';
-  if (l.includes('andamur')) return '🟦 ANDAMUR';
+  const l = bestLabel.toLowerCase();
+  if (l.includes('pactado') || l.includes('andamur')) return '🟦';
+  if (l.includes('galp')) return '🟧';
+  return '🟥';
+}
+function cardEmojiLabel(bestLabel) {
+  if (!bestLabel) return '';
+  const l = bestLabel.toLowerCase();
+  if (l.includes('pactado'))  return '🟦 PRECIO PACTADO';
+  if (l.includes('andamur'))  return '🟦 ANDAMUR';
+  if (l.includes('galp'))     return '🟧 TARJETA GALP';
   return '🟥 SOLRED';
 }
 
@@ -1138,7 +1466,7 @@ function generateWhatsApp() {
     const ord=ordinals[i]||`${i+1}ª`;
     const via=s.via&&s.via.trim()?s.via:s.localidad;
     text+=`📍 ${ord} PARADA: ${s.name} (${via})\n`;
-    if (bestLabel) text+=`💳 TARJETA: ${cardEmoji(bestLabel)}\n`;
+    if (bestLabel) text+=`💳 TARJETA: ${cardEmojiLabel(bestLabel)}\n`;
     if (bestP!=null) {
       text+=`💰 PRECIO: ${fmtPrice(bestP)} €/L`;
       if (savingsTotal) text+=` (ahorras ${savingsTotal}€ en ${tankL}L)`;
