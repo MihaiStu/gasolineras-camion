@@ -150,6 +150,8 @@
   .badge-pactado { display:inline-block; background:#1e3a8a; color:#93c5fd; border-radius:3px; padding:1px 5px; font-size:9px; font-family:'Barlow Condensed',sans-serif; font-weight:700; letter-spacing:0.5px; margin-left:5px; vertical-align:middle; }
   .station-card.pactada { border-left:3px solid #f59e0b; }
   .star-badge { font-size:10px; margin-right:3px; }
+  .badge-truck { display:inline-block; background:#134e4a; color:#5eead4; border-radius:3px; padding:1px 5px; font-size:9px; font-family:'Barlow Condensed',sans-serif; font-weight:700; letter-spacing:0.5px; margin-left:4px; vertical-align:middle; }
+  .filter-btn.truck-active { background:#0f766e; border-color:#14b8a6; color:white; }
 
   /* ── ROUTE PLAN PANEL ── */
   .rpp-panel {
@@ -335,6 +337,10 @@
       <input class="search-box" id="searchBox" type="text" placeholder="🔍  Buscar estación, localidad, provincia..."
         oninput="if(typeof renderList==='function'){renderList();updateMarkers();}"
         onkeyup="if(typeof renderList==='function'){renderList();updateMarkers();}">
+      <div style="display:flex;gap:5px;align-items:center;">
+        <button id="btnTruck" class="filter-btn" onclick="toggleTruckFilter()" title="Solo estaciones con acceso para camiones (Gasoil B, Andamur o Pactadas)">🚛 CAMIONES</button>
+        <span id="truckCount" style="font-size:10px;color:var(--muted);display:none;"></span>
+      </div>
       <div class="filters" id="zoneFilters"></div>
       <div id="routeBanner" style="display:none" class="route-banner">
         <span class="route-banner-name" id="routeBannerName"></span>
@@ -800,6 +806,7 @@ let selectedId = null;
 let dataSource = 'api';
 let priceMinMax = { min: 0, max: 0 };
 let routePlan = []; // IDs de estaciones en la ruta de repostaje
+let truckFilter = false; // Filtro: solo estaciones con acceso para camiones
 
 // ── UTILIDADES ────────────────────────────────────────────────────────────────
 function distanceKm(lat1, lng1, lat2, lng2) {
@@ -890,12 +897,17 @@ function parseMinetur(data) {
     const lat = parseApiNum(e['Latitud']);
     const lng = parseApiNum(e['Longitud (WGS84)']);
     if (!lat || !lng) return;
+    const precioB = parseApiNum(e['Precio Gasoleo B']);
+    const bt = getBrandType(rotulo);
     result.push({
-      id: idx, name: rotulo, rotulo, brandType: getBrandType(rotulo),
+      id: idx, name: rotulo, rotulo, brandType: bt,
       via: (e['Dirección']||'').trim(), localidad: (e['Localidad']||'').trim(),
       provincia: (e['Provincia']||'').trim(), cp: (e['C.P.']||'').trim(),
       zone: zoneFromProvincia((e['Provincia']||'').trim()),
-      price: precioA, lat, lng, ideess: e['IDEESS']||'', fromApi: true
+      price: precioA, preciob: precioB||null,
+      hasDieselB: !!precioB,
+      truckOk: !!precioB || bt==='andamur',
+      lat, lng, ideess: e['IDEESS']||'', fromApi: true
     });
   });
   return result;
@@ -959,6 +971,7 @@ function applyPactadas(apiStations) {
           s.price     = m.price;
           s.manualPrice = true;
           s.pactada   = true;
+          s.truckOk   = true;
         });
         return; // no inyectar
       }
@@ -979,7 +992,7 @@ function applyPactadas(apiStations) {
       id: 90000+mIdx, name:m.name, via:m.via, localidad:m.localidad, provincia:m.provincia,
       price:m.price, zone:zoneFromProvincia(m.provincia), rotulo:m.name.toUpperCase(),
       brandType:getBrandType(m.name), cp:'', fromApi:false,
-      manualPrice:true, pactada:true,
+      manualPrice:true, pactada:true, truckOk:true,
       lat:coords?coords[0]+j():null, lng:coords?coords[1]+j():null
     });
   });
@@ -1153,13 +1166,29 @@ function buildZones() {
   });
 }
 
+function toggleTruckFilter() {
+  truckFilter = !truckFilter;
+  const btn = document.getElementById('btnTruck');
+  const cntEl = document.getElementById('truckCount');
+  btn.classList.toggle('truck-active', truckFilter);
+  if (truckFilter) {
+    const cnt = stations.filter(s=>s.truckOk).length;
+    cntEl.textContent = `${cnt} apto${cnt!==1?'s':''}`;
+    cntEl.style.display = 'inline';
+  } else {
+    cntEl.style.display = 'none';
+  }
+  buildZones(); renderList(); updateMarkers();
+}
+
 function filteredStations(skipZone=false) {
   const q=document.getElementById('searchBox').value.toLowerCase().trim();
   return stations.filter(s => {
     const mZ=skipZone||activeZone==='TODAS'||s.zone===activeZone;
     const mQ=!q||s.name.toLowerCase().includes(q)||s.localidad.toLowerCase().includes(q)||s.provincia.toLowerCase().includes(q)||s.via.toLowerCase().includes(q)||(s.cp&&s.cp.includes(q));
     const mR=!activeRoute||stationMatchesRoute(s,activeRoute);
-    return mZ&&mQ&&mR;
+    const mT=!truckFilter||s.truckOk;
+    return mZ&&mQ&&mR&&mT;
   });
 }
 
@@ -1213,7 +1242,7 @@ function renderList() {
       <div class="station-info">
         <div class="station-name">${s.pactada?'<span class="star-badge">⭐</span>':''}${s.name}</div>
         <div class="station-meta">${s.via?s.via+' · ':''}${s.localidad}, ${s.provincia}</div>
-        <div class="station-zone">${s.zone}${s.manualPrice?'<span class="badge-pactado">PRECIO PACTADO</span>':''}</div>
+        <div class="station-zone">${s.zone}${s.manualPrice?'<span class="badge-pactado">PRECIO PACTADO</span>':''}${s.hasDieselB&&!s.pactada?'<span class="badge-truck">GASOIL B</span>':''}</div>
       </div>
       <div class="price-badge ${cls}">${bp!=null?bp.toFixed(3).replace('.',','):'—'}<span class="pb-label">${p&&p.bestLabel?p.bestLabel:''}</span></div>
       <button class="btn-add-plan${inPlan?' in-plan':''}" onclick="event.stopPropagation();togglePlanFromCard(${s.id})" title="${inPlan?'Quitar de ruta':'Añadir a ruta'}">${inPlan?'✓':'+'}</button>
@@ -1248,7 +1277,9 @@ function makePopupHtml(s) {
   let compareHtml='';
   if (p) {
     const rows=[];
-    rows.push(`<tr><td>⛽ Surtidor</td><td class="pc-price">${fmtPrice(p.surtidor)}</td></tr>`);
+    const truckTag=s.truckOk?` <span style="font-size:10px;">🚛</span>`:'';
+    rows.push(`<tr><td>⛽ Surtidor${truckTag}</td><td class="pc-price">${fmtPrice(p.surtidor)}</td></tr>`);
+    if (s.hasDieselB&&s.preciob) rows.push(`<tr><td>🚛 Gasoil B (prof.)</td><td class="pc-price" style="color:#5eead4;">${fmtPrice(s.preciob)}</td></tr>`);
     if (p.galp!=null) {
       const isBest=p.bestLabel==='Tarjeta Galp';
       rows.push(`<tr${isBest?' class="pc-best"':''}><td>${isBest?'🏆 ':''}Tarjeta Galp <span style="font-size:10px;color:var(--muted)">(-${GALP_DISCOUNT.toFixed(2)}€)</span></td><td class="pc-price">${fmtPrice(p.galp)}</td></tr>`);
