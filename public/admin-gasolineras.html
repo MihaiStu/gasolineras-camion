@@ -320,9 +320,12 @@
 
   <div class="header-right">
     <div class="legend">
-      <span><span class="legend-dot" style="background:var(--cheap)"></span>Barato</span>
-      <span><span class="legend-dot" style="background:var(--mid)"></span>Medio</span>
-      <span><span class="legend-dot" style="background:var(--exp)"></span>Caro</span>
+      <span><span class="legend-dot" style="background:#1d4ed8"></span>GALP</span>
+      <span><span class="legend-dot" style="background:#dc2626"></span>REPSOL</span>
+      <span><span class="legend-dot" style="background:#d97706"></span>ANDAMUR</span>
+      <span><span class="legend-dot" style="background:#7c3aed"></span>GALP+AND</span>
+      <span><span class="legend-dot" style="background:#0d9488"></span>OTRAS</span>
+      <span><span class="legend-dot" style="background:#fbbf24;border-radius:2px;"></span>⭐ PACTADA</span>
     </div>
     <span class="last-update" id="lastUpdate">—</span>
     <div class="total-badge" id="totalBadge">— estaciones</div>
@@ -420,10 +423,17 @@
 <script>
 // ── CONFIGURACIÓN ─────────────────────────────────────────────────────────────
 const API_URL = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/';
-const GALP_DISCOUNT = 0.16;
+const GALP_DISCOUNT    = 0.16;  // descuento Tarjeta Galp sobre surtidor
+const REPSOL_DISCOUNT  = 0.06;  // descuento Tarjeta Solred sobre surtidor
 const LIST_MAX = 250;
 const ANDAMUR_NEARBY_KM = 5;
 const BRANDS_FILTER = ['GALP', 'REPSOL', 'CAMPSA', 'PETRONOR', 'ANDAMUR'];
+
+// Estaciones Repsol/Solred pactadas (identificadas por IDEESS del Ministerio)
+const REPSOL_PACTADAS_IDEESS = new Set([
+  '2409','10910','96844','4571','15456','96896','11969',
+  '10867','37002','3311','4377','96082','96083','5474','13430'
+]);
 
 // ── PROVINCE → ZONA ───────────────────────────────────────────────────────────
 const PROVINCE_TO_ZONE = {
@@ -996,6 +1006,18 @@ function applyPactadas(apiStations) {
       lat:coords?coords[0]+j():null, lng:coords?coords[1]+j():null
     });
   });
+  // Marcar Repsol pactadas por IDEESS (descuento 6 cts ya se aplica globalmente)
+  result.forEach(s => {
+    if (!s.pactada && s.ideess) {
+      const normId = String(parseInt(s.ideess, 10));
+      if (REPSOL_PACTADAS_IDEESS.has(normId)) {
+        s.pactada   = true;
+        s.truckOk   = true;
+        s.manualPrice = true;
+      }
+    }
+  });
+
   return result;
 }
 
@@ -1054,7 +1076,8 @@ function computePrices(station) {
     r.solred   = surt;
     if (station.manualPrice) r.pactado = station.price; // precio contractual
   } else if (station.brandType==='repsol') {
-    r.surtidor=station.price; r.solred=station.price;
+    r.surtidor=station.price;
+    r.solred=+(station.price - REPSOL_DISCOUNT).toFixed(3);
   } else if (station.brandType==='andamur') {
     r.surtidor=station.price; r.andamur=station.price;
   } else {
@@ -1069,7 +1092,7 @@ function computePrices(station) {
   const opts=[];
   if (r.pactado!=null)  opts.push({label:'Precio Pactado', price:r.pactado});
   if (r.galp!=null)     opts.push({label:'Tarjeta Galp',   price:r.galp});
-  if (r.solred!=null && r.galp==null && r.pactado==null) opts.push({label:'Tarjeta Solred', price:r.solred});
+  if (r.solred!=null && r.galp==null && r.pactado==null) opts.push({label:'Tarjeta Solred (-0,06€)', price:r.solred});
   if (r.andamur!=null)  opts.push({label:'Andamur',        price:r.andamur});
   if (r.andamurNearby)  opts.push({label:'Andamur cercano',price:r.andamurNearby.price});
   if (opts.length) { const best=opts.reduce((a,b)=>a.price<b.price?a:b); r.best=best.price; r.bestLabel=best.label; }
@@ -1328,12 +1351,24 @@ function makePopupHtml(s) {
   `;
 }
 
-function makeMarkerIcon(cls, pactada=false) {
-  const colors={cheap:'#22c55e',mid:'#eab308',exp:'#ef4444'};
-  const c=colors[cls]||'#f97316';
+const BRAND_COLORS = {
+  galp:    '#1d4ed8', // azul GALP
+  repsol:  '#dc2626', // rojo Repsol/Solred
+  andamur: '#d97706', // naranja Andamur
+  multi:   '#7c3aed', // púrpura: GALP o Repsol + Andamur cercano
+  other:   '#0d9488', // verde-azul: otras redes pactadas
+};
+
+function getBrandMarkerColor(brandType, hasMultiNetwork) {
+  if (hasMultiNetwork) return BRAND_COLORS.multi;
+  return BRAND_COLORS[brandType] || BRAND_COLORS.other;
+}
+
+function makeMarkerIcon(brandType, pactada=false, hasMultiNetwork=false) {
+  const c = getBrandMarkerColor(brandType, hasMultiNetwork);
   const star = pactada
     ? `<text x="10" y="13" text-anchor="middle" font-size="9" fill="#fbbf24" font-family="sans-serif">★</text>`
-    : `<circle cx="10" cy="10" r="4" fill="white" opacity="0.9"/>`;
+    : `<circle cx="10" cy="10" r="4" fill="white" opacity="0.85"/>`;
   const ring = pactada ? `<circle cx="10" cy="10" r="9" fill="none" stroke="#fbbf24" stroke-width="1.5" opacity="0.9"/>` : '';
   return L.divIcon({
     className:'',
@@ -1356,8 +1391,8 @@ function rebuildMarkers() {
   const visible=new Set(filteredStations().map(s=>s.id));
   stations.forEach(s => {
     if (!s.lat) return;
-    const cls=s.priceData&&s.priceData.best?priceClass(s.priceData.best):'mid';
-    const m=L.marker([s.lat,s.lng],{icon:makeMarkerIcon(cls,!!s.pactada)});
+    const hasMulti = !!(s.priceData&&s.priceData.andamurNearby) && s.brandType!=='andamur';
+    const m=L.marker([s.lat,s.lng],{icon:makeMarkerIcon(s.brandType,!!s.pactada,hasMulti)});
     // Popup dinámico: se recalcula al abrirse (recoge tank L y plan actuales)
     m.bindPopup(()=>makePopupHtml(s), {maxWidth:290});
     m.on('click',()=>{
@@ -1570,7 +1605,7 @@ function showResult(type, msg) {
 window.addEventListener('DOMContentLoaded', async () => {
   buildRoutesList();
   map=L.map('map',{center:[40.4,-3.7],zoom:6,zoomControl:true});
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',subdomains:'abcd',maxZoom:19}).addTo(map);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles © Esri — Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community',maxZoom:19}).addTo(map);
   clusterGroup=L.markerClusterGroup({chunkedLoading:true,maxClusterRadius:50,showCoverageOnHover:false});
   map.addLayer(clusterGroup);
 
