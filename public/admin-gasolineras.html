@@ -405,11 +405,11 @@
 <div class="modal-overlay" id="pricesModalOverlay" onclick="if(event.target===this)closePricesModal()">
   <div class="modal">
     <h2>⬆ Actualizar precios</h2>
-    <p>Pega filas separadas por tabuladores:<br>
-    <code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green)">Nombre gasolinera · Precio</code><br>
-    Actualiza los precios de las estaciones pactadas en esta sesión.</p>
+    <p>Pega el texto de precios actualizado (separado por tabuladores).<br>
+    Formato completo: <code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green)">Nombre · Vía · Localidad · Provincia · Precio · Zona</code><br>
+    Formato corto: <code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green)">Nombre · Precio</code></p>
     <div id="pricesParseResult" class="parse-result"></div>
-    <textarea id="pricesPasteArea" placeholder="GALP Meco	1.435&#10;ANDAMUR Minglanilla	1.440&#10;NIEVES Parets	1.415"></textarea>
+    <textarea id="pricesPasteArea" placeholder="ANDAMUR La Junquera	AP-7, N-II	La Junquera	Girona	1,603	CATALUÑA&#10;ANDAMUR Minglanilla	A-3	Minglanilla	Cuenca	1,440	ZONA MADRID&#10;&#10;O formato corto:&#10;ANDAMUR Minglanilla	1.440"></textarea>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closePricesModal()">Cancelar</button>
       <button class="btn-parse" onclick="parsePricesOnly()">Actualizar precios</button>
@@ -1591,26 +1591,43 @@ function closePricesModal() { document.getElementById('pricesModalOverlay').clas
 function parsePricesOnly() {
   const text = document.getElementById('pricesPasteArea').value.trim();
   if (!text) { showPricesResult('err', 'Campo vacío.'); return; }
-  let updated = 0, notFound = [];
-  text.split('\n').forEach(line => {
+  let updated = 0, added = 0, notFound = [];
+  text.split('\n').forEach((line, idx) => {
     const p = line.split('\t');
     if (p.length < 2) return;
     const name = p[0].trim();
-    const price = parseFloat(p[1].replace(',', '.'));
+    // Formato largo (6 col): Nombre · Vía · Localidad · Provincia · Precio · Zona
+    // Formato corto (2 col): Nombre · Precio
+    const priceRaw = p.length >= 5 ? p[4].trim() : p[1].trim();
+    const price = parseFloat(priceRaw.replace(',', '.'));
     if (!name || isNaN(price) || price < 0.5 || price > 4) return;
     const existing = stations.find(s => s.name.toLowerCase() === name.toLowerCase()
-      || normalizeStr(s.name).includes(normalizeStr(name))
-      || normalizeStr(name).includes(normalizeStr(s.name)));
+      || normalizeStr(s.name) === normalizeStr(name));
     if (existing) {
       if (existing.brandType === 'galp' && !existing.apiSurtidor) existing.apiSurtidor = existing.price;
       existing.price = price; existing.manualPrice = true; existing.pactada = true;
       existing.priceData = computePrices(existing); updated++;
+    } else if (p.length >= 5) {
+      // Formato largo: añadir si no existe
+      const via = p[1].trim(), localidad = p[2].trim(), provincia = p[3].trim();
+      const zone = p[5] ? p[5].trim() : zoneFromProvincia(provincia);
+      const key = `${localidad}|${provincia}`;
+      let coords = COORDS_FALLBACK[key] || null;
+      if (!coords) { const fb = Object.keys(COORDS_FALLBACK).find(k => k.startsWith(localidad+'|')); coords = fb ? COORDS_FALLBACK[fb] : null; }
+      const j = () => (Math.random()-0.5)*0.008;
+      const ns = { id: Date.now()+idx, name, via, localidad, provincia, price, zone,
+        rotulo: name.toUpperCase(), brandType: getBrandType(name), cp:'', fromApi:false,
+        manualPrice:true, pactada:true,
+        lat: coords ? coords[0]+j() : null, lng: coords ? coords[1]+j() : null };
+      ns.priceData = computePrices(ns); stations.push(ns); added++;
     } else { notFound.push(name); }
   });
-  if (updated === 0) { showPricesResult('err', notFound.length ? `No encontradas: ${notFound.join(', ')}` : 'Sin filas válidas. Formato: Nombre\\tPrecio'); return; }
-  const warn = notFound.length ? ` · No encontradas: ${notFound.join(', ')}` : '';
-  showPricesResult('ok', `✓ ${updated} precios actualizados${warn}`);
-  updatePriceMinMax(); renderList(); rebuildMarkers(); updateLastUpdate();
+  if (updated+added === 0) { showPricesResult('err', notFound.length ? `No encontradas: ${notFound.join(', ')}` : 'Sin filas válidas.'); return; }
+  let msg = `✓ ${updated} actualizadas`;
+  if (added) msg += `, ${added} nuevas`;
+  if (notFound.length) msg += ` · No encontradas: ${notFound.join(', ')}`;
+  showPricesResult('ok', msg);
+  updatePriceMinMax(); activeZone='TODAS'; buildZones(); renderList(); rebuildMarkers(); updateLastUpdate();
   setTimeout(closePricesModal, 2500);
 }
 
