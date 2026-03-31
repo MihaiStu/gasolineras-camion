@@ -33,6 +33,8 @@
   .btn-update:hover { background:var(--accent2); }
   .btn-refresh { background:none; color:var(--green); border:1px solid var(--green); padding:6px 11px; border-radius:4px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:12px; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
   .btn-refresh:hover { background:rgba(34,197,94,0.1); }
+  .btn-prices { background:#1e3a5f; color:#93c5fd; border:1px solid #3b82f6; padding:6px 11px; border-radius:4px; font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:12px; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+  .btn-prices:hover { background:#1e40af; color:white; }
   .total-badge { background:var(--border); border:1px solid var(--accent); border-radius:4px; padding:4px 10px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent); white-space:nowrap; }
   .legend { display:flex; gap:10px; align-items:center; font-size:11px; color:var(--muted); }
   .legend-dot { width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:3px; }
@@ -274,6 +276,7 @@
     .btn-routes svg { display:none; }
     .total-badge,.last-update,.legend,.btn-refresh { display:none; }
     .btn-update { font-size:12px; padding:5px 10px; }
+    .btn-prices { font-size:11px; padding:5px 8px; }
     .routes-wrapper { position:static; }
     .routes-dropdown { position:fixed; top:48px; left:0; right:0; width:100%; max-height:70vh; overflow-y:auto; border-radius:0 0 8px 8px; border-left:none; border-right:none; }
     .main { flex-direction:column-reverse; height:calc(100vh - 48px); }
@@ -330,6 +333,7 @@
     <span class="last-update" id="lastUpdate">—</span>
     <div class="total-badge" id="totalBadge">— estaciones</div>
     <button class="btn-refresh" onclick="refreshData()" title="Recargar precios desde API">↻ API</button>
+    <button class="btn-prices" onclick="openPricesModal()" title="Actualizar precios de estaciones pactadas">⬆ Actualizar precios</button>
     <button class="btn-update" onclick="openModal()">+ Añadir manual</button>
   </div>
 </header>
@@ -396,6 +400,22 @@
   <span class="rpp-tab-badge" id="rppTabBadge">0</span>
   RUTA ▶
 </button>
+
+<!-- MODAL ACTUALIZAR PRECIOS -->
+<div class="modal-overlay" id="pricesModalOverlay" onclick="if(event.target===this)closePricesModal()">
+  <div class="modal">
+    <h2>⬆ Actualizar precios</h2>
+    <p>Pega filas separadas por tabuladores:<br>
+    <code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green)">Nombre gasolinera · Precio</code><br>
+    Actualiza los precios de las estaciones pactadas en esta sesión.</p>
+    <div id="pricesParseResult" class="parse-result"></div>
+    <textarea id="pricesPasteArea" placeholder="GALP Meco	1.435&#10;ANDAMUR Minglanilla	1.440&#10;NIEVES Parets	1.415"></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closePricesModal()">Cancelar</button>
+      <button class="btn-parse" onclick="parsePricesOnly()">Actualizar precios</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL AÑADIR MANUAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
@@ -1562,6 +1582,40 @@ function fallbackCopy(text) {
   document.body.appendChild(ta); ta.select(); document.execCommand('copy');
   document.body.removeChild(ta);
   showToast('✅ Copiado con éxito · Pega en WhatsApp con Ctrl+V', 4000);
+}
+
+// ── MODAL ACTUALIZAR PRECIOS ──────────────────────────────────────────────────
+function openPricesModal() { document.getElementById('pricesModalOverlay').classList.add('open'); document.getElementById('pricesPasteArea').value=''; document.getElementById('pricesParseResult').className='parse-result'; }
+function closePricesModal() { document.getElementById('pricesModalOverlay').classList.remove('open'); }
+
+function parsePricesOnly() {
+  const text = document.getElementById('pricesPasteArea').value.trim();
+  if (!text) { showPricesResult('err', 'Campo vacío.'); return; }
+  let updated = 0, notFound = [];
+  text.split('\n').forEach(line => {
+    const p = line.split('\t');
+    if (p.length < 2) return;
+    const name = p[0].trim();
+    const price = parseFloat(p[1].replace(',', '.'));
+    if (!name || isNaN(price) || price < 0.5 || price > 4) return;
+    const existing = stations.find(s => s.name.toLowerCase() === name.toLowerCase()
+      || normalizeStr(s.name).includes(normalizeStr(name))
+      || normalizeStr(name).includes(normalizeStr(s.name)));
+    if (existing) {
+      if (existing.brandType === 'galp' && !existing.apiSurtidor) existing.apiSurtidor = existing.price;
+      existing.price = price; existing.manualPrice = true; existing.pactada = true;
+      existing.priceData = computePrices(existing); updated++;
+    } else { notFound.push(name); }
+  });
+  if (updated === 0) { showPricesResult('err', notFound.length ? `No encontradas: ${notFound.join(', ')}` : 'Sin filas válidas. Formato: Nombre\\tPrecio'); return; }
+  const warn = notFound.length ? ` · No encontradas: ${notFound.join(', ')}` : '';
+  showPricesResult('ok', `✓ ${updated} precios actualizados${warn}`);
+  updatePriceMinMax(); renderList(); rebuildMarkers(); updateLastUpdate();
+  setTimeout(closePricesModal, 2500);
+}
+
+function showPricesResult(type, msg) {
+  const el = document.getElementById('pricesParseResult'); el.className = 'parse-result ' + type; el.textContent = msg;
 }
 
 // ── MODAL ─────────────────────────────────────────────────────────────────────
