@@ -447,7 +447,7 @@ const GALP_DISCOUNT    = 0.16;  // descuento Tarjeta Galp sobre surtidor
 const REPSOL_DISCOUNT  = 0.06;  // descuento Tarjeta Solred sobre surtidor
 const LIST_MAX = 250;
 const ANDAMUR_NEARBY_KM = 5;
-const BRANDS_FILTER = ['GALP', 'REPSOL', 'CAMPSA', 'PETRONOR', 'ANDAMUR'];
+const BRANDS_FILTER = ['REPSOL', 'CAMPSA', 'PETRONOR'];
 
 // Estaciones Repsol/Solred pactadas (identificadas por IDEESS del Ministerio)
 const REPSOL_PACTADAS_IDEESS = new Set([
@@ -917,6 +917,17 @@ async function fetchMinetur() {
   } catch(e) { clearTimeout(tid); throw e; }
 }
 
+// Solo acepta Repsol/Campsa cuya dirección indica claramente autopista/autovía
+function isHighwayStation(dir) {
+  if (!dir) return false;
+  const d = dir.toUpperCase().trim();
+  if (/AUTOV[IÍ][AO]|AUTOPISTA|ÁREA DE SERVICIO|AREA DE SERVICIO|AREA SERVICIO/.test(d)) return true;
+  if (/\b(AP?|N|CN|E|R)-\d{1,3}\b[\s,].*?\b(KM|PK|P\.K)\.?\b/.test(d)) return true;
+  if (/\b(KM|PK)\b.*?\b(AP?|N|CN)-\d{1,3}\b/.test(d)) return true;
+  if (/^(AUTOV|AUTOP|A-\d|AP-\d|N-\d|CN-\d|CTRA\.?\s*(N-|A-|AP-|CN-))/.test(d)) return true;
+  return false;
+}
+
 function parseMinetur(data) {
   const result = [];
   (data.ListaEESSPrecio || []).forEach((e, idx) => {
@@ -927,16 +938,18 @@ function parseMinetur(data) {
     const lat = parseApiNum(e['Latitud']);
     const lng = parseApiNum(e['Longitud (WGS84)']);
     if (!lat || !lng) return;
+    const dir = (e['Dirección']||'').trim();
+    if (!isHighwayStation(dir)) return; // solo autopista/autovía
     const precioB = parseApiNum(e['Precio Gasoleo B']);
     const bt = getBrandType(rotulo);
     result.push({
       id: idx, name: rotulo, rotulo, brandType: bt,
-      via: (e['Dirección']||'').trim(), localidad: (e['Localidad']||'').trim(),
+      via: dir, localidad: (e['Localidad']||'').trim(),
       provincia: (e['Provincia']||'').trim(), cp: (e['C.P.']||'').trim(),
       zone: zoneFromProvincia((e['Provincia']||'').trim()),
       price: precioA, preciob: precioB||null,
       hasDieselB: !!precioB,
-      truckOk: !!precioB || bt==='andamur',
+      truckOk: true,
       lat, lng, ideess: e['IDEESS']||'', fromApi: true
     });
   });
