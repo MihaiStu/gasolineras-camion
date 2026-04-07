@@ -634,7 +634,7 @@ const API_URL = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburante
 const GALP_DISCOUNT = 0.16;
 const LIST_MAX = 250;
 const ANDAMUR_NEARBY_KM = 5;
-const BRANDS_FILTER = ['GALP', 'REPSOL', 'CAMPSA', 'PETRONOR', 'ANDAMUR'];
+const BRANDS_FILTER = ['REPSOL', 'CAMPSA', 'PETRONOR'];
 
 // ── PROVINCE → ZONA ───────────────────────────────────────────────────────────
 const PROVINCE_TO_ZONE = {
@@ -679,115 +679,234 @@ const ROUTE_CORRIDORS = {
   'mol-ali':    [37.40, -2.15, 38.95, 0.30]
 };
 
-// ── DATOS ESTÁTICOS DE RESPALDO ───────────────────────────────────────────────
-const RAW_DATA = `ANDAMUR La Junquera	AP-7, N-II	La Junquera	Girona	1,603	CATALUÑA
-ANDAMUR La Junquera-Llers	AP-7, N-II	Llers	Girona	1,603	CATALUÑA
-ANDAMUR Pamplona	AP15, N-121-A	Imárcoain	Navarra	1,614	NAVARRA
-ANDAMUR San Román - Araia	A-1	San Román de San Millán	Álava	1,605	PAÍS VASCO
-ANDAMUR El Límite	A-7	Huércal-Overa	Almería	1,560	ANDALUCÍA
-ANDAMUR Guarromán	A-4	Guarromán	Jaén	1,589	ANDALUCÍA
-ANDAMUR Lorca	A-7	Lorca	Murcia	1,570	MURCIA
-GALP Huétor Tájar	A-92	Huetor Tajar	Granada	1,604	ANDALUCÍA
-GALP Jerez	A-381	Jerez de la Frontera	Cádiz	1,597	ANDALUCÍA
-GALP Puerto Real	CA-35	Puerto Real	Cádiz	1,629	ANDALUCÍA
-GALP Rosal de La Frontera	N-433	Rosal de la Frontera	Huelva	1,630	ANDALUCÍA
-GALP Estepona	A-7	Estepona	Málaga	1,594	ANDALUCÍA
-GALP Málaga - El Viso	A-357	Málaga	Málaga	1,600	ANDALUCÍA
-GALP Málaga - El Limonar	A-7	Málaga	Málaga	1,623	ANDALUCÍA
-GALP Los Palacios	AP-4	Los Palacios y Villafranca	Sevilla	1,590	ANDALUCÍA
-GALP Cáceres - Ctra. A Trujillo	N-521	Cáceres	Cáceres	1,678	EXTREMADURA
-GALP Peraleda de la Mata	A-5	Peraleda de la Mata	Cáceres	1,683	EXTREMADURA
-GALP Castillo de Garcimuñoz	A-3	Castillo de Garcimuñoz	Cuenca	1,595	CASTILLA-LA MANCHA
-GALP Calera y Chozas	A-5	Calera y Chozas	Toledo	1,603	CASTILLA-LA MANCHA
-GALP Puerto Lápice I	A-4	Puerto Lapice	Ciudad Real	1,601	CASTILLA-LA MANCHA
-GALP Puerto Lápice II	A-4	Puerto Lapice	Ciudad Real	1,601	CASTILLA-LA MANCHA
-GALP Ribarroja Del Turia	AP-7, A-3	Ribarroja del Turia	Valencia	1,540	C. VALENCIANA
-GALP Beneixida	N-340	Beneixida	Valencia	1,542	C. VALENCIANA
-GALP Fuente La Higuera	A-35	Fuente La Higuera	Valencia	1,560	C. VALENCIANA
-GALP Torrent I	A-7	Torrent	Valencia	1,589	C. VALENCIANA
-GALP Torrent II	A-7	Torrent	Valencia	1,589	C. VALENCIANA
-GALP El Puig	A-7	El Puig de Santa María	Valencia	1,590	C. VALENCIANA
-GALP Villargordo Cabriel I	A-3	Villargordo del Gabriel	Valencia	1,595	C. VALENCIANA
-GALP Agost - AP7 Dir.Murcia	AP-7	Agost	Alicante	1,616	C. VALENCIANA
-GALP Agost - AP7 Dir.Valencia	AP-7	Agost	Alicante	1,616	C. VALENCIANA
-GALP Elche I	A-70	Torrellano	Alicante	1,593	C. VALENCIANA
-GALP Elche II	A-70	Torrellano	Alicante	1,594	C. VALENCIANA
-GALP San Antonio I	AP-7	Pedreguer	Alicante	1,595	C. VALENCIANA
-GALP La Plana I	AP-7	Burriana	Castellón	1,598	C. VALENCIANA
-GALP La Plana II	AP-7	Burriana	Castellón	1,598	C. VALENCIANA
-GALP Alcalá Henares I	A-2	Alcalá de Henares	Madrid	1,596	C. DE MADRID
-GALP Alcalá Henares II	A-2	Alcalá de Henares	Madrid	1,596	C. DE MADRID
-GALP Parla	A-42	Parla	Madrid	1,617	C. DE MADRID
-GALP Pinto - Eboli I	M-506	Pinto	Madrid	1,595	C. DE MADRID
-GALP Pinto - Eboli II	M-506	Pinto	Madrid	1,595	C. DE MADRID
-GALP Perales De Tajuña	A-3, N-III	Perales De Tajuña	Madrid	1,597	C. DE MADRID
-GALP S.S.de los Reyes-Jarama	A-1	San Sebastián de los Reyes	Madrid	1,596	C. DE MADRID
-GALP Zaragoza I	A-2	La Muela	Zaragoza	1,599	ARAGÓN
-GALP Zaragoza II	A-2	La Muela	Zaragoza	1,599	ARAGÓN
-GALP Monegros I	AP-2	Candasnos	Huesca	1,600	ARAGÓN
-GALP Monegros II	AP-2	Candasnos	Huesca	1,600	ARAGÓN
-GALP El Prat de Llobregat-Vertix	C-31	El Prat de Llobregat	Barcelona	1,583	CATALUÑA
-GALP Molins de Rei	B-23	Molins de Rei	Barcelona	1,583	CATALUÑA
-GALP Granollers	BP-5002	Granollers	Barcelona	1,608	CATALUÑA
-GALP Porta de Barcelona Sur	AP-7	Castellbisbal	Barcelona	1,584	CATALUÑA
-GALP Barcelona	B-10	Barcelona	Barcelona	1,583	CATALUÑA
-GALP El Bruc	A-2	El Bruc	Barcelona	1,584	CATALUÑA
-GALP Gironès Norte	AP-7	Aiguaviva	Girona	1,642	CATALUÑA
-GALP Gironès Sur	AP-7	Riudellots de la Selva	Girona	1,642	CATALUÑA
-GALP Jonquera - Tramuntana	N-II	La Junquera	Girona	1,646	CATALUÑA
-GALP Alt Camp I	AP-2	Rodonya	Tarragona	1,586	CATALUÑA
-GALP Alt Camp II	AP-2	Rodonya	Tarragona	1,586	CATALUÑA
-GALP Ziordia	A-1	Ziordia	Navarra	1,665	NAVARRA
-GALP Alsasua Dir. Madrid	A-1	Altsasu Alsasu	Navarra	1,642	NAVARRA
-GALP Irún	A-15, NA-700	Irun	Guipúzcoa	1,668	PAÍS VASCO
-GALP Lasarte	A-1	Lasarte	Guipúzcoa	1,666	PAÍS VASCO
-GALP Villatoro	N-627	Burgos	Burgos	1,675	CASTILLA Y LEÓN
-GALP Sarracín I	A-1	Sarracín	Burgos	1,675	CASTILLA Y LEÓN
-GALP Sarracín II	A-1	Sarracín	Burgos	1,675	CASTILLA Y LEÓN
-GALP Los Balbases	A-62	Los Balbases	Burgos	1,677	CASTILLA Y LEÓN
-GALP Aldehuela de la Bóveda	A-62	Aldehuela de la Bóveda	Salamanca	1,683	CASTILLA Y LEÓN
-GALP Villacastín Dir. Coruña	N-6	Villacastin	Segovia	1,598	CASTILLA Y LEÓN
-GALP Villacastín Dir. Madrid	N-6	Villacastin	Segovia	1,598	CASTILLA Y LEÓN
-GALP Medina Del Campo	A-6	Medina del Campo	Valladolid	1,675	CASTILLA Y LEÓN
-GALP De la Vega I	A-8	Posada de Llanes	Asturias	1,687	ASTURIAS
-GALP De la Vega II	A-8	Posada de Llanes	Asturias	1,687	ASTURIAS
-GALP Guitiriz I	A-6	Guitiriz	Lugo	1,668	GALICIA
-GALP Guitiriz II	A-6	Guitiriz	Lugo	1,668	GALICIA
-GALP Monforte de Lemos	N-120, LU-933	Monforte de Lemos	Lugo	1,684	GALICIA
-GALP Meis	AG-41	Meis (San Martin)	Pontevedra	1,698	GALICIA
-GALP Silleda	AP-53	Silleda	Pontevedra	1,674	GALICIA`;
+// ── RED PACTADA (datos curados, siempre visibles) ─────────────────────────────
+const RAW_DATA = `ANDAMUR La Junquera	AP-7, N-II	La Junquera	Girona	1,629	CATALUÑA
+ANDAMUR La Junquera-Llers	AP-7, N-II	Llers	Girona	1,629	CATALUÑA
+GM FUEL Servei Carrer 3	B-10	Barcelona	Barcelona	1,562	CATALUÑA
+NIEVES Parets	N-152	Parets del Valles	Barcelona	1,680	CATALUÑA
+Renova Oil Incoenergy	N-230	Torrefarrera	Lérida	1,568	CATALUÑA
+NIEVES Lérida	N-II	Lérida	Lérida	1,685	CATALUÑA
+GALP El Prat de Llobregat-Vertix	C-31	El Prat de Llobregat	Barcelona	1,659	CATALUÑA
+GALP Molins de Rei	B-23	Molins de Rei	Barcelona	1,659	CATALUÑA
+GALP Granollers	BP-5002	Granollers	Barcelona	1,659	CATALUÑA
+GALP Porta de Barcelona Sur	AP-7	Castellbisbal	Barcelona	1,660	CATALUÑA
+GM FUEL La Gornal	N-340	Castellet i Gonal	Barcelona	1,550	CATALUÑA
+PRIMER Area Truck Service	C-153	Vic	Barcelona	1,551	CATALUÑA
+GALP Barcelona	B-10	Barcelona	Barcelona	1,659	CATALUÑA
+GALP El Bruc	A-2	El Bruc	Barcelona	1,660	CATALUÑA
+NIEVES Sesrovires	AP-7, A2	Sant Esteve de Sesrovires	Barcelona	1,675	CATALUÑA
+NIEVES Zona Franca	B-10	Barcelona	Barcelona	1,675	CATALUÑA
+GALP Gironès Norte	AP-7	Aiguaviva	Girona	1,718	CATALUÑA
+GALP Gironès Sur	AP-7	Riudellots de la Selva	Girona	1,718	CATALUÑA
+GALP Jonquera - Tramuntana	N-II	La Junquera	Girona	1,722	CATALUÑA
+ENI Hospitalet Sur	AP-7	L'Hospitalet Del Infant	Tarragona	1,611	CATALUÑA
+ENI Hospitalet Norte	AP-7	L'Hospitalet Del Infant	Tarragona	1,611	CATALUÑA
+GM FUEL Coma-Ruga	N-340	Masos de Comarruga	Tarragona	1,552	CATALUÑA
+GALP Alt Camp I	AP-2	Rodonya	Tarragona	1,662	CATALUÑA
+GALP Alt Camp II	AP-2	Rodonya	Tarragona	1,662	CATALUÑA
+ALAS Hospitalet De L'Infant	N-340	L'Hospitalet De L'Infant	Tarragona	1,556	CATALUÑA
+ALAS Vila-Seca	AP-7	Vila-Seca	Tarragona	1,548	CATALUÑA
+ALAS Constantí	C-14	Constantí	Tarragona	1,548	CATALUÑA
+ALAS L'Ametlla de Mar	N-340	L'Ametlla de Mar	Tarragona	1,603	CATALUÑA
+ANDAMUR Pamplona	AP15, N-121-A	Imárcoain	Navarra	1,600	NAVARRA
+NOIL Bera de Bidasoa	N-121-A	Bera	Navarra	1,608	NAVARRA
+EUROCAM Tudela	A-68	Tudela	Navarra	1,613	NAVARRA
+EUROCAM Pamplona-Agustinos	AP-15	Pamplona	Navarra	1,608	NAVARRA
+GALP Ziordia	A-1	Ziordia	Navarra	1,715	NAVARRA
+GALP Alsasua Dir. Madrid	A-1	Altsasu Alsasu	Navarra	1,718	NAVARRA
+GALP Alsasua Dir. Irún	A-1	Altsasu Alsasu	Navarra	1,715	NAVARRA
+ANDAMUR San Román - Araia	A-1	San Román de San Millán	Álava	1,589	PAÍS VASCO
+Merkaoil	AP-8, GI-2638	Lezo	Guipúzcoa	1,605	PAÍS VASCO
+Gexa	AP-8, GI-636	Oiartzun	Guipúzcoa	1,607	PAÍS VASCO
+EUROCAM Nanclares de Oca	A-1	Nanclares de la Oca	Álava	1,603	PAÍS VASCO
+GALP Irún	A-15, NA-700	Irun	Guipúzcoa	1,718	PAÍS VASCO
+GALP Lasarte	A-1	Lasarte	Guipúzcoa	1,716	PAÍS VASCO
+ANDAMUR El Límite	A-7	Huércal-Overa	Almería	1,583	ANDALUCÍA
+ANDAMUR Guarromán	A-4	Guarromán	Jaén	1,594	ANDALUCÍA
+Las Cuartillas	N-630	Valencina de la Concepción	Sevilla	1,568	ANDALUCÍA
+Magdaoil	A-92	Alcalá de Guadaira	Sevilla	1,548	ANDALUCÍA
+Ruta 4	A-4	La Campana	Sevilla	1,549	ANDALUCÍA
+TJ Oil	M-630	Salteras	Sevilla	1,546	ANDALUCÍA
+ENI El Fantasma	AP-4	Sevilla	Sevilla	1,611	ANDALUCÍA
+BQP Villanueva Food and Fuel	A-4	Écija	Sevilla	1,570	ANDALUCÍA
+HAFESA OIL Almerimar	A-7	El Ejido	Almería	1,586	ANDALUCÍA
+VALCARCE Láchar	A-92	Láchar	Granada	1,666	ANDALUCÍA
+VALCARCE Gor	A-92	Gor	Granada	1,666	ANDALUCÍA
+CARBURANTES A92	A-92	Darro	Granada	1,666	ANDALUCÍA
+GALP Huétor Tájar	A-92	Huetor Tajar	Granada	1,680	ANDALUCÍA
+El Fresno	A-7	Los Barrios	Cádiz	1,551	ANDALUCÍA
+NIEVES Algeciras	A-7	Los Barrios	Cádiz	1,696	ANDALUCÍA
+GALP Jerez	A-381	Jerez de la Frontera	Cádiz	1,673	ANDALUCÍA
+GALP Puerto Real	CA-35	Puerto Real	Cádiz	1,679	ANDALUCÍA
+AREA 117 Benamejí	N-331	Benamejí	Córdoba	1,558	ANDALUCÍA
+DEOIL Gibraleon	N-431	Gibraleón	Huelva	1,540	ANDALUCÍA
+GALP Rosal de La Frontera	N-433	Rosal de la Frontera	Huelva	1,681	ANDALUCÍA
+Platero	A-494	Moguer	Huelva	1,666	ANDALUCÍA
+GALP Estepona	A-7	Estepona	Málaga	1,670	ANDALUCÍA
+AREA 117 Humilladero I	A-92	Humilladero	Málaga	1,549	ANDALUCÍA
+AREA 117 Humilladero II	A-92	Humilladero	Málaga	1,551	ANDALUCÍA
+GALP Málaga - El Viso	A-357	Málaga	Málaga	1,676	ANDALUCÍA
+GALP Málaga - El Limonar	A-7	Málaga	Málaga	1,673	ANDALUCÍA
+AGLA La Isla	A-8053	Dos Hermanas	Sevilla	1,539	ANDALUCÍA
+GALP Los Palacios	AP-4	Los Palacios y Villafranca	Sevilla	1,666	ANDALUCÍA
+ANDAMUR Lorca	A-7	Lorca	Murcia	1,583	MURCIA
+Sierra Espuña Trade	A-7	Totana	Murcia	1,564	MURCIA
+Agetrans	A-7	Totana	Murcia	1,563	MURCIA
+La Cañada	A-30	Molina de Segura	Murcia	1,564	MURCIA
+Mill Enterprise	MU-533	Ceuti	Murcia	1,562	MURCIA
+Grupo Caliche	AP-7	San Javier	Murcia	1,640	MURCIA
+MAGNAOIL Vía de la Plata	A-5	Mérida	Badajoz	1,687	EXTREMADURA
+MAGNAOIL El Nevero	A-5	Badajoz	Badajoz	1,667	EXTREMADURA
+GALP Cáceres - Ctra. A Trujillo	N-521	Cáceres	Cáceres	1,728	EXTREMADURA
+GALP Peraleda de la Mata	A-5	Peraleda de la Mata	Cáceres	1,733	EXTREMADURA
+AREA 117 Torremocha del Campo	A-2	Torremocha del Campo	Guadalajara	1,607	CASTILLA-LA MANCHA
+VALCARCE Área de Uclés 90	A-3	Villarubio	Cuenca	1,607	CASTILLA-LA MANCHA
+BEROIL Tébar	A-3	Tébar	Cuenca	1,610	CASTILLA-LA MANCHA
+GALP Castillo de Garcimuñoz	A-3	Castillo de Garcimuñoz	Cuenca	1,671	CASTILLA-LA MANCHA
+VALCARCE El Casar de Talavera	A-5, N-502	El Casar de Talavera	Toledo	1,607	CASTILLA-LA MANCHA
+GALP Calera y Chozas	A-5	Calera y Chozas	Toledo	1,679	CASTILLA-LA MANCHA
+GALP Puerto Lápice I	A-4	Puerto Lapice	Ciudad Real	1,676	CASTILLA-LA MANCHA
+GALP Puerto Lápice II	A-4	Puerto Lapice	Ciudad Real	1,676	CASTILLA-LA MANCHA
+ATENOIL Valdepeñas	A-4	La Consolación	Ciudad Real	1,538	CASTILLA-LA MANCHA
+ATENOIL Valdepeñas II MD	A-4	La Consolación	Ciudad Real	1,538	CASTILLA-LA MANCHA
+ALZ El Oliveral	AP-7, A-3	Ribarroja del Turia	Valencia	1,561	C. VALENCIANA
+GALP Ribarroja Del Turia	AP-7, A-3	Ribarroja del Turia	Valencia	1,563	C. VALENCIANA
+GALP Beneixida	N-340	Beneixida	Valencia	1,559	C. VALENCIANA
+GALP Fuente La Higuera	A-35	Fuente La Higuera	Valencia	1,538	C. VALENCIANA
+GALP Fuente La Higuera II	A-35	Fuente La Higuera	Valencia	1,538	C. VALENCIANA
+GALP Torrent I	A-7	Torrent	Valencia	1,665	C. VALENCIANA
+GALP Torrent II	A-7	Torrent	Valencia	1,665	C. VALENCIANA
+GALP El Puig	A-7	El Puig de Santa María	Valencia	1,666	C. VALENCIANA
+GALP Villargordo Cabriel I	A-3	Villargordo del Gabriel	Valencia	1,671	C. VALENCIANA
+GALP Villargordo Cabriel II	A-3	Villargordo del Gabriel	Valencia	1,671	C. VALENCIANA
+GALP Agost - AP7 Dir.Murcia	AP-7	Agost	Alicante	1,666	C. VALENCIANA
+GALP Agost - AP7 Dir.Valencia	AP-7	Agost	Alicante	1,666	C. VALENCIANA
+GALP Elche I	A-70	Torrellano	Alicante	1,669	C. VALENCIANA
+GALP Elche II	A-70	Torrellano	Alicante	1,670	C. VALENCIANA
+GALP San Antonio I	AP-7	Pedreguer	Alicante	1,671	C. VALENCIANA
+GALP San Antonio II	AP-7	Pedreguer	Alicante	1,671	C. VALENCIANA
+ENI La Ribera Norte	AP-7	Ribera de Cabanes	Castellón	1,568	C. VALENCIANA
+ENI La Ribera Sur (Dir Valencia)	AP-7	Ribera de Cabanes	Castellón	1,568	C. VALENCIANA
+GALP La Plana I	AP-7	Burriana	Castellón	1,674	C. VALENCIANA
+GALP La Plana II	AP-7	Burriana	Castellón	1,674	C. VALENCIANA
+GHC Ganesha Combustibles	A-3	Madrid	Madrid	1,607	C. DE MADRID
+VALCARCE Torrejón de Ardoz	M-206	Torrejón de Ardoz	Madrid	1,606	C. DE MADRID
+GALP Alcalá Henares I	A-2	Alcalá de Henares	Madrid	1,672	C. DE MADRID
+GALP Alcalá Henares II	A-2	Alcalá de Henares	Madrid	1,672	C. DE MADRID
+GALP Parla	A-42	Parla	Madrid	1,667	C. DE MADRID
+ATENOIL Parla II	M-408	Parla	Madrid	1,538	C. DE MADRID
+GALP Pinto - Eboli I	M-506	Pinto	Madrid	1,671	C. DE MADRID
+GALP Pinto - Eboli II	M-506	Pinto	Madrid	1,671	C. DE MADRID
+GALP Perales De Tajuña	A-3, N-III	Perales De Tajuña	Madrid	1,673	C. DE MADRID
+ENI San Sebastián de los Reyes I MD	A-1	San Sebastian de los Reyes	Madrid	1,605	C. DE MADRID
+ENI San Sebastián de los Reyes II MI	N-1	Fuente del Fresno	Madrid	1,538	C. DE MADRID
+GALP S.S.de los Reyes-Jarama	A-1	San Sebastián de los Reyes	Madrid	1,672	C. DE MADRID
+AVIA Castillo Benavente	A-6	Benavente	Zamora	1,621	CASTILLA Y LEÓN
+AVIA Castillo El Burgo	A-231	El Burgo Ranero	León	1,597	CASTILLA Y LEÓN
+GALP Villadangos - Dir. Astorga	N-120	Villadangos del Paramo	León	1,731	CASTILLA Y LEÓN
+VALCARCE Aranda	N-1	Aranda de Duero	Burgos	1,599	CASTILLA Y LEÓN
+BEROIL Estépar	N-620	Estépar	Burgos	1,622	CASTILLA Y LEÓN
+BEROIL Miranda de Ebro	AP-1	Miranda de Ebro	Burgos	1,622	CASTILLA Y LEÓN
+GALP Villatoro	N-627	Burgos	Burgos	1,726	CASTILLA Y LEÓN
+GALP Sarracín I	A-1	Sarracín	Burgos	1,726	CASTILLA Y LEÓN
+GALP Sarracín II	A-1	Sarracín	Burgos	1,726	CASTILLA Y LEÓN
+GALP Los Balbases	A-62	Los Balbases	Burgos	1,728	CASTILLA Y LEÓN
+Bernal	A-62	Aldehuela de la Bóveda	Salamanca	1,663	CASTILLA Y LEÓN
+GALP Aldehuela de la Bóveda	A-62	Aldehuela de la Bóveda	Salamanca	1,734	CASTILLA Y LEÓN
+GALP Villacastín Dir. Coruña	N-6	Villacastin	Segovia	1,674	CASTILLA Y LEÓN
+GALP Villacastín Dir. Madrid	N-6	Villacastin	Segovia	1,674	CASTILLA Y LEÓN
+GALP Martin Muñoz de la Dehesa-Arevalo	A-6	Martín Muñoz de la Dehesa	Segovia	1,669	CASTILLA Y LEÓN
+GALP Medina Del Campo	A-6	Medina del Campo	Valladolid	1,725	CASTILLA Y LEÓN
+San Lamberto	A-2	Zaragoza	Zaragoza	1,560	ARAGÓN
+ALFA ENERGY Alfajarín	AP-2, N-II	Alfajarín	Zaragoza	1,568	ARAGÓN
+HAFESA OIL Cadrete	N-330	Cadrete	Zaragoza	1,542	ARAGÓN
+AVIA Gallur	N-232	Gallur	Zaragoza	1,562	ARAGÓN
+PETROBIL Valdeherrera	A-202	Calatayud	Zaragoza	1,566	ARAGÓN
+GALP Zaragoza I	A-2	La Muela	Zaragoza	1,674	ARAGÓN
+GALP Zaragoza II	A-2	La Muela	Zaragoza	1,674	ARAGÓN
+GALP Monegros I	AP-2	Candasnos	Huesca	1,675	ARAGÓN
+GALP Monegros II	AP-2	Candasnos	Huesca	1,675	ARAGÓN
+EUROCAM Logroño	AP-68	Logroño	La Rioja	1,592	LA RIOJA
+BEROIL San Asensio	N-232	San Asensio	La Rioja	1,622	LA RIOJA
+Empresoil	A-8	Gijón	Asturias	1,593	ASTURIAS
+GALP De la Vega I	A-8	Posada de Llanes	Asturias	1,720	ASTURIAS
+GALP De la Vega II	A-8	Posada de Llanes	Asturias	1,720	ASTURIAS
+Cetanoil	LC-221	Cecebre	A Coruña	1,592	GALICIA
+GALP Guitiriz I	A-6	Guitiriz	Lugo	1,719	GALICIA
+GALP Guitiriz II	A-6	Guitiriz	Lugo	1,719	GALICIA
+GALP Monforte de Lemos	N-120, LU-933	Monforte de Lemos	Lugo	1,734	GALICIA
+GALP Barbadanes - Dir. Celanova	OU-540	Barbadas	Ourense	1,728	GALICIA
+El Sol	A-55, N-550	Mos	Pontevedra	1,671	GALICIA
+Sertuy	A-55, N-550	Guillarey	Pontevedra	1,675	GALICIA
+GALP Meis	AG-41	Meis (San Martin)	Pontevedra	1,748	GALICIA
+GALP Silleda	AP-53	Silleda	Pontevedra	1,724	GALICIA`;
 
 const COORDS = {
-  "La Junquera|Girona": [42.4192, 2.8726], "Llers|Girona": [42.3800, 2.8500],
-  "Imárcoain|Navarra": [42.7580, -1.6130], "San Román de San Millán|Álava": [42.8500, -2.5500],
-  "Huércal-Overa|Almería": [37.3890, -1.9450], "Guarromán|Jaén": [38.1750, -3.6850],
-  "Lorca|Murcia": [37.6710, -1.7040], "Huetor Tajar|Granada": [37.2060, -4.0430],
-  "Jerez de la Frontera|Cádiz": [36.6850, -6.1360], "Puerto Real|Cádiz": [36.5260, -6.1920],
-  "Rosal de la Frontera|Huelva": [37.9870, -7.2180], "Estepona|Málaga": [36.4270, -5.1460],
-  "Málaga|Málaga": [36.7213, -4.4214], "Los Palacios y Villafranca|Sevilla": [37.1600, -5.9280],
-  "Cáceres|Cáceres": [39.4752, -6.3724], "Peraleda de la Mata|Cáceres": [39.8460, -5.5000],
-  "Castillo de Garcimuñoz|Cuenca": [39.7180, -2.3390], "Calera y Chozas|Toledo": [39.8970, -5.1180],
-  "Puerto Lapice|Ciudad Real": [39.3120, -3.4670], "Ribarroja del Turia|Valencia": [39.5360, -0.5980],
-  "Beneixida|Valencia": [39.0730, -0.4670], "Fuente La Higuera|Valencia": [38.8260, -0.8890],
-  "Torrent|Valencia": [39.4340, -0.4670], "El Puig de Santa María|Valencia": [39.5830, -0.2880],
-  "Villargordo del Gabriel|Valencia": [39.4720, -1.6470], "Agost|Alicante": [38.4380, -0.6580],
-  "Torrellano|Alicante": [38.2670, -0.6800], "Pedreguer|Alicante": [38.7830, 0.0440],
-  "Burriana|Castellón": [39.8870, -0.0680], "Alcalá de Henares|Madrid": [40.4817, -3.3636],
-  "Parla|Madrid": [40.2390, -3.7680], "Pinto|Madrid": [40.2490, -3.6940],
-  "Perales De Tajuña|Madrid": [40.2540, -3.3630], "San Sebastián de los Reyes|Madrid": [40.5490, -3.6270],
-  "La Muela|Zaragoza": [41.5950, -1.0970], "Candasnos|Huesca": [41.5080, 0.0260],
-  "El Prat de Llobregat|Barcelona": [41.3270, 2.0960], "Molins de Rei|Barcelona": [41.4130, 1.9940],
-  "Granollers|Barcelona": [41.6070, 2.2870], "Castellbisbal|Barcelona": [41.4680, 1.9780],
-  "Barcelona|Barcelona": [41.3851, 2.1734], "El Bruc|Barcelona": [41.5810, 1.7330],
-  "Aiguaviva|Girona": [41.8760, 2.8120], "Riudellots de la Selva|Girona": [41.8940, 2.7980],
-  "Rodonya|Tarragona": [41.2530, 1.3920], "Ziordia|Navarra": [42.8710, -2.2760],
-  "Altsasu Alsasu|Navarra": [42.8990, -2.1810], "Irun|Guipúzcoa": [43.3390, -1.7890],
-  "Lasarte|Guipúzcoa": [43.2710, -2.0170], "Burgos|Burgos": [42.3439, -3.6969],
-  "Sarracín|Burgos": [42.2940, -3.6500], "Los Balbases|Burgos": [42.1820, -3.8820],
-  "Aldehuela de la Bóveda|Salamanca": [40.9500, -6.1120], "Villacastin|Segovia": [40.7630, -4.4220],
-  "Medina del Campo|Valladolid": [41.3100, -4.9140], "Posada de Llanes|Asturias": [43.4100, -4.7320],
-  "Guitiriz|Lugo": [43.1840, -7.8750], "Monforte de Lemos|Lugo": [42.5240, -7.5190],
-  "Meis (San Martin)|Pontevedra": [42.5020, -8.6680], "Silleda|Pontevedra": [42.6970, -8.2380]
+  "La Junquera|Girona":[42.4192,2.8726],"Llers|Girona":[42.3800,2.8500],
+  "Imárcoain|Navarra":[42.7580,-1.6130],"San Román de San Millán|Álava":[42.8678,-2.2453],
+  "Huércal-Overa|Almería":[37.3890,-1.9450],"Guarromán|Jaén":[38.1750,-3.6850],
+  "Lorca|Murcia":[37.6710,-1.7040],"Huetor Tajar|Granada":[37.2060,-4.0430],
+  "Jerez de la Frontera|Cádiz":[36.6866,-6.1369],"Puerto Real|Cádiz":[36.5264,-6.1903],
+  "Rosal de la Frontera|Huelva":[37.9858,-7.2131],"Estepona|Málaga":[36.4272,-5.1453],
+  "Málaga|Málaga":[36.7192,-4.4194],"Los Palacios y Villafranca|Sevilla":[37.1617,-5.9233],
+  "Cáceres|Cáceres":[39.4753,-6.3724],"Peraleda de la Mata|Cáceres":[39.8339,-5.4817],
+  "Castillo de Garcimuñoz|Cuenca":[39.7180,-2.3390],"Calera y Chozas|Toledo":[39.8970,-5.1180],
+  "Puerto Lapice|Ciudad Real":[39.3120,-3.4670],"Ribarroja del Turia|Valencia":[39.5360,-0.5980],
+  "Beneixida|Valencia":[39.0781,-0.4333],"Fuente La Higuera|Valencia":[38.7900,-0.8533],
+  "Torrent|Valencia":[39.4340,-0.4670],"El Puig de Santa María|Valencia":[39.5822,-0.3053],
+  "Villargordo del Gabriel|Valencia":[39.4958,-1.3947],"Agost|Alicante":[38.4380,-0.6580],
+  "Torrellano|Alicante":[38.2670,-0.6800],"Pedreguer|Alicante":[38.7867,0.0247],
+  "Burriana|Castellón":[39.8870,-0.0680],"Alcalá de Henares|Madrid":[40.4817,-3.3636],
+  "Parla|Madrid":[40.2390,-3.7680],"Pinto|Madrid":[40.2490,-3.6940],
+  "Perales De Tajuña|Madrid":[40.3453,-3.3408],"San Sebastián de los Reyes|Madrid":[40.5503,-3.6275],
+  "San Sebastian de los Reyes|Madrid":[40.5503,-3.6275],"Fuente del Fresno|Madrid":[40.5831,-3.6358],
+  "Torrejón de Ardoz|Madrid":[40.4600,-3.4669],"Madrid|Madrid":[40.3697,-3.5989],
+  "La Muela|Zaragoza":[41.5950,-1.0970],"Candasnos|Huesca":[41.5080,0.0260],
+  "El Prat de Llobregat|Barcelona":[41.3217,2.0931],"Molins de Rei|Barcelona":[41.4175,2.0169],
+  "Granollers|Barcelona":[41.6081,2.2872],"Castellbisbal|Barcelona":[41.4680,1.9780],
+  "Barcelona|Barcelona":[41.3851,2.1734],"El Bruc|Barcelona":[41.5810,1.7330],
+  "Parets del Valles|Barcelona":[41.5666,2.2256],"Vic|Barcelona":[41.9297,2.2542],
+  "Sant Esteve de Sesrovires|Barcelona":[41.4481,1.8694],"Castellet i Gonal|Barcelona":[41.2547,1.5522],
+  "Aiguaviva|Girona":[41.8760,2.8120],"Riudellots de la Selva|Girona":[41.8897,2.8239],
+  "Rodonya|Tarragona":[41.2530,1.3920],"L'Hospitalet Del Infant|Tarragona":[40.9775,0.9256],
+  "L'Hospitalet De L'Infant|Tarragona":[40.9775,0.9256],"Masos de Comarruga|Tarragona":[41.1867,1.5547],
+  "Vila-Seca|Tarragona":[41.1078,1.1678],"Constantí|Tarragona":[41.1525,1.1742],
+  "L'Ametlla de Mar|Tarragona":[40.8878,0.7878],"Ribera de Cabanes|Castellón":[40.1503,0.2358],
+  "Torrefarrera|Lérida":[41.6750,0.6750],"Lérida|Lérida":[41.6176,0.6200],
+  "Ziordia|Navarra":[42.8983,-2.1964],"Altsasu Alsasu|Navarra":[42.9011,-2.1669],
+  "Bera|Navarra":[43.2786,-1.6822],"Pamplona|Navarra":[42.8188,-1.6440],
+  "Tudela|Navarra":[42.0600,-1.6053],"Irun|Guipúzcoa":[43.3375,-1.7886],
+  "Lasarte|Guipúzcoa":[43.2822,-2.0144],"Lezo|Guipúzcoa":[43.3143,-1.8886],
+  "Oiartzun|Guipúzcoa":[43.2944,-1.9314],"Nanclares de la Oca|Álava":[42.8508,-2.9189],
+  "Logroño|La Rioja":[42.4661,-2.4450],"San Asensio|La Rioja":[42.5056,-2.7233],
+  "Burgos|Burgos":[42.3325,-3.6792],"Sarracín|Burgos":[42.2940,-3.6500],
+  "Los Balbases|Burgos":[42.1831,-3.8564],"Estépar|Burgos":[42.2714,-4.0156],
+  "Miranda de Ebro|Burgos":[42.6847,-2.9447],"Aranda de Duero|Burgos":[41.6694,-3.6892],
+  "Aldehuela de la Bóveda|Salamanca":[40.8197,-6.2828],"Villacastin|Segovia":[40.7714,-4.4242],
+  "Martín Muñoz de la Dehesa|Segovia":[41.0764,-4.7228],"Medina del Campo|Valladolid":[41.3100,-4.9140],
+  "Benavente|Zamora":[42.0025,-5.6786],"El Burgo Ranero|León":[42.3631,-5.1536],
+  "Villadangos del Paramo|León":[42.5169,-5.7578],"Posada de Llanes|Asturias":[43.4167,-4.7517],
+  "Gijón|Asturias":[43.5322,-5.6611],"Guitiriz|Lugo":[43.1840,-7.8750],
+  "Monforte de Lemos|Lugo":[42.5231,-7.5122],"Meis (San Martin)|Pontevedra":[42.5156,-8.6961],
+  "Silleda|Pontevedra":[42.6970,-8.2380],"Barbadas|Ourense":[42.3197,-7.8839],
+  "Mos|Pontevedra":[42.2022,-8.6308],"Guillarey|Pontevedra":[42.1500,-8.5831],
+  "Cecebre|A Coruña":[43.2358,-8.3264],"Zaragoza|Zaragoza":[41.6200,-0.9200],
+  "Alfajarín|Zaragoza":[41.6231,-0.7386],"Cadrete|Zaragoza":[41.5831,-1.0100],
+  "Gallur|Zaragoza":[41.8767,-1.3194],"Calatayud|Zaragoza":[41.3569,-1.6428],
+  "Valencina de la Concepción|Sevilla":[37.4119,-6.0758],"Alcalá de Guadaira|Sevilla":[37.3380,-5.8389],
+  "La Campana|Sevilla":[37.5831,-5.3964],"Salteras|Sevilla":[37.4564,-6.1456],
+  "Sevilla|Sevilla":[37.3891,-5.9845],"Écija|Sevilla":[37.5406,-5.0822],
+  "El Ejido|Almería":[36.7769,-2.8150],"Láchar|Granada":[37.2069,-3.9956],
+  "Gor|Granada":[37.3861,-2.9900],"Darro|Granada":[37.3906,-3.2153],
+  "Los Barrios|Cádiz":[36.1786,-5.4939],"Los Barrios|Cadiz":[36.1786,-5.4939],
+  "Benamejí|Córdoba":[37.2706,-4.5428],"Gibraleón|Huelva":[37.3819,-6.9706],
+  "Moguer|Huelva":[37.2783,-6.8406],"Humilladero|Málaga":[37.1075,-4.6811],
+  "Dos Hermanas|Sevilla":[37.2831,-5.9200],"Totana|Murcia":[37.7708,-1.5019],
+  "Molina de Segura|Murcia":[38.0614,-1.2133],"Ceuti|Murcia":[38.0847,-1.2703],
+  "San Javier|Murcia":[37.8025,-0.8369],"Mérida|Badajoz":[38.9160,-6.3404],
+  "Badajoz|Badajoz":[38.8794,-6.9706],"Torremocha del Campo|Guadalajara":[40.9947,-2.5044],
+  "Villarubio|Cuenca":[39.9069,-2.7806],"Tébar|Cuenca":[39.5861,-1.9906],
+  "El Casar de Talavera|Toledo":[39.9617,-4.8994],"La Consolación|Ciudad Real":[38.8999,-3.3904]
 };
 
 // ── RUTAS GPS ─────────────────────────────────────────────────────────────────
@@ -920,6 +1039,22 @@ async function fetchMinetur() {
   }
 }
 
+// Filtro POSITIVO: solo estaciones cuya dirección indica claramente autopista/autovía.
+// Ejemplos válidos: "AUTOVÍA A-4 KM 185", "AUTOPISTA AP-7 PK 200", "N-340 KM 1062",
+//                   "A-1 KM 232", "CTRA. A-2 KM 309", "ÁREA DE SERVICIO A-6"
+function isHighwayStation(dir) {
+  if (!dir) return false;
+  const d = dir.toUpperCase().trim();
+  // Palabras clave explícitas de autopista/área de servicio
+  if (/AUTOV[IÍ][AO]|AUTOPISTA|ÁREA DE SERVICIO|AREA DE SERVICIO|AREA SERVICIO/.test(d)) return true;
+  // Código de carretera (A-, AP-, N-, CN-, E-) seguido de número + KM/PK
+  if (/\b(AP?|N|CN|E|R)-\d{1,3}\b[\s,].*?\b(KM|PK|P\.K)\.?\b/.test(d)) return true;
+  if (/\b(KM|PK)\b.*?\b(AP?|N|CN)-\d{1,3}\b/.test(d)) return true;
+  // Dirección que empieza directamente con código de carretera nacional/autovía
+  if (/^(AUTOV|AUTOP|A-\d|AP-\d|N-\d|CN-\d|CTRA\.?\s*(N-|A-|AP-|CN-))/.test(d)) return true;
+  return false;
+}
+
 function parseMinetur(data) {
   const list = data.ListaEESSPrecio || [];
   const result = [];
@@ -931,6 +1066,8 @@ function parseMinetur(data) {
     const lat = parseApiNum(e['Latitud']);
     const lng = parseApiNum(e['Longitud (WGS84)']);
     if (!lat || !lng) return;
+    const dir = (e['Dirección'] || '').trim();
+    if (!isHighwayStation(dir)) return; // solo estaciones en autopista/autovía
     result.push({
       id: idx,
       name: rotulo,
@@ -985,26 +1122,27 @@ function parseRaw(raw) {
 
 async function loadStations() {
   showLoading(true);
+  // Red pactada siempre presente
+  const localStations = parseRaw(RAW_DATA);
   try {
-    // Intentar caché de sesión (30 min)
+    // API solo para Repsol/Campsa en autopista (BRANDS_FILTER + isHighwayStation)
     const cached = sessionStorage.getItem('minetur_data');
     const cacheTs = parseInt(sessionStorage.getItem('minetur_ts') || '0');
+    let data;
     if (cached && Date.now() - cacheTs < 30 * 60 * 1000) {
-      dataSource = 'api';
-      return parseMinetur(JSON.parse(cached));
+      data = JSON.parse(cached);
+    } else {
+      data = await fetchMinetur();
+      try {
+        sessionStorage.setItem('minetur_data', JSON.stringify(data));
+        sessionStorage.setItem('minetur_ts', Date.now().toString());
+      } catch(e) {}
     }
-    const data = await fetchMinetur();
-    try {
-      sessionStorage.setItem('minetur_data', JSON.stringify(data));
-      sessionStorage.setItem('minetur_ts', Date.now().toString());
-    } catch(e) { /* sessionStorage puede estar lleno en móvil */ }
     dataSource = 'api';
-    return parseMinetur(data);
+    return [...localStations, ...parseMinetur(data)];
   } catch(e) {
-    console.warn('API MINETUR no disponible:', e.message);
     dataSource = 'local';
-    showToast('⚠ API no disponible · mostrando datos locales');
-    return parseRaw(RAW_DATA);
+    return localStations;
   } finally {
     showLoading(false);
   }
