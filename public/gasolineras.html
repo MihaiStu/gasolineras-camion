@@ -632,6 +632,7 @@
 // ── CONFIGURACIÓN ─────────────────────────────────────────────────────────────
 const API_URL = 'https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/';
 const GALP_DISCOUNT = 0.16;
+const REPSOL_DISCOUNT = 0.06;
 const LIST_MAX = 250;
 const ANDAMUR_NEARBY_KM = 5;
 const BRANDS_FILTER = ['REPSOL', 'CAMPSA', 'PETRONOR'];
@@ -997,10 +998,10 @@ function getBrandType(rotulo) {
 }
 
 function getBrandColor(brandType) {
-  if (brandType === 'galp') return '#0066cc';
+  if (brandType === 'galp')    return '#0066cc';
   if (brandType === 'andamur') return '#f59e0b';
-  if (brandType === 'repsol') return '#e30613';
-  return '#64748b';
+  if (brandType === 'repsol')  return '#e30613';
+  return '#6b7280'; // gris neutro para otras redes
 }
 
 function zoneFromProvincia(provincia) {
@@ -1149,51 +1150,54 @@ async function loadStations() {
 }
 
 // ── CÁLCULO DE PRECIOS / COMPARADOR ──────────────────────────────────────────
-function findNearestAndamur(station) {
-  if (station.brandType === 'andamur') return null;
-  let nearest = null;
-  let minDist = ANDAMUR_NEARBY_KM;
+function findNearestOfBrand(station, brandType) {
+  if (station.brandType === brandType) return null;
+  let nearest = null, minDist = Infinity;
   for (const s of stations) {
-    if (s.brandType !== 'andamur' || !s.lat) continue;
+    if (s.brandType !== brandType || !s.lat || s.id === station.id) continue;
     const d = distanceKm(station.lat, station.lng, s.lat, s.lng);
     if (d < minDist) { minDist = d; nearest = s; }
   }
-  return nearest ? { station: nearest, distM: minDist * 1000 } : null;
+  return nearest ? { station: nearest, distKm: minDist } : null;
+}
+
+function fmtDist(km) {
+  return km < 1 ? `${Math.round(km * 1000)}m` : `${Math.round(km)}km`;
 }
 
 function computePrices(station) {
   if (!station.price) return null;
-  const result = {};
+  const result = { surtidor: station.price };
+
   if (station.brandType === 'galp') {
-    result.surtidor = station.price;
     result.galp = +(station.price - GALP_DISCOUNT).toFixed(3);
-    result.solred = station.price;
   } else if (station.brandType === 'repsol') {
-    result.surtidor = station.price;
-    result.solred = station.price;
+    result.repsol = +(station.price - REPSOL_DISCOUNT).toFixed(3);
   } else if (station.brandType === 'andamur') {
-    result.surtidor = station.price;
     result.andamur = station.price;
   } else {
-    result.surtidor = station.price;
-    result.solred = station.price;
+    // Estación de otra red → comparar con la Galp, Andamur y Repsol más cercanas
+    if (station.lat) {
+      const ng = findNearestOfBrand(station, 'galp');
+      if (ng) result.nearGalp = { price: +(ng.station.price - GALP_DISCOUNT).toFixed(3), name: ng.station.name, distKm: ng.distKm };
+      const na = findNearestOfBrand(station, 'andamur');
+      if (na) result.nearAndamur = { price: na.station.price, name: na.station.name, distKm: na.distKm };
+      const nr = findNearestOfBrand(station, 'repsol');
+      if (nr) result.nearRepsol = { price: +(nr.station.price - REPSOL_DISCOUNT).toFixed(3), name: nr.station.name, distKm: nr.distKm };
+    }
   }
-  // Andamur cercano (si no es Andamur)
-  if (station.lat && station.brandType !== 'andamur') {
-    const nearby = findNearestAndamur(station);
-    if (nearby) result.andamurNearby = { price: nearby.station.price, name: nearby.station.name, distM: nearby.distM };
-  }
+
   // Mejor opción
-  const options = [];
-  if (result.galp != null) options.push({ label: 'Tarjeta Galp', price: result.galp });
-  if (result.solred != null && (result.galp == null || result.solred < result.galp)) options.push({ label: 'Tarjeta Solred', price: result.solred });
+  const options = [{ label: 'Aquí', price: result.surtidor }];
+  if (result.galp   != null) options.push({ label: 'Tarjeta Galp', price: result.galp });
+  if (result.repsol != null) options.push({ label: 'Tarjeta Repsol', price: result.repsol });
   if (result.andamur != null) options.push({ label: 'Andamur', price: result.andamur });
-  if (result.andamurNearby) options.push({ label: 'Andamur cercano', price: result.andamurNearby.price });
-  if (options.length > 0) {
-    const best = options.reduce((a, b) => a.price < b.price ? a : b);
-    result.best = best.price;
-    result.bestLabel = best.label;
-  }
+  if (result.nearGalp)   options.push({ label: `Galp (${fmtDist(result.nearGalp.distKm)})`,   price: result.nearGalp.price });
+  if (result.nearAndamur) options.push({ label: `Andamur (${fmtDist(result.nearAndamur.distKm)})`, price: result.nearAndamur.price });
+  if (result.nearRepsol) options.push({ label: `Repsol (${fmtDist(result.nearRepsol.distKm)})`, price: result.nearRepsol.price });
+  const best = options.reduce((a, b) => a.price < b.price ? a : b);
+  result.best = best.price;
+  result.bestLabel = best.label;
   return result;
 }
 
@@ -1342,7 +1346,11 @@ function renderList() {
     card.className = 'station-card' + (s.id === selectedId ? ' selected' : '');
     card.dataset.id = s.id;
     const p = s.priceData;
-    const bestHint = p && p.bestLabel ? `<span style="font-size:10px;color:var(--green);margin-left:4px;">· ${p.bestLabel} ${fmtPrice(p.best)}</span>` : '';
+    const bestHint = p && p.bestLabel
+      ? (p.bestLabel === 'Aquí'
+          ? `<span style="font-size:10px;color:var(--green);margin-left:4px;">· ✅ precio competitivo</span>`
+          : `<span style="font-size:10px;color:var(--yellow);margin-left:4px;">· mejor: ${p.bestLabel} ${fmtPrice(p.best)}</span>`)
+      : '';
     card.innerHTML = `
       <div class="brand-dot" style="background:${getBrandColor(s.brandType)};margin-top:5px;"></div>
       <div class="station-card-body">
@@ -1369,33 +1377,49 @@ function makePopupHtml(s) {
 
   if (p) {
     const rows = [];
-    rows.push(`<tr><td>⛽ Surtidor</td><td class="pc-price">${fmtPrice(p.surtidor)}</td></tr>`);
+    const isOther = s.brandType === 'other';
+
+    rows.push(`<tr><td>⛽ ${isOther ? 'Aquí' : 'Surtidor'}</td><td class="pc-price">${fmtPrice(p.surtidor)}</td></tr>`);
+
     if (p.galp != null) {
       const isBest = p.bestLabel === 'Tarjeta Galp';
       rows.push(`<tr${isBest ? ' class="pc-best"' : ''}><td>${isBest ? '🏆 ' : ''}Tarjeta Galp <span style="font-size:10px;color:var(--muted);">(-${GALP_DISCOUNT.toFixed(2)}€)</span></td><td class="pc-price">${fmtPrice(p.galp)}</td></tr>`);
     }
-    if (p.solred != null && p.galp == null) {
-      const isBest = p.bestLabel === 'Tarjeta Solred';
-      rows.push(`<tr${isBest ? ' class="pc-best"' : ''}><td>${isBest ? '🏆 ' : ''}Tarjeta Solred</td><td class="pc-price">${fmtPrice(p.solred)}</td></tr>`);
+    if (p.repsol != null) {
+      const isBest = p.bestLabel === 'Tarjeta Repsol';
+      rows.push(`<tr${isBest ? ' class="pc-best"' : ''}><td>${isBest ? '🏆 ' : ''}Tarjeta Repsol <span style="font-size:10px;color:var(--muted);">(-${REPSOL_DISCOUNT.toFixed(2)}€)</span></td><td class="pc-price">${fmtPrice(p.repsol)}</td></tr>`);
     }
     if (p.andamur != null) {
       rows.push(`<tr><td>Andamur</td><td class="pc-price">${fmtPrice(p.andamur)}</td></tr>`);
     }
-    if (p.andamurNearby) {
-      const d = p.andamurNearby.distM < 1000 ? `${Math.round(p.andamurNearby.distM)}m` : `${(p.andamurNearby.distM/1000).toFixed(1)}km`;
-      const isBest = p.bestLabel === 'Andamur cercano';
-      rows.push(`<tr${isBest ? ' class="pc-best"' : ''}><td>${isBest ? '🏆 ' : ''}Andamur (${d})</td><td class="pc-price">${fmtPrice(p.andamurNearby.price)}</td></tr>`);
+
+    // Estaciones de otras redes: mostrar comparación con Galp/Andamur/Repsol cercanos
+    if (p.nearGalp) {
+      const isBest = p.bestLabel && p.bestLabel.startsWith('Galp');
+      rows.push(`<tr${isBest ? ' class="pc-best"' : ''}><td>${isBest ? '🏆 ' : ''}<span style="color:#0066cc;">●</span> Galp cercana (${fmtDist(p.nearGalp.distKm)})</td><td class="pc-price">${fmtPrice(p.nearGalp.price)}</td></tr>`);
     }
+    if (p.nearAndamur) {
+      const isBest = p.bestLabel && p.bestLabel.startsWith('Andamur');
+      rows.push(`<tr${isBest ? ' class="pc-best"' : ''}><td>${isBest ? '🏆 ' : ''}<span style="color:#f59e0b;">●</span> Andamur cercano (${fmtDist(p.nearAndamur.distKm)})</td><td class="pc-price">${fmtPrice(p.nearAndamur.price)}</td></tr>`);
+    }
+    if (p.nearRepsol) {
+      const isBest = p.bestLabel && p.bestLabel.startsWith('Repsol');
+      rows.push(`<tr${isBest ? ' class="pc-best"' : ''}><td>${isBest ? '🏆 ' : ''}<span style="color:#e30613;">●</span> Repsol cercana (${fmtDist(p.nearRepsol.distKm)})</td><td class="pc-price">${fmtPrice(p.nearRepsol.price)}</td></tr>`);
+    }
+
+    const bestIsHere = p.bestLabel === 'Aquí';
     compareHtml = `
       <table class="popup-compare">
-        <thead><tr><th>Opción de pago</th><th>€/l</th></tr></thead>
+        <thead><tr><th>${isOther ? '¿Dónde echar?' : 'Opción de pago'}</th><th>€/l</th></tr></thead>
         <tbody>${rows.join('')}</tbody>
       </table>
-      ${p.bestLabel ? `<div class="popup-best">✅ Mejor: <b>${p.bestLabel}</b> · ${fmtPrice(p.best)}</div>` : ''}
+      <div class="popup-best">${bestIsHere ? '✅ Echa aquí · precio competitivo' : `✅ Mejor: <b>${p.bestLabel}</b> · ${fmtPrice(p.best)}`}</div>
     `;
   }
 
-  const sourceNote = s.fromApi ? `<div class="popup-api-note">Precio en tiempo real · API MINETUR</div>` : `<div class="popup-api-note">Precio local (sin conexión API)</div>`;
+  const sourceNote = s.fromApi
+    ? `<div class="popup-api-note">Precio en tiempo real · API MINETUR</div>`
+    : `<div class="popup-api-note">Precio red pactada</div>`;
 
   return `
     <div class="popup-inner">
@@ -1409,11 +1433,11 @@ function makePopupHtml(s) {
   `;
 }
 
-function makeMarkerIcon() {
+function makeMarkerIcon(color) {
   return L.divIcon({
     className: '',
     html: `<svg width="20" height="28" viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg">
-      <path d="M10 0C4.477 0 0 4.477 0 10c0 7.18 10 18 10 18s10-10.82 10-18C20 4.477 15.523 0 10 0z" fill="#f97316" opacity="0.95"/>
+      <path d="M10 0C4.477 0 0 4.477 0 10c0 7.18 10 18 10 18s10-10.82 10-18C20 4.477 15.523 0 10 0z" fill="${color}" opacity="0.95"/>
       <circle cx="10" cy="10" r="4" fill="white" opacity="0.9"/>
     </svg>`,
     iconSize: [20, 28],
@@ -1440,7 +1464,7 @@ function rebuildMarkers() {
   const visible = new Set(filteredStations().map(s => s.id));
   stations.forEach(s => {
     if (!s.lat) return;
-    const m = L.marker([s.lat, s.lng], { icon: makeMarkerIcon() });
+    const m = L.marker([s.lat, s.lng], { icon: makeMarkerIcon(getBrandColor(s.brandType)) });
     m.bindPopup(makePopupHtml(s), { maxWidth: 280 });
     m.on('click', () => {
       selectedId = s.id;
