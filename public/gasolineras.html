@@ -637,6 +637,20 @@ const LIST_MAX = 250;
 const ANDAMUR_NEARBY_KM = 5;
 const BRANDS_FILTER = ['REPSOL', 'CAMPSA', 'PETRONOR'];
 
+// ── ESTACIONES FAVORITAS (destacadas en mapa y lista) ─────────────────────────
+const STARRED_STATIONS = new Set([
+  'la cañada',
+  'valcarce área de uclés 90',
+  'galp pinto - eboli i',
+  'gm fuel servei carrer 3',
+  'galp torrent i',
+  'area 117 benamejí',
+  'andamur guarromán',
+  "alas l'ametlla de mar",
+  'galp fuente la higuera'
+]);
+function isStarred(name) { return STARRED_STATIONS.has((name||'').toLowerCase()); }
+
 // ── PROVINCE → ZONA ───────────────────────────────────────────────────────────
 const PROVINCE_TO_ZONE = {
   'Almería':'ANDALUCÍA','Cádiz':'ANDALUCÍA','Córdoba':'ANDALUCÍA','Granada':'ANDALUCÍA',
@@ -1354,7 +1368,7 @@ function renderList() {
     card.innerHTML = `
       <div class="brand-dot" style="background:${getBrandColor(s.brandType)};margin-top:5px;"></div>
       <div class="station-card-body">
-        <div class="station-name">${s.name}</div>
+        <div class="station-name">${isStarred(s.name) ? '⭐ ' : ''}${s.name}</div>
         <div class="station-meta">${s.via ? s.via + ' · ' : ''}${s.localidad}, ${s.provincia}</div>
         <div class="station-zone">${s.zone}${bestHint}</div>
       </div>
@@ -1423,7 +1437,7 @@ function makePopupHtml(s) {
 
   return `
     <div class="popup-inner">
-      <div class="popup-name">${s.name}</div>
+      <div class="popup-name">${isStarred(s.name) ? '⭐ ' : ''}${s.name}</div>
       <div class="popup-row"><b>Dirección:</b> ${s.via || '—'}</div>
       <div class="popup-row"><b>Localidad:</b> ${s.localidad}, ${s.provincia}${s.cp ? ' (' + s.cp + ')' : ''}</div>
       ${sourceNote}
@@ -1433,7 +1447,20 @@ function makePopupHtml(s) {
   `;
 }
 
-function makeMarkerIcon(color) {
+function makeMarkerIcon(color, starred) {
+  if (starred) {
+    return L.divIcon({
+      className: '',
+      html: `<svg width="28" height="38" viewBox="0 0 28 38" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 0C6.268 0 0 6.268 0 14c0 10.05 14 24 14 24s14-13.95 14-24C28 6.268 21.732 0 14 0z" fill="${color}" opacity="0.95"/>
+        <circle cx="14" cy="14" r="9" fill="none" stroke="white" stroke-width="2" opacity="0.9"/>
+        <text x="14" y="19" text-anchor="middle" font-size="12" fill="white" font-family="sans-serif">★</text>
+      </svg>`,
+      iconSize: [28, 38],
+      iconAnchor: [14, 38],
+      popupAnchor: [0, -40]
+    });
+  }
   return L.divIcon({
     className: '',
     html: `<svg width="20" height="28" viewBox="0 0 20 28" xmlns="http://www.w3.org/2000/svg">
@@ -1464,7 +1491,7 @@ function rebuildMarkers() {
   const visible = new Set(filteredStations().map(s => s.id));
   stations.forEach(s => {
     if (!s.lat) return;
-    const m = L.marker([s.lat, s.lng], { icon: makeMarkerIcon(getBrandColor(s.brandType)) });
+    const m = L.marker([s.lat, s.lng], { icon: makeMarkerIcon(getBrandColor(s.brandType), isStarred(s.name)) });
     m.bindPopup(makePopupHtml(s), { maxWidth: 280 });
     m.on('click', () => {
       selectedId = s.id;
