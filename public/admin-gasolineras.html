@@ -77,6 +77,16 @@
   .sort-label { font-size:11px; color:var(--muted); white-space:nowrap; }
   .sort-select { flex:1; background:var(--navy); border:1px solid var(--border); color:var(--text); padding:4px 8px; border-radius:3px; font-size:12px; outline:none; }
   .stats-row { display:flex; gap:6px; }
+
+  .ops-panel { background:var(--navy); border:1px solid var(--accent); border-radius:6px; padding:8px; display:flex; flex-direction:column; gap:6px; }
+  .ops-title { font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:700; color:var(--accent); letter-spacing:0.6px; }
+  .ops-kpis { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .ops-kpi { background:#0b1628; border:1px solid var(--border); border-radius:4px; padding:6px; }
+  .ops-kpi .v { font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; }
+  .ops-kpi .l { font-size:9px; color:var(--muted); text-transform:uppercase; }
+  .ops-top3 { font-size:11px; line-height:1.5; color:var(--text); }
+  .ops-top3 b { color:var(--green); }
+  .ops-inline { background:#3f1d0a; border:1px solid #fb923c; border-radius:5px; padding:6px 8px; font-size:11px; color:#fed7aa; font-weight:600; }
   .stat-chip { flex:1; background:var(--navy); border:1px solid var(--border); border-radius:4px; padding:6px 8px; text-align:center; }
   .stat-chip .sv { font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600; }
   .stat-chip .sl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:1px; }
@@ -348,6 +358,13 @@
         <button id="btnTruck" class="filter-btn" onclick="toggleTruckFilter()" title="Solo estaciones con acceso para camiones (Gasoil B, Andamur o Pactadas)">🚛 CAMIONES</button>
         <span id="truckCount" style="font-size:10px;color:var(--muted);display:none;"></span>
       </div>
+      <div class="ops-inline" id="opsInline">🚛 Modo operativo: calculando mejores opciones...</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;">
+        <button id="btnModeAll" class="filter-btn active" onclick="setBrandMode('all')">TODAS</button>
+        <button id="btnModeAndamur" class="filter-btn" onclick="setBrandMode('andamur')">SOLO ANDAMUR</button>
+        <button id="btnModeGalp" class="filter-btn" onclick="setBrandMode('galp')">SOLO GALP</button>
+        <button id="btnModeDual" class="filter-btn" onclick="setBrandMode('dual')">GALP + ANDAMUR</button>
+      </div>
       <div class="filters" id="zoneFilters"></div>
       <div id="routeBanner" style="display:none" class="route-banner">
         <span class="route-banner-name" id="routeBannerName"></span>
@@ -366,6 +383,14 @@
         <div class="stat-chip"><div class="sv green">—</div><div class="sl">Mín mejor €/l</div></div>
         <div class="stat-chip"><div class="sv yellow">—</div><div class="sl">Media €/l</div></div>
         <div class="stat-chip"><div class="sv red">—</div><div class="sl">Máx surtidor €/l</div></div>
+      </div>
+      <div class="ops-panel" id="opsPanel">
+        <div class="ops-title">🚛 Modo Operativo Camión</div>
+        <div class="ops-kpis">
+          <div class="ops-kpi"><div class="v" id="opsVisible">—</div><div class="l">Visibles ahora</div></div>
+          <div class="ops-kpi"><div class="v" id="opsSaving">—</div><div class="l">Ahorro 300L</div></div>
+        </div>
+        <div class="ops-top3" id="opsTop3">Top 3: —</div>
       </div>
     </div>
     <div class="station-list" id="stationList"></div>
@@ -447,7 +472,7 @@ const GALP_DISCOUNT    = 0.16;  // descuento Tarjeta Galp sobre surtidor
 const REPSOL_DISCOUNT  = 0.06;  // descuento Tarjeta Solred sobre surtidor
 const LIST_MAX = 250;
 const ANDAMUR_NEARBY_KM = 5;
-const BRANDS_FILTER = ['REPSOL', 'CAMPSA', 'PETRONOR'];
+const BRANDS_FILTER = ['GALP', 'SHELL', 'ANDAMUR', 'REPSOL', 'CAMPSA', 'PETRONOR'];
 
 // ── ESTACIONES FAVORITAS ───────────────────────────────────────────────────────
 const STARRED_STATIONS = new Set([
@@ -850,7 +875,8 @@ let selectedId = null;
 let dataSource = 'api';
 let priceMinMax = { min: 0, max: 0 };
 let routePlan = []; // IDs de estaciones en la ruta de repostaje
-let truckFilter = false; // Filtro: solo estaciones con acceso para camiones
+let truckFilter = true; // Filtro activado por defecto: solo estaciones con acceso para camiones
+let brandMode = 'all';
 
 // ── UTILIDADES ────────────────────────────────────────────────────────────────
 function distanceKm(lat1, lng1, lat2, lng2) {
@@ -882,6 +908,8 @@ function isBrandMatch(r) {
 function getBrandType(r) {
   const u = (r||'').toUpperCase();
   if (u.includes('GALP')) return 'galp';
+  if (u.includes('GALP')) return 'galp';
+  if (u.includes('SHELL')) return 'shell';
   if (u.includes('ANDAMUR')) return 'andamur';
   if (u.includes('REPSOL')||u.includes('CAMPSA')||u.includes('PETRONOR')) return 'repsol';
   return 'other';
@@ -890,6 +918,7 @@ function getBrandType(r) {
 function getBrandColor(bt) {
   if (bt==='galp') return '#0066cc';
   if (bt==='andamur') return '#f59e0b';
+  if (bt==='shell') return '#ef4444';
   if (bt==='repsol') return '#e30613';
   return '#64748b';
 }
@@ -1169,6 +1198,12 @@ function getMostExpensiveInCorridor(routeId) {
 }
 
 // ── FILTROS Y RUTAS ───────────────────────────────────────────────────────────
+
+function stationInAnyCorridor(s) {
+  if (s.lat == null) return false;
+  return Object.keys(ROUTE_CORRIDORS).some((routeId) => stationMatchesRoute(s, routeId));
+}
+
 function stationMatchesRoute(s, routeId) {
   const c = ROUTE_CORRIDORS[routeId];
   if (c && s.lat!=null) {
@@ -1251,14 +1286,37 @@ function toggleTruckFilter() {
   buildZones(); renderList(); updateMarkers();
 }
 
+
+function stationMatchesBrandMode(s) {
+  if (brandMode === 'all') return true;
+  if (brandMode === 'andamur') return s.brandType === 'andamur';
+  if (brandMode === 'galp') return s.brandType === 'galp';
+  if (brandMode === 'dual') {
+    const p = s.priceData || {};
+    return p.galp != null && (p.andamur != null || p.andamurNearby != null);
+  }
+  return true;
+}
+
+function setBrandMode(mode) {
+  brandMode = mode;
+  document.getElementById('btnModeAll')?.classList.toggle('active', mode === 'all');
+  document.getElementById('btnModeAndamur')?.classList.toggle('active', mode === 'andamur');
+  document.getElementById('btnModeGalp')?.classList.toggle('active', mode === 'galp');
+  document.getElementById('btnModeDual')?.classList.toggle('active', mode === 'dual');
+  renderList();
+  updateMarkers();
+}
+
 function filteredStations(skipZone=false) {
   const q=document.getElementById('searchBox').value.toLowerCase().trim();
   return stations.filter(s => {
     const mZ=skipZone||activeZone==='TODAS'||s.zone===activeZone;
     const mQ=!q||s.name.toLowerCase().includes(q)||s.localidad.toLowerCase().includes(q)||s.provincia.toLowerCase().includes(q)||s.via.toLowerCase().includes(q)||(s.cp&&s.cp.includes(q));
-    const mR=!activeRoute||stationMatchesRoute(s,activeRoute);
+    const mR=activeRoute?stationMatchesRoute(s,activeRoute):stationInAnyCorridor(s);
     const mT=!truckFilter||s.truckOk;
-    return mZ&&mQ&&mR&&mT;
+    const mB=stationMatchesBrandMode(s);
+    return mZ&&mQ&&mR&&mT&&mB;
   });
 }
 
@@ -1274,8 +1332,34 @@ function sortedStations(list) {
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
+
+function updateOperationalPanel(list) {
+  const withBest = list.filter(s => s.priceData && s.priceData.best != null);
+  document.getElementById('opsVisible').textContent = String(list.length);
+
+  if (!withBest.length) {
+    document.getElementById('opsSaving').textContent = '—';
+    document.getElementById('opsTop3').textContent = 'Top 3: sin datos de precio';
+    document.getElementById('opsInline').textContent = '🚛 Modo operativo: sin precios visibles';
+    return;
+  }
+
+  const sorted = [...withBest].sort((a,b) => a.priceData.best - b.priceData.best);
+  const top3 = sorted.slice(0, 3);
+  const cheapest = sorted[0].priceData.best;
+  const expensive = sorted[sorted.length - 1].priceData.best;
+  const saving300 = ((expensive - cheapest) * getTankL()).toFixed(2).replace('.', ',');
+
+  document.getElementById('opsSaving').textContent = `${saving300} €`;
+  document.getElementById('opsTop3').innerHTML = 'Top 3: ' + top3.map((s, idx) =>
+    `${idx + 1}) <b>${s.priceData.best.toFixed(3).replace('.', ',')}€/L</b> ${s.name}`
+  ).join(' · ');
+  document.getElementById('opsInline').textContent = `🚛 Top: ${top3[0].name} · ${top3[0].priceData.best.toFixed(3).replace('.', ',')}€/L · Ahorro 300L: ${saving300} €`; 
+}
+
 function renderList() {
   const list=sortedStations(filteredStations());
+  updateOperationalPanel(list);
   const container=document.getElementById('stationList');
   container.innerHTML='';
   document.getElementById('totalBadge').textContent=`${list.length} estaciones`;
@@ -1709,6 +1793,7 @@ function showResult(type, msg) {
 // ── INIT ─────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   buildRoutesList();
+  document.getElementById('btnTruck')?.classList.add('truck-active');
   map=L.map('map',{center:[40.4,-3.7],zoom:6,zoomControl:true});
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles © Esri — Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community',maxZoom:19}).addTo(map);
   clusterGroup=L.markerClusterGroup({chunkedLoading:true,maxClusterRadius:50,showCoverageOnHover:false});
@@ -1719,7 +1804,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   updatePriceMinMax();
   buildZones(); renderList(); rebuildMarkers(); updateLastUpdate();
 
-  if (dataSource==='api') showToast(`✓ ${stations.length} estaciones · GALP, Repsol, Campsa, Petronor, Andamur`);
+  if (dataSource==='api') {
+    const visible = filteredStations().length;
+    showToast(`✓ ${visible} visibles en corredores · ${stations.length} cargadas`);
+  }
 
   document.getElementById('searchBox').addEventListener('input',()=>{ renderList(); updateMarkers(); });
 });

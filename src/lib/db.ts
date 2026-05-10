@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
+import { getDateDaysAgoInSpain } from './date';
 
 const DB_PATH = process.env.DB_PATH || './data/gasoil.db';
 const resolvedPath = path.resolve(process.cwd(), DB_PATH);
@@ -138,10 +139,7 @@ export function upsertPriceHistory(price: PriceHistory): void {
 
 export function getStationsForRoute(routeId: string): StationWithPrice[] {
   const db = getDb();
-  const today = new Date().toISOString().split('T')[0];
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split('T')[0];
+  const sevenDaysAgo = getDateDaysAgoInSpain(7);
 
   const stations = db.prepare(`
     SELECT
@@ -208,9 +206,7 @@ export function getStationsForRoute(routeId: string): StationWithPrice[] {
 
 export function getPriceHistory(ideess: string, days = 30): PriceHistory[] {
   const db = getDb();
-  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split('T')[0];
+  const since = getDateDaysAgoInSpain(days);
   return db.prepare(`
     SELECT * FROM price_history
     WHERE station_ideess = ? AND date >= ?
