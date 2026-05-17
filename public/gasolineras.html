@@ -603,6 +603,7 @@
       <input class="search-box" id="searchBox" type="text" placeholder="🔍  Buscar estación, localidad, provincia..."
         oninput="if(typeof renderList==='function'){renderList();updateMarkers();}"
         onkeyup="if(typeof renderList==='function'){renderList();updateMarkers();}">
+      <div class="filters" id="brandFilters" style="margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #1e2d45;"></div>
       <div class="filters" id="zoneFilters"></div>
       <div id="routeBanner" style="display:none" class="route-banner">
         <span class="route-banner-name" id="routeBannerName"></span>
@@ -635,7 +636,7 @@ const GALP_DISCOUNT = 0.16;
 const REPSOL_DISCOUNT = 0.06;
 const LIST_MAX = 250;
 const ANDAMUR_NEARBY_KM = 5;
-const BRANDS_FILTER = ['REPSOL', 'CAMPSA', 'PETRONOR'];
+const BRANDS_FILTER = ['REPSOL', 'CAMPSA', 'PETRONOR', 'ANDAMUR'];
 
 // ── ESTACIONES FAVORITAS (destacadas en mapa y lista) ─────────────────────────
 const STARRED_STATIONS = new Set([
@@ -973,6 +974,7 @@ let markers = {};
 let clusterGroup;
 let map;
 let activeZone = 'TODAS';
+let activeBrand = 'TODAS';
 let activeRoute = null;
 let activeRouteName = '';
 let selectedId = null;
@@ -1082,7 +1084,7 @@ function parseMinetur(data) {
     const lng = parseApiNum(e['Longitud (WGS84)']);
     if (!lat || !lng) return;
     const dir = (e['Dirección'] || '').trim();
-    if (!isHighwayStation(dir)) return; // solo estaciones en autopista/autovía
+    if (!isHighwayStation(dir) && !rotulo.toUpperCase().includes('ANDAMUR')) return;
     result.push({
       id: idx,
       name: rotulo,
@@ -1319,7 +1321,30 @@ function filteredStations(skipZone = false) {
       || s.via.toLowerCase().includes(q)
       || (s.cp && s.cp.includes(q));
     const matchRoute = !activeRoute || stationMatchesRoute(s, activeRoute);
-    return matchZone && matchQ && matchRoute;
+    const matchBrand = activeBrand === 'TODAS'
+      || (activeBrand === 'galp' && s.brandType === 'galp')
+      || (activeBrand === 'andamur' && s.brandType === 'andamur')
+      || (activeBrand === 'galp+andamur' && (s.brandType === 'galp' || s.brandType === 'andamur'));
+    return matchZone && matchQ && matchRoute && matchBrand;
+  });
+}
+
+function buildBrandFilters() {
+  const brands = [
+    { id: 'TODAS',        label: 'Todas',          color: '#94a3b8' },
+    { id: 'galp',         label: '● Galp',         color: '#0066cc' },
+    { id: 'andamur',      label: '● Andamur',      color: '#f59e0b' },
+    { id: 'galp+andamur', label: 'Galp + Andamur', color: '#22c55e' },
+  ];
+  const container = document.getElementById('brandFilters');
+  container.innerHTML = '';
+  brands.forEach(b => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (b.id === activeBrand ? ' active' : '');
+    btn.textContent = b.label;
+    btn.style.color = b.id === activeBrand ? '#fff' : b.color;
+    btn.onclick = () => { activeBrand = b.id; buildBrandFilters(); buildZones(); renderList(); updateMarkers(); };
+    container.appendChild(btn);
   });
 }
 
@@ -1540,6 +1565,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   stations = await loadStations();
   computeAllPrices();
 
+  buildBrandFilters();
   buildZones();
   renderList();
   rebuildMarkers();
