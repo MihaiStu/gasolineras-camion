@@ -9,6 +9,7 @@ import {
 } from './db';
 import { ROUTES } from './routes';
 import { selectStationsForRoute } from './stationSelector';
+import { getTodayInSpain } from './date';
 
 export async function updatePrices(): Promise<{
   updated: number;
@@ -42,7 +43,7 @@ async function updatePricesFromFetched(
 ): Promise<{ updated: number; errors: number; message: string }> {
   const trackedIds = getAllTrackedStationIds();
   const stationMap = new Map(allStations.map((s) => [s.ideess, s]));
-  const today = new Date().toISOString().split('T')[0];
+  const today = getTodayInSpain();
 
   let updated = 0;
   let errors = 0;
@@ -132,7 +133,7 @@ export async function setupStations(
   console.log('[Setup] Station setup complete');
 
   // Immediately update prices after setup
-  const today = new Date().toISOString().split('T')[0];
+  const today = getTodayInSpain();
   const trackedIds = getAllTrackedStationIds();
   const stationMap = new Map(stations.map((s) => [s.ideess, s]));
 

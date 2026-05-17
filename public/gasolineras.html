@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+  // Legacy entrypoint: redirect to the Next.js app so users see current data and UI.
+  if (window.location.pathname.endsWith('/gasolineras.html')) {
+    window.location.replace('/');
+  }
+</script>
 <title>AdmiLogistic · Gasolineras Camión</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
