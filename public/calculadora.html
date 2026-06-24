@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de ahorro en gasóleo · Repostaje Camión</title>
+<meta name="description" content="Calcula en 10 segundos cuánto ahorra tu flota en gasóleo repostando en la red correcta. Sin registro.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0f172a;
+    --navy2: #1e293b;
+    --panel: #162032;
+    --accent: #f97316;
+    --accent2: #fb923c;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --border: #1e3a5f;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: radial-gradient(1200px 600px at 50% -10%, #14213d 0%, var(--navy) 55%);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .wrap { width: 100%; max-width: 720px; }
+
+  /* HERO */
+  .brand {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 800; letter-spacing: 1.5px;
+    color: var(--accent); text-align: center; margin-bottom: 22px;
+  }
+  .brand span { color: var(--text); }
+  h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800; font-size: clamp(28px, 6vw, 42px);
+    line-height: 1.05; text-align: center; letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+  h1 .hl { color: var(--accent); }
+  .sub {
+    text-align: center; color: var(--muted); font-size: 16px;
+    max-width: 520px; margin: 0 auto 28px;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: 0 20px 50px -20px rgba(0,0,0,.6);
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; }
+  @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } }
+
+  .field label {
+    display: block; font-size: 12px; font-weight: 600; letter-spacing: .4px;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 7px;
+  }
+  .input-row { display: flex; align-items: center; gap: 8px; }
+  input[type=number] {
+    width: 100%;
+    background: var(--navy); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 11px 12px; font-family: 'JetBrains Mono', monospace;
+    font-size: 17px; font-weight: 700; -moz-appearance: textfield;
+  }
+  input[type=number]:focus { outline: none; border-color: var(--accent); }
+  .unit { color: var(--muted); font-size: 13px; white-space: nowrap; }
+
+  .slider-val {
+    font-family: 'JetBrains Mono', monospace; font-weight: 700;
+    color: var(--accent); font-size: 15px;
+  }
+  input[type=range] {
+    width: 100%; margin-top: 10px; accent-color: var(--accent);
+    height: 4px; cursor: pointer;
+  }
+  .hint { font-size: 11.5px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+
+  /* RESULT */
+  .result {
+    margin-top: 22px; padding: 22px;
+    background: linear-gradient(180deg, rgba(34,197,94,.10), rgba(34,197,94,.03));
+    border: 1px solid rgba(34,197,94,.35); border-radius: 12px; text-align: center;
+  }
+  .result .label { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+  .result .big {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+    font-size: clamp(44px, 12vw, 72px); line-height: 1; color: var(--green);
+    margin: 4px 0; font-variant-numeric: tabular-nums;
+  }
+  .result .per { color: var(--muted); font-size: 15px; }
+  .result .year {
+    margin-top: 10px; font-family: 'JetBrains Mono', monospace;
+    font-size: 15px; color: var(--text);
+  }
+  .result .year b { color: var(--green); }
+
+  /* ROI strip */
+  .roi {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px;
+  }
+  .roi .chip {
+    flex: 1 1 0; min-width: 120px;
+    background: var(--navy); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 14px; text-align: center;
+  }
+  .roi .chip .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  .roi .chip .v {
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 24px;
+    margin-top: 2px; font-variant-numeric: tabular-nums;
+  }
+  .roi .chip .v.orange { color: var(--accent); }
+  .roi .chip .v.green { color: var(--green); }
+
+  .pitch {
+    text-align: center; margin: 18px 0 4px; font-size: 15px; color: var(--text);
+  }
+  .pitch b { color: var(--accent); }
+
+  /* CTA */
+  .cta {
+    display: block; width: 100%; margin-top: 16px;
+    background: var(--accent); color: #1a1006; border: none; border-radius: 10px;
+    padding: 15px; font-family: 'Barlow Condensed', sans-serif; font-weight: 800;
+    font-size: 19px; letter-spacing: .5px; text-align: center; text-decoration: none;
+    cursor: pointer; transition: transform .12s, background .12s;
+  }
+  .cta:hover { background: var(--accent2); transform: translateY(-1px); }
+  .cta .small { display: block; font-family: 'Barlow', sans-serif; font-weight: 500; font-size: 12px; letter-spacing: 0; opacity: .85; }
+
+  .foot {
+    text-align: center; color: var(--muted); font-size: 12px; margin-top: 18px; line-height: 1.5;
+  }
+  .foot a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">REPOSTAJE <span>CAMIÓN</span></div>
+
+  <h1>¿Cuánto <span class="hl">tira</span> tu flota en gasóleo de más?</h1>
+  <p class="sub">Repostar en la red correcta, con el descuento correcto, son cientos de euros al mes por camión. Calcúlalo en 10 segundos. Sin registro.</p>
+
+  <div class="card">
+    <div class="grid">
+      <div class="field">
+        <label for="trucks">Camiones</label>
+        <div class="input-row">
+          <input type="number" id="trucks" min="1" max="2000" step="1" value="1" inputmode="numeric" oninput="calc()">
+        </div>
+        <div class="hint">Cuántos vehículos repostan.</div>
+      </div>
+
+      <div class="field">
+        <label for="km">Km al mes por camión</label>
+        <div class="input-row">
+          <input type="number" id="km" min="0" max="50000" step="500" value="10000" inputmode="numeric" oninput="calc()">
+          <span class="unit">km</span>
+        </div>
+        <div class="hint">Larga distancia ronda 8.000–12.000.</div>
+      </div>
+
+      <div class="field">
+        <label for="cons">Consumo medio</label>
+        <div class="input-row">
+          <input type="number" id="cons" min="15" max="60" step="0.5" value="30" inputmode="decimal" oninput="calc()">
+          <span class="unit">L/100 km</span>
+        </div>
+        <div class="hint">Un tractora cargada anda por 28–34.</div>
+      </div>
+
+      <div class="field">
+        <label for="disc">Ahorro por litro <span class="slider-val" id="discVal">0,10 €/L</span></label>
+        <input type="range" id="disc" min="0.02" max="0.20" step="0.01" value="0.10" oninput="calc()">
+        <div class="hint">Diferencia real entre el precio "a ojo" y la red optimizada + gasóleo profesional.</div>
+      </div>
+    </div>
+
+    <div class="result">
+      <div class="label">Ahorro estimado</div>
+      <div class="big" id="saveMonth">300 €</div>
+      <div class="per">al mes</div>
+      <div class="year">≈ <b id="saveYear">3.600 €</b> al año · <span id="liters">3.000</span> L/mes repostados</div>
+    </div>
+
+    <div class="roi">
+      <div class="chip">
+        <div class="k">Coste del servicio</div>
+        <div class="v orange" id="cost">5 €/mes</div>
+      </div>
+      <div class="chip">
+        <div class="k">Te ahorra</div>
+        <div class="v green" id="net">295 €/mes</div>
+      </div>
+      <div class="chip">
+        <div class="k">Retorno</div>
+        <div class="v green" id="roi">60×</div>
+      </div>
+    </div>
+
+    <p class="pitch">Cuesta <b>5 €/camión al mes</b>. El ratio es el anuncio.</p>
+
+    <a href="/gasolineras.html" class="cta">
+      Probar gratis con mi flota
+      <span class="small">Mapa, plan de repostaje y red pactada · sin tarjeta</span>
+    </a>
+  </div>
+
+  <p class="foot">
+    Cálculo orientativo a partir de tus datos. Precios de referencia: gasóleo A oficial (MINETUR).<br>
+    El ahorro real se mide camión a camión dentro de la app. · <a href="/gasolineras.html">Ver el mapa →</a>
+  </p>
+</div>
+
+<script>
+  // Precio de servicio por camión/mes (ancla del ROI).
+  const PRECIO_SERVICIO = 5;
+
+  const $ = id => document.getElementById(id);
+  // Formato español (punto de millares). Bucle determinista, sin Intl/locale ni regex.
+  const num = n => {
+    const s = Math.round(Math.abs(n)).toString();
+    let out = '';
+    for (let i = 0; i < s.length; i++) {
+      if (i > 0 && (s.length - i) % 3 === 0) out += '.';
+      out += s[i];
+    }
+    return (n < 0 ? '-' : '') + out;
+  };
+  const eur = n => num(n) + ' €';
+
+  function calc() {
+    const trucks = Math.max(0, +$('trucks').value || 0);
+    const km     = Math.max(0, +$('km').value || 0);
+    const cons   = Math.max(0, +$('cons').value || 0);
+    const disc   = +$('disc').value || 0;
+
+    const litersPerTruck = km * cons / 100;        // L/mes por camión
+    const litersTotal    = litersPerTruck * trucks;
+    const saveMonth      = litersTotal * disc;      // ahorro = litros × €/L
+    const saveYear       = saveMonth * 12;
+    const cost           = trucks * PRECIO_SERVICIO;
+    const net            = saveMonth - cost;
+    const roi            = cost > 0 ? saveMonth / cost : 0;
+
+    $('discVal').textContent = disc.toFixed(2).replace('.', ',') + ' €/L';
+    $('saveMonth').textContent = eur(saveMonth);
+    $('saveYear').textContent  = eur(saveYear);
+    $('liters').textContent    = num(litersTotal);
+    $('cost').textContent      = num(cost) + ' €/mes';
+    $('net').textContent       = eur(net) + '/mes';
+    $('roi').textContent       = roi >= 1 ? Math.round(roi) + '×' : roi.toFixed(1) + '×';
+  }
+
+  // Handlers inline (oninput="calc()") en cada campo: bombproof y embebible.
+  window.calc = calc;
+  calc();
+</script>
+</body>
+</html>
