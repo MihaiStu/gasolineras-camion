@@ -16,6 +16,7 @@ Ejecutar en este orden exacto (cada uno depende del anterior):
 | 2 | `02_rls.sql` | Activa Row Level Security y crea las políticas de aislamiento multi-tenant + grants para los roles `anon`, `authenticated`, `service_role`. |
 | 3 | `03_seed_stations.sql` | Inserta el tenant inicial **AdmiLogistic** y las **160 estaciones** de la red pactada en `station`, `price` (cache) y `tenant_station`. |
 | 4 | `04_station_address_columns.sql` | Desnormaliza la dirección en columnas propias (`via`, `localidad`, `provincia`, `zona`) que el front necesita para filtros y zonas. Las rellena parseando `station.direccion` y `tenant_station.nota`. |
+| 5 | `05_savings_views.sql` | Vistas del **contador de ahorro** (Fase 2): `monthly_savings` (ahorro por tenant/camión/mes) y `savings_current_month` (rollup del mes en curso). Creadas con `security_invoker = true` para respetar la RLS de `refuel`. Solo legibles por `authenticated`. |
 
 ### Cómo aplicarlos
 
