@@ -72,6 +72,11 @@
 <script>
 // ── CONFIGURACIÓN ─────────────────────────────────────────────────────────────
 const API_URL = '/api/gasolineras';
+// Backend Supabase aislado (red pactada en BD). Si falla, fallback a RAW_DATA embebido.
+// TODO prod: cambiar a la URL pública (Cloudflare Tunnel) cuando se exponga.
+const SUPABASE_URL = 'http://192.168.1.33:8100';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzgyMjM3OTM0LCJleHAiOjIwOTc1OTc5MzR9.HIN7LriE0ngaW9_4jILe9MxtATqavJHAiCLR_GmV19s';
+const SUPABASE_SCHEMA = 'gasoil';
 const GALP_DISCOUNT = 0.16;
 const REPSOL_DISCOUNT = 0.06;
 const LIST_MAX = 250;
@@ -577,10 +582,49 @@ function parseRaw(raw) {
   return result;
 }
 
+// Lee la red pactada desde Supabase (schema gasoil). Devuelve el mismo shape que parseRaw.
+async function fetchPactadas() {
+  const url = `${SUPABASE_URL}/rest/v1/station`
+    + `?select=id,nombre,marca,via,localidad,provincia,zona,lat,lng,price(producto,precio)`;
+  const res = await fetch(url, {
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      'Accept-Profile': SUPABASE_SCHEMA,
+    },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) throw new Error('Supabase station ' + res.status);
+  const rows = await res.json();
+  return rows.map((r, idx) => {
+    const gasoleo = (r.price || []).find(p => p.producto === 'gasoleo_a');
+    return {
+      id: 10000 + idx,
+      name: r.nombre,
+      via: r.via || '',
+      localidad: r.localidad || '',
+      provincia: r.provincia || '',
+      price: gasoleo ? Number(gasoleo.precio) : NaN,
+      zone: r.zona || zoneFromProvincia(r.provincia || ''),
+      rotulo: (r.nombre || '').toUpperCase(),
+      brandType: getBrandType(r.nombre || ''),
+      cp: '', fromApi: false,
+      lat: r.lat != null ? Number(r.lat) : null,
+      lng: r.lng != null ? Number(r.lng) : null,
+    };
+  }).filter(s => !isNaN(s.price));
+}
+
 async function loadStations() {
   showLoading(true);
-  // Red pactada siempre presente
-  const localStations = parseRaw(RAW_DATA);
+  // Red pactada: desde Supabase, con fallback a RAW_DATA embebido si la API no responde.
+  let localStations;
+  try {
+    localStations = await fetchPactadas();
+    if (!localStations.length) throw new Error('Supabase devolvió 0 estaciones');
+  } catch (e) {
+    console.warn('Pactadas desde Supabase falló, uso RAW_DATA:', e.message);
+    localStations = parseRaw(RAW_DATA);
+  }
   try {
     // API solo para Repsol/Campsa en autopista (BRANDS_FILTER + isHighwayStation)
     const cached = sessionStorage.getItem('minetur_data');
