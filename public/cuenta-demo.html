@@ -106,6 +106,8 @@
     return (n < 0 ? '-' : '') + out;
   };
   const eur = n => num(n) + ' €';
+  // Escapa texto antes de interpolarlo en HTML (matricula es texto libre por tenant).
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
   async function load() {
@@ -136,8 +138,8 @@
     const filas = rows.map(r => {
       const delta = (Number(r.precio_referencia_medio) - Number(r.precio_pagado_medio));
       return `<tr>
-        <td>${r.matricula}</td>
-        <td>${r.repostajes}</td>
+        <td>${esc(r.matricula)}</td>
+        <td>${Number(r.repostajes)}</td>
         <td>${num(r.litros)} L</td>
         <td>${Number(r.precio_pagado_medio).toFixed(3).replace('.', ',')}<br><span class="delta">ref ${Number(r.precio_referencia_medio).toFixed(3).replace('.', ',')}</span></td>
         <td class="save">${eur(r.ahorro_eur)}</td>
