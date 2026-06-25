@@ -18,6 +18,7 @@ Ejecutar en este orden exacto (cada uno depende del anterior):
 | 4 | `04_station_address_columns.sql` | Desnormaliza la dirección en columnas propias (`via`, `localidad`, `provincia`, `zona`) que el front necesita para filtros y zonas. Las rellena parseando `station.direccion` y `tenant_station.nota`. |
 | 5 | `05_savings_views.sql` | Vistas del **contador de ahorro** (Fase 2): `monthly_savings` (ahorro por tenant/camión/mes) y `savings_current_month` (rollup del mes en curso). Creadas con `security_invoker = true` para respetar la RLS de `refuel`. Solo legibles por `authenticated`. |
 | 6 | `06_savings_demo.sql` | **Opcional (demo).** Vista `savings_demo` acotada al tenant demo AdmiLogistic y legible por `anon`, para la página de muestra `public/cuenta-demo.html` (reporting sin login). Borrar cuando haya auth real: `DROP VIEW gasoil.savings_demo;`. |
+| 7 | `07_auth_signup.sql` | **Alta self-serve.** Trigger `on_auth_user_created` en `auth.users`: por cada registro crea su `tenant` (empresa) + `profile` (rol `gestor`). Los datos vienen de `options.data` del signup (`company_name`, `tipo`, `nombre`). Lo consume `public/cuenta.html`. |
 
 ### Cómo aplicarlos
 
