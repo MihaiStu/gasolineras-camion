@@ -68,6 +68,9 @@
   td.save { color: var(--green); font-weight: 700; }
   .delta { color: var(--muted); font-size: 12px; }
   .empty { text-align: center; color: var(--muted); padding: 40px 20px; line-height: 1.6; }
+  .panel-form { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin-bottom: 6px; }
+  @media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
   .foot { text-align: center; color: var(--muted); font-size: 12px; margin-top: 22px; line-height: 1.6; }
   .foot a { color: var(--accent); text-decoration: none; }
   .hidden { display: none; }
@@ -115,6 +118,33 @@
   <!-- REPORTING -->
   <div id="report" class="hidden">
     <div id="report-body"><div class="empty">Cargando…</div></div>
+
+    <!-- Registrar repostaje -->
+    <div class="section-title" style="margin-top:26px;">Registrar repostaje</div>
+    <div class="panel-form">
+      <form id="form-refuel">
+        <div class="grid2">
+          <div class="field">
+            <label>Camión</label>
+            <select id="rf-truck"></select>
+          </div>
+          <div class="field">
+            <label>Litros</label>
+            <input type="number" id="rf-litros" min="1" max="2000" step="0.01" placeholder="600" required>
+          </div>
+          <div class="field">
+            <label>€/L pagado</label>
+            <input type="number" id="rf-pagado" min="0.5" max="3" step="0.001" placeholder="1.529" required>
+          </div>
+          <div class="field">
+            <label>€/L referencia <span class="delta" title="Precio medio de mercado">(mercado)</span></label>
+            <input type="number" id="rf-ref" min="0.5" max="3" step="0.001" placeholder="1.629" required>
+          </div>
+        </div>
+        <button class="btn" type="submit" style="margin-top:4px;">Guardar repostaje</button>
+        <div class="msg" id="rf-msg"></div>
+      </form>
+    </div>
   </div>
 
   <p class="foot">
@@ -179,12 +209,65 @@
     $('report').classList.remove('hidden');
     $('session-info').classList.remove('hidden');
 
-    // Nombre de la cuenta (tenant)
-    const { data: tenants } = await sb.from('tenant').select('nombre').limit(1);
+    // Nombre + id de la cuenta (tenant)
+    const { data: tenants } = await sb.from('tenant').select('id,nombre').limit(1);
+    currentTenantId = tenants?.[0]?.id || null;
     $('acc-name').textContent = tenants?.[0]?.nombre || session.user.email;
 
-    await loadReport();
+    await Promise.all([loadReport(), loadTrucks(), suggestRefPrice()]);
   }
+
+  let currentTenantId = null;
+
+  async function loadTrucks() {
+    const sel = $('rf-truck');
+    const { data: trucks } = await sb.from('truck').select('id,matricula').order('matricula');
+    const opts = (trucks || []).map(t => `<option value="${esc(t.id)}">${esc(t.matricula)}</option>`).join('');
+    sel.innerHTML = opts + '<option value="__new__">+ Nuevo camión…</option>';
+  }
+
+  async function suggestRefPrice() {
+    // Sugerencia = media de gasoleo_a en la cache de precios (público).
+    const { data } = await sb.from('price').select('precio').eq('producto', 'gasoleo_a').limit(500);
+    if (data && data.length) {
+      const avg = data.reduce((a, p) => a + Number(p.precio), 0) / data.length;
+      $('rf-ref').value = avg.toFixed(3);
+    }
+  }
+
+  // Alta rápida de camión al elegir "+ Nuevo camión…"
+  $('rf-truck').addEventListener('change', async (e) => {
+    if (e.target.value !== '__new__') return;
+    const matricula = (prompt('Matrícula del nuevo camión:') || '').trim();
+    if (!matricula) { await loadTrucks(); return; }
+    if (!currentTenantId) { rfMsg('No se pudo identificar la cuenta.', 'err'); return; }
+    const { data, error } = await sb.from('truck')
+      .insert({ tenant_id: currentTenantId, matricula }).select('id').single();
+    if (error) { rfMsg(error.message, 'err'); await loadTrucks(); return; }
+    await loadTrucks();
+    $('rf-truck').value = data.id;
+  });
+
+  const rfMsg = (t, cls='') => { $('rf-msg').textContent = t; $('rf-msg').className = 'msg ' + cls; };
+
+  $('form-refuel').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const truck_id = $('rf-truck').value;
+    if (!truck_id || truck_id === '__new__') return rfMsg('Elige un camión.', 'err');
+    if (!currentTenantId) return rfMsg('No se pudo identificar la cuenta.', 'err');
+    rfMsg('Guardando…');
+    const { error } = await sb.from('refuel').insert({
+      tenant_id: currentTenantId,
+      truck_id,
+      litros: Number($('rf-litros').value),
+      precio_pagado: Number($('rf-pagado').value),
+      precio_referencia: Number($('rf-ref').value),
+    });
+    if (error) return rfMsg(error.message, 'err');
+    rfMsg('Repostaje guardado ✓', 'ok');
+    $('rf-litros').value = ''; $('rf-pagado').value = '';
+    await loadReport();
+  });
 
   async function loadReport() {
     const body = $('report-body');
