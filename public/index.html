@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Repostaje Camión · Tu flota ahorra en gasóleo</title>
+<meta name="description" content="La capa neutral e inteligente sobre todas las redes para que tu flota reposte siempre al mejor precio. Mira cuánto ahorras y pruébalo gratis.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0f172a; --navy2: #1e293b; --panel: #162032;
+    --accent: #f97316; --accent2: #fb923c; --green: #22c55e;
+    --text: #e2e8f0; --muted: #94a3b8; --border: #1e3a5f;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Barlow', sans-serif; background: var(--navy); color: var(--text); }
+  a { color: inherit; text-decoration: none; }
+
+  /* NAV */
+  nav { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; padding: 14px 22px; background: rgba(15,23,42,.85); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .brand { font-family: 'Barlow Condensed', sans-serif; font-size: 21px; font-weight: 800; letter-spacing: 1.4px; color: var(--accent); }
+  .brand span { color: var(--text); }
+  .nav-links { display: flex; align-items: center; gap: 8px; }
+  .nav-links a { font-weight: 600; font-size: 14px; padding: 8px 14px; border-radius: 8px; color: var(--muted); }
+  .nav-links a:hover { color: var(--text); }
+  .nav-links a.cta { background: var(--accent); color: #1a1006; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; letter-spacing: .5px; }
+  .nav-links a.cta:hover { background: var(--accent2); }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+
+  /* HERO */
+  .hero { text-align: center; padding: 70px 20px 50px; background: radial-gradient(1100px 500px at 50% -10%, #14213d 0%, var(--navy) 60%); }
+  .eyebrow { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent2); background: rgba(249,115,22,.12); border: 1px solid var(--accent); padding: 5px 12px; border-radius: 999px; margin-bottom: 20px; }
+  h1 { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: clamp(34px, 7vw, 60px); line-height: 1.04; letter-spacing: .5px; max-width: 14ch; margin: 0 auto 16px; }
+  h1 .hl { color: var(--accent); }
+  .lead { color: var(--muted); font-size: clamp(16px, 2.4vw, 20px); max-width: 620px; margin: 0 auto 30px; line-height: 1.5; }
+  .cta-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: .5px; padding: 14px 26px; border-radius: 10px; cursor: pointer; border: none; transition: transform .12s, background .12s; }
+  .btn-primary { background: var(--accent); color: #1a1006; }
+  .btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-ghost:hover { border-color: var(--accent); }
+
+  /* SECTIONS */
+  section.block { padding: 56px 0; border-top: 1px solid var(--border); }
+  .section-eyebrow { text-align: center; color: var(--accent2); font-weight: 700; font-size: 13px; letter-spacing: .8px; text-transform: uppercase; margin-bottom: 8px; }
+  h2 { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: clamp(26px, 4.5vw, 38px); text-align: center; letter-spacing: .5px; margin-bottom: 38px; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  @media (max-width: 720px) { .steps { grid-template-columns: 1fr; } }
+  .step { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
+  .step .n { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 15px; color: var(--accent); border: 1px solid var(--accent); width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 9px; margin-bottom: 14px; }
+  .step h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 21px; font-weight: 700; margin-bottom: 8px; }
+  .step p { color: var(--muted); font-size: 15px; line-height: 1.55; }
+
+  .cmp { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 720px) { .cmp { grid-template-columns: 1fr; } }
+  .card { border: 1px solid var(--border); border-radius: 14px; padding: 22px; background: var(--panel); }
+  .card.us { border-color: var(--green); box-shadow: 0 20px 50px -28px rgba(34,197,94,.4); }
+  .card h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 19px; margin-bottom: 10px; }
+  .card.us h3 { color: var(--green); }
+  .card p { color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+
+  /* PRICE */
+  .price-box { max-width: 540px; margin: 0 auto; text-align: center; background: linear-gradient(180deg, rgba(249,115,22,.10), rgba(249,115,22,.02)); border: 1px solid var(--accent); border-radius: 18px; padding: 38px 26px; }
+  .price-box .amount { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 64px; color: var(--accent); line-height: 1; }
+  .price-box .amount small { font-size: 20px; color: var(--muted); font-weight: 600; }
+  .price-box .vs { color: var(--text); font-size: 18px; margin: 14px 0 4px; }
+  .price-box .vs b { color: var(--green); }
+  .price-box .ratio { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+
+  footer { border-top: 1px solid var(--border); padding: 30px 20px; text-align: center; color: var(--muted); font-size: 13px; }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+  <nav>
+    <a href="/index.html" class="brand">REPOSTAJE <span>CAMIÓN</span></a>
+    <div class="nav-links">
+      <a href="/calculadora.html">Calculadora</a>
+      <a href="/gasolineras.html">Mapa</a>
+      <a href="/cuenta.html" class="cta">Entrar</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <span class="eyebrow">Para flotas y autónomos del transporte</span>
+    <h1>Tu flota gasta <span class="hl">de más</span> en gasóleo. Demuéstralo.</h1>
+    <p class="lead">La capa neutral e inteligente sobre todas las redes: reposta siempre donde toca, con el descuento que toca, y mide el ahorro camión a camión. Cuesta menos que un café.</p>
+    <div class="cta-row">
+      <a href="/calculadora.html"><button class="btn btn-primary">Calcular mi ahorro</button></a>
+      <a href="/cuenta.html"><button class="btn btn-ghost">Probar gratis</button></a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="block">
+      <div class="section-eyebrow">Cómo funciona</div>
+      <h2>De repostar a ojo a repostar con datos</h2>
+      <div class="steps">
+        <div class="step"><div class="n">1</div><h3>Conecta tu flota</h3><p>Das de alta tus camiones y tus tarjetas. En segundos, sin comercial ni instalación.</p></div>
+        <div class="step"><div class="n">2</div><h3>Repostas donde toca</h3><p>El mapa y el plan de ruta te dicen la estación correcta de la red pactada, con precios oficiales actualizados.</p></div>
+        <div class="step"><div class="n">3</div><h3>Ves lo que ahorras</h3><p>Cada repostaje suma al contador. A fin de mes sabes, en euros reales, cuánto te has ahorrado por camión.</p></div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="section-eyebrow">Por qué nosotros</div>
+      <h2>Ni una app de coche ni una tarjeta atada a una red</h2>
+      <div class="cmp">
+        <div class="card"><h3>Apps de gasolineras</h3><p>Genéricas, pensadas para turismos. No saben de gasóleo profesional, de accesos para 40 t ni de restricciones de camión.</p></div>
+        <div class="card"><h3>Tarjetas de flota</h3><p>Te atan a su propia red. Te interesa que repostes en SUS estaciones, no en la más barata para ti.</p></div>
+        <div class="card us"><h3>Repostaje Camión</h3><p>Neutral sobre todas las redes, inteligente y específico de camión. Optimiza por ruta y te demuestra el ahorro con tus propios datos.</p></div>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="section-eyebrow">Precio</div>
+      <h2>El ratio es el anuncio</h2>
+      <div class="price-box">
+        <div class="amount">5 €<small> /camión al mes</small></div>
+        <div class="vs">frente a <b>~400 €/mes</b> de ahorro por camión</div>
+        <div class="ratio">Con ese retorno, un solo camión ya lo paga. Prueba gratis, sin tarjeta.</div>
+        <a href="/cuenta.html"><button class="btn btn-primary">Crear cuenta gratis</button></a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Repostaje Camión · <a href="/calculadora.html">Calculadora</a> · <a href="/gasolineras.html">Mapa</a> · <a href="/cuenta.html">Entrar</a><br>
+    Hecho para el transporte por carretera. Precios de referencia: gasóleo A oficial (MINETUR).
+  </footer>
+</body>
+</html>
