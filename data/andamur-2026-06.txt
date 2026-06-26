@@ -1,0 +1,191 @@
+ZONA JUNQUERA	VIA	LOCALIDAD	PROVINCIA	PRECIO €/l
+ANDAMUR La Junquera	AP-7, N-II	La Junquera	Girona	1,206
+ANDAMUR La Junquera-Llers	AP-7, N-II	Llers	Girona	1,206
+GM FUEL Servei Carrer 3	B-10	Barcelona	Barcelona	1,169
+NIEVES Parets	N-152	Parets del Valles	Barcelona	1,244
+Renova Oil Incoenergy	N-230	Torrefarrera	Lérida	1,177
+ZONA IRÚN	VIA	LOCALIDAD	PROVINCIA	PRECIO €/l
+ANDAMUR Pamplona	AP15, N-121-A	Imárcoain	Navarra	1,207
+ANDAMUR San Román - Araia	A-1	San Román de San Millán	Álava	1,208
+Merkaoil	AP-8, GI-2638	Lezo	Guipúzcoa	1,199
+EUROCAM Nanclares de Oca	A-1	Nanclares de la Oca	Álava	1,196
+Gexa	AP-8, GI-636	Oiartzun	Guipúzcoa	1,200
+ANDALUCIA	VIA	LOCALIDAD	PROVINCIA	PRECIO €/l
+ANDAMUR El Límite	A-7	Huércal-Overa	Almería	1,192
+ANDAMUR Guarromán	A-4	Guarromán	Jaén	1,178
+Las Cuartillas	N-630	Valencina de la Concepción	Sevilla	1,209
+Magdaoil	A-92	Alcalá de Guadaira	Sevilla	1,190
+Ruta 4	A-4	La Campana	Sevilla	1,189
+TJ Oil	M-630	Salteras	Sevilla	1,186
+ENI El Fantasma	AP-4	Sevilla	Sevilla	1,268
+BQP Villanueva Food and Fuel	A-4	Écija	Sevilla	1,210
+HAFESA OIL Almerimar	A-7	El Ejido	Almería	1,173
+VALCARCE Láchar	A-92	Láchar	Granada	1,175
+VALCARCE Gor	A-92	Gor	Granada	1,175
+CARBURANTES A92	A-92	Darro	Granada	1,175
+GALP Huétor Tájar	A-92	Huetor Tajar	Granada	1,160
+HAXX Motril	N-340, GR-16	Varadero, El	Granada	1,173
+El Fresno	A-7	Los Barrios	Cadiz	1,191
+NIEVES Algeciras	A-7	Los Barrios	Cádiz	1,225
+GALP Jerez	A-381	Jerez de la Frontera	Cádiz	1,162
+GALP Puerto Real	CA-35	Puerto Real	Cádiz	1,173
+AREA 117 Benamejí	N-331	Benamejí	Córdoba	1,190
+DEOIL Gibraleon	N-431	Gibraleón	Huelva	1,245
+GALP Rosal de La Frontera	N-433	Rosal de la Frontera	Huelva	1,175
+Platero	A-494	Moguer	Huelva	1,271
+GALP Estepona	A-7	Estepona	Málaga	1,159
+AREA 117 Humilladero I	A-92	Humilladero	Málaga	1,199
+AREA 117 Humilladero II	A-92	Humilladero	Málaga	1,191
+GALP Málaga - El Viso	A-357	Málaga	Málaga	1,155
+GALP Málaga - El Limonar	A-7	Málaga	Málaga	1,157
+AGLA La Isla	A-8053	Dos Hermanas	Sevilla	1,281
+GALP Los Palacios	AP-4	Los Palacios y Villafranca	Sevilla	1,152
+MURCIA	VIA	LOCALIDAD	PROVINCIA	PRECIO €/l
+ANDAMUR Lorca	A-7	Lorca	Murcia	1,192
+Sierra Espuña Trade	A-7	Totana	Murcia	1,170
+Agetrans	A-7	Totana	Murcia	1,171
+La Cañada	A-30	Molina de Segura	Murcia	1,171
+Mill Enterprise	MU-533	Ceuti	Murcia	1,171
+Grupo Caliche	AP-7	San Javier	Murcia	1,178
+EXTREMADURA	VIA	LOCALIDAD	PROVINCIA	PRECIO €/l
+MAGNAOIL Vía de la Plata	A-5	Mérida	Badajoz	1,211
+MAGNAOIL El Nevero	A-5	Badajoz	Badajoz	1,213
+GALP Cáceres - Ctra. A Trujillo	N-521	Cáceres	Cáceres	1,204
+GALP Peraleda de la Mata	A-5	Peraleda de la Mata	Cáceres	1,209
+CASTILLA - LA MANCHA	VIA	LOCALIDAD	PROVINCIA	PRECIO €/l
+AREA 117 Torremocha del Campo	A-2	Torremocha del Campo	Guadalajara	1,174
+VALCARCE Área de Uclés 90	A-3	Villarubio	Cuenca	1,174
+BEROIL Tébar	A-3	Tébar	Cuenca	1,200
+GALP Castillo de Garcimuñoz	A-3	Castillo de Garcimuñoz	Cuenca	1,164
+VALCARCE El Casar de Talavera	A-5, N-502	El Casar de Talavera	Toledo	1,164
+GALP Calera y Chozas	A-5	Calera y Chozas	Toledo	1,171
+GALP Puerto Lápice I	A-4	Puerto Lapice	Ciudad Real	1,169
+GALP Puerto Lápice II	A-4	Puerto Lapice	Ciudad Real	1,169
+ATENOIL Valdepeñas	A-4	La Consolación	Ciudad Real	1,188
+ATENOIL Valdepeñas II MD	A-4	La Consolación	Ciudad Real	1,192
+COMUNIDAD VALENCIANA	VIA	LOCALIDAD	PROVINCIA	PRECIO €/l
+ALZ El Oliveral	AP-7, A-3	Ribarroja del Turia	Valencia	1,167
+GALP Ribarroja Del Turia	AP-7, A-3	Ribarroja del Turia	Valencia	1,168
+GALP Beneixida	N-340	Beneixida	Valencia	1,170
+GALP Fuente La Higuera	A-35	Fuente La Higuera	Valencia	1,194
+GALP Fuente La Higuera II	A-35	Fuente La Higuera	Valencia	1,194
+GALP Torrent I	A-7	Torrent	Valencia	1,152
+GALP Torrent II	A-7	Torrent	Valencia	1,152
+GALP El Puig	A-7	El Puig de Santa María	Valencia	1,153
+GALP Villargordo Cabriel I	A-3	Villargordo del Gabriel	Valencia	1,157
+GALP Villargordo Cabriel II	A-3	Villargordo del Gabriel	Valencia	1,157
+GALP Agost - AP7 Dir.Murcia	AP-7	Agost	Alicante	1,157
+GALP Agost - AP7 Dir.Valencia	AP-7	Agost	Alicante	1,157
+GALP Elche I	A-70	Torrellano	Alicante	1,156
+GALP Elche II	A-70	Torrellano	Alicante	1,157
+GALP San Antonio I	AP-7	Pedreguer	Alicante	1,157
+GALP San Antonio II	AP-7	Pedreguer	Alicante	1,157
+ENI La Ribera Norte	AP-7	Ribera de Cabanes	Castellón	1,174
+ENI La Ribera Sur (Dir Valencia)	AP-7	Ribera de Cabanes	Castellón	1,174
+GALP La Plana I	AP-7	Burriana	Castellón	1,161
+GALP La Plana II	AP-7	Burriana	Castellón	1,161
+COMUNIDAD DE MADRID	VIA	LOCALIDAD	PROVINCIA	PRECIO €/l
+GHC Ganesha Combustibles	A-3	Madrid	Madrid	1,174
+VALCARCE Torrejón de Ardoz	M-206	Torrejón de Ardoz	Madrid	1,173
+GALP Alcalá Henares I	A-2	Alcalá de Henares	Madrid	1,164
+GALP Alcalá Henares II	A-2	Alcalá de Henares	Madrid	1,164
+GALP Parla	A-42	Parla	Madrid	1,165
+ATENOIL Parla II	M-408	Parla	Madrid	1,174
+GALP Pinto - Eboli I	M-506	Pinto	Madrid	1,163
+GALP Pinto - Eboli II	M-506	Pinto	Madrid	1,163
+GALP Perales De Tajuña	A-3, N-III	Perales De Tajuña	Madrid	1,166
+ENI San Sebastián de los Reyes I MD	A-1	San Sebastian de los Reyes	Madrid	1,184
+ENI San Sebastián de los Reyes II MI	N-1	Fuente del Fresno	Madrid	1,190
+GALP S.S.de los Reyes-Jarama	A-1	San Sebastián de los Reyes	Madrid	1,164
+CASTILLA Y LEÓN	VIA	LOCALIDAD	PROVINCIA	PRECIO €/l
+AVIA Castillo Benavente	A-6	Benavente	Zamora	1,221
+AVIA Castillo El Burgo	A-231	El Burgo Ranero	León	1,221
+GALP Villadangos - Dir. Astorga	N-120	Villadangos del Paramo	León	1,207
+VALCARCE Aranda	N-1	Aranda de Duero	Burgos	1,223
+BEROIL Estépar	N-620	Estépar	Burgos	1,229
+BEROIL Miranda de Ebro	AP-1	Miranda de Ebro	Burgos	1,229
+GALP Villatoro	N-627	Burgos	Burgos	1,202
+GALP Sarracín I	A-1	Sarracín	Burgos	1,202
+GALP Sarracín II	A-1	Sarracín	Burgos	1,202
+GALP Los Balbases	A-62	Los Balbases	Burgos	1,204
+Bernal	A-62	Aldehuela de la Bóveda	Salamanca	1,209
+GALP Aldehuela de la Bóveda	A-62	Aldehuela de la Bóveda	Salamanca	1,210
+GALP Villacastín Dir. Coruña	N-6	Villacastin	Segovia	1,167
+GALP Villacastín Dir. Madrid	N-6	Villacastin	Segovia	1,167
+GALP Martin Muñoz de la Dehesa-Arevalo	A-6	Martín Muñoz de la Dehesa	Segovia	1,167
+GALP Medina Del Campo	A-6	Medina del Campo	Valladolid	1,202
+ARAGÓN	VIA	LOCALIDAD	PROVINCIA	PRECIO €/l
+VALCARCE La Joyosa	A-68	La Joyosa	Zaragoza	1,172
+San Lamberto	A-2	Zaragoza	Zaragoza	1,167
+ALFA ENERGY Alfajarín	AP-2, N-II	Alfajarín	Zaragoza	1,176
+HAFESA OIL Cadrete	N-330	Cadrete	Zaragoza	1,210
+AVIA Gallur	N-232	Gallur	Zaragoza	1,162
+PETROBIL Valdeherrera	A-202	Calatayud	Zaragoza	1,174
+GALP Zaragoza I	A-2	La Muela	Zaragoza	1,162
+GALP Zaragoza II	A-2	La Muela	Zaragoza	1,162
+GALP Monegros I	AP-2	Candasnos	Huesca	1,162
+GALP Monegros II	AP-2	Candasnos	Huesca	1,162
+CATALUÑA	VIA	LOCALIDAD	PROVINCIA	PRECIO €/l
+ANDAMUR La Junquera	AP-7, N-II	La Junquera	Girona	1,206
+ANDAMUR La Junquera-Llers	AP-7, N-II	Llers	Girona	1,206
+GM FUEL Servei Carrer 3	B-10	Barcelona	Barcelona	1,169
+Renova Oil Incoenergy	N-230	Torrefarrera	Lérida	1,177
+NIEVES Lérida	N-II	Lérida	Lérida	1,280
+NIEVES Parets	N-152	Parets del Valles	Barcelona	1,244
+GALP El Prat de Llobregat-Vertix	C-31	El Prat de Llobregat	Barcelona	1,146
+GALP Molins de Rei	B-23	Molins de Rei	Barcelona	1,146
+GALP Granollers	BP-5002	Granollers	Barcelona	1,150
+GALP Porta de Barcelona Sur	AP-7	Castellbisbal	Barcelona	1,146
+GM FUEL La Gornal	N-340	Castellet i Gonal	Barcelona	1,159
+PRIMER Area Truck Service	C-153	Vic	Barcelona	1,163
+GALP Barcelona	B-10	Barcelona	Barcelona	1,145
+GALP El Bruc	A-2	El Bruc	Barcelona	1,146
+NIEVES Sesrovires	AP-7, A2	Sant Esteve de Sesrovires	Barcelona	1,220
+NIEVES Zona Franca	B-10	Barcelona	Barcelona	1,210
+GALP Gironès Norte	AP-7	Aiguaviva	Girona	1,190
+GALP Gironès Sur	AP-7	Riudellots de la Selva	Girona	1,190
+GALP Jonquera - Tramuntana	N-II	La Junquera	Girona	1,193
+ENI Hospitalet Sur	AP-7	L'Hospitalet Del Infant	Tarragona	1,268
+ENI Hospitalet Norte	AP-7	L'Hospitalet Del Infant	Tarragona	1,268
+GM FUEL Coma-Ruga	N-340	Masos de Comarruga	Tarragona	1,161
+GALP Alt Camp I	AP-2	Rodonya	Tarragona	1,149
+GALP Alt Camp II	AP-2	Rodonya	Tarragona	1,149
+ALAS Hospitalet De L’Infant	N-340	L'Hospitalet De L’Infant	Tarragona	1,163
+ALAS Vila-Seca	AP-7	Vila-Seca	Tarragona	1,191
+SHELL Vila Seca II	A-7	Vila-Seca	Tarragona	1,318
+ALAS Constantí	C-14	Constantí	Tarragona	1,191
+ALAS L'Ametlla de Mar	N-340	L'Ametlla de Mar	Tarragona	1,245
+NAVARRA	VIA	LOCALIDAD	PROVINCIA	PRECIO €/l
+ANDAMUR Pamplona	AP15, N-121-A	Imárcoain	Navarra	1,207
+NOIL Bera de Bidasoa	N-121-A	Bera	Navarra	1,201
+EUROCAM Tudela	A-68	Tudela	Navarra	1,196
+EUROCAM Pamplona-Agustinos	AP-15	Pamplona	Navarra	1,191
+GALP Ziordia	A-1	Ziordia	Navarra	1,192
+GALP Alsasua Dir. Madrid	A-1	Altsasu Alsasu	Navarra	1,189
+GALP Alsasua Dir. Irún	A-1	Altsasu Alsasu	Navarra	1,192
+PAIS VASCO	VIA	LOCALIDAD	PROVINCIA	PRECIO €/l
+ANDAMUR San Román - Araia	A-1	San Román de San Millán	Álava	1,208
+Merkaoil	AP-8, GI-2638	Lezo	Guipúzcoa	1,199
+Gexa	AP-8, GI-636	Oiartzun	Guipúzcoa	1,200
+EUROCAM Nanclares de Oca	A-1	Nanclares de la Oca	Álava	1,196
+GALP Irún	A-15, NA-700	Irun	Guipúzcoa	1,195
+GALP Lasarte	A-1	Lasarte	Guipúzcoa	1,193
+LA RIOJA	VIA	LOCALIDAD	PROVINCIA	PRECIO €/l
+EUROCAM Logroño	AP-68	Logroño	La Rioja	1,203
+BEROIL San Asensio	N-232	San Asensio	La Rioja	1,229
+ASTURIAS	VIA	LOCALIDAD	PROVINCIA	PRECIO €/l
+Empresoil	A-8	Gijón	Asturias	1,248
+GALP De la Vega I	A-8	Posada de Llanes	Asturias	1,266
+GALP De la Vega II	A-8	Posada de Llanes	Asturias	1,266
+CANTABRIA	VIA	LOCALIDAD	PROVINCIA	PRECIO €/l
+VALCARCE Pámanes	N-634	Pámanes	Cantabria	1,197
+GALICIA	VIA	LOCALIDAD	PROVINCIA	PRECIO €/l
+GALP Guitiriz I	A-6	Guitiriz	Lugo	1,195
+GALP Guitiriz II	A-6	Guitiriz	Lugo	1,195
+GALP Monforte de Lemos	N-120, LU-933	Monforte de Lemos	Lugo	1,211
+GALP Abrea Cuquejo	A-52, OU-1018	Cualedro	Ourense	1,302
+GALP Barbadanes - Dir. Celanova	OU-540	Barbadas	Ourense	1,205
+El Sol	A-55, N-550	Mos	Pontevedra	1,213
+Sertuy	A-55, N-550	Guillarey	Pontevedra	1,218
+GALP Meis	AG-41	Meis (San Martin)	Pontevedra	1,225
+GALP Silleda	AP-53	Silleda	Pontevedra	1,201
