@@ -611,6 +611,7 @@ async function fetchPactadas() {
       lat: r.lat != null ? Number(r.lat) : null,
       lng: r.lng != null ? Number(r.lng) : null,
       geo: r.geo_fuente || null,
+      sid: r.id,   // uuid real de la estación (para cruzar con mejor_tarjeta_estacion)
     };
   }).filter(s => !isNaN(s.price));
 }
@@ -948,6 +949,7 @@ function makePopupHtml(s) {
   return `
     <div class="popup-inner">
       <div class="popup-name">${isStarred(s.name) ? '⭐ ' : ''}${s.name}</div>
+      ${(window.__mejor && s.sid && window.__mejor[s.sid]) ? `<div class="popup-row" style="color:var(--green);font-weight:700">💳 Mejor tarjeta: ${window.__mejor[s.sid].t} · ${Number(window.__mejor[s.sid].n).toFixed(3)} €/L</div>` : ''}
       <div class="popup-row"><b>Dirección:</b> ${s.via || '—'}</div>
       <div class="popup-row"><b>Localidad:</b> ${s.localidad}, ${s.provincia}${s.cp ? ' (' + s.cp + ')' : ''}</div>
       ${(s.geo === 'pendiente' || !s.lat || !s.lng)
@@ -1005,7 +1007,7 @@ function rebuildMarkers() {
   stations.forEach(s => {
     if (!s.lat) return;
     const m = L.marker([s.lat, s.lng], { icon: makeMarkerIcon(getBrandColor(s.brandType), isStarred(s.name)) });
-    m.bindPopup(makePopupHtml(s), { maxWidth: 280 });
+    m.bindPopup(() => makePopupHtml(s), { maxWidth: 280 });
     m.on('click', () => {
       selectedId = s.id;
       renderList();
@@ -1072,6 +1074,24 @@ window.addEventListener('DOMContentLoaded', async () => {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW registration:', e.message));
 }
+</script>
+<!-- Capa inteligente: si hay sesión (login en /cuenta.html), carga la mejor tarjeta por estación -->
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+  const SB_URL = 'http://192.168.1.33:8100';
+  const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzgyMjM3OTM0LCJleHAiOjIwOTc1OTc5MzR9.HIN7LriE0ngaW9_4jILe9MxtATqavJHAiCLR_GmV19s';
+  try {
+    const sb = createClient(SB_URL, SB_ANON, { db: { schema: 'gasoil' }, auth: { persistSession: true, autoRefreshToken: true } });
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      const { data } = await sb.from('mejor_tarjeta_estacion').select('station_id,mejor_tarjeta,mejor_neto');
+      if (data && data.length) {
+        window.__mejor = {};
+        for (const r of data) window.__mejor[r.station_id] = { t: r.mejor_tarjeta, n: r.mejor_neto };
+        console.log('Mejor tarjeta cargada para', data.length, 'estaciones');
+      }
+    }
+  } catch (e) { console.warn('No se pudo cargar la mejor tarjeta:', e.message); }
 </script>
 </body>
 </html>
