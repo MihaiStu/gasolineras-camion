@@ -71,6 +71,13 @@
   .panel-form { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin-bottom: 6px; }
   @media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
+  .truck-list { display: flex; flex-direction: column; gap: 8px; }
+  .truck-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--navy); border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px; }
+  .truck-row .mat { font-weight: 700; }
+  .truck-row .cons { color: var(--muted); font-size: 13px; font-family: 'JetBrains Mono', monospace; }
+  .truck-row button { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 7px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
+  .truck-row button:hover { border-color: var(--red); color: var(--red); }
+  .truck-empty { color: var(--muted); font-size: 14px; padding: 6px 2px; }
   .foot { text-align: center; color: var(--muted); font-size: 12px; margin-top: 22px; line-height: 1.6; }
   .foot a { color: var(--accent); text-decoration: none; }
   .hidden { display: none; }
@@ -118,6 +125,26 @@
   <!-- REPORTING -->
   <div id="report" class="hidden">
     <div id="report-body"><div class="empty">Cargando…</div></div>
+
+    <!-- Mis camiones -->
+    <div class="section-title" style="margin-top:26px;">Mis camiones</div>
+    <div class="panel-form">
+      <div id="truck-list" class="truck-list"></div>
+      <form id="form-truck" class="grid2" style="margin-top:14px;">
+        <div class="field">
+          <label>Matrícula</label>
+          <input type="text" id="tk-matricula" placeholder="1234 ABC" required>
+        </div>
+        <div class="field">
+          <label>Consumo medio (opcional)</label>
+          <input type="number" id="tk-consumo" min="10" max="80" step="0.5" placeholder="30 L/100 km">
+        </div>
+        <div style="grid-column:1/-1;">
+          <button class="btn" type="submit">Añadir camión</button>
+          <div class="msg" id="tk-msg"></div>
+        </div>
+      </form>
+    </div>
 
     <!-- Registrar repostaje -->
     <div class="section-title" style="margin-top:26px;">Registrar repostaje</div>
@@ -220,11 +247,56 @@
   let currentTenantId = null;
 
   async function loadTrucks() {
+    const { data: trucks } = await sb.from('truck').select('id,matricula,consumo_l_100km').order('matricula');
+    const list = trucks || [];
+
+    // Desplegable del formulario de repostaje
     const sel = $('rf-truck');
-    const { data: trucks } = await sb.from('truck').select('id,matricula').order('matricula');
-    const opts = (trucks || []).map(t => `<option value="${esc(t.id)}">${esc(t.matricula)}</option>`).join('');
-    sel.innerHTML = opts + '<option value="__new__">+ Nuevo camión…</option>';
+    if (list.length) {
+      sel.innerHTML = list.map(t => `<option value="${esc(t.id)}">${esc(t.matricula)}</option>`).join('');
+      sel.disabled = false;
+    } else {
+      sel.innerHTML = '<option value="">— añade un camión primero —</option>';
+      sel.disabled = true;
+    }
+
+    // Lista de "Mis camiones"
+    const cont = $('truck-list');
+    if (!list.length) {
+      cont.innerHTML = '<div class="truck-empty">Aún no tienes camiones. Añade el primero abajo 👇</div>';
+    } else {
+      cont.innerHTML = list.map(t => `<div class="truck-row">
+        <span><span class="mat">${esc(t.matricula)}</span>${t.consumo_l_100km ? ` <span class="cons">· ${Number(t.consumo_l_100km)} L/100km</span>` : ''}</span>
+        <button type="button" data-id="${esc(t.id)}" data-mat="${esc(t.matricula)}">Borrar</button>
+      </div>`).join('');
+      cont.querySelectorAll('button[data-id]').forEach(b => b.addEventListener('click', () => deleteTruck(b.dataset.id, b.dataset.mat)));
+    }
   }
+
+  async function deleteTruck(id, mat) {
+    if (!confirm(`¿Borrar el camión ${mat}? Sus repostajes quedarán sin camión asignado.`)) return;
+    const { error } = await sb.from('truck').delete().eq('id', id);
+    if (error) return tkMsg(error.message, 'err');
+    await Promise.all([loadTrucks(), loadReport()]);
+  }
+
+  const tkMsg = (t, cls='') => { $('tk-msg').textContent = t; $('tk-msg').className = 'msg ' + cls; };
+
+  $('form-truck').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!currentTenantId) return tkMsg('No se pudo identificar la cuenta.', 'err');
+    const matricula = $('tk-matricula').value.trim();
+    if (!matricula) return tkMsg('Pon una matrícula.', 'err');
+    tkMsg('Guardando…');
+    const row = { tenant_id: currentTenantId, matricula };
+    const consumo = $('tk-consumo').value;
+    if (consumo) row.consumo_l_100km = Number(consumo);
+    const { error } = await sb.from('truck').insert(row);
+    if (error) return tkMsg(error.message, 'err');
+    tkMsg('Camión añadido ✓', 'ok');
+    $('tk-matricula').value = ''; $('tk-consumo').value = '';
+    await loadTrucks();
+  });
 
   async function suggestRefPrice() {
     // Sugerencia = media de gasoleo_a en la cache de precios (público).
@@ -235,25 +307,12 @@
     }
   }
 
-  // Alta rápida de camión al elegir "+ Nuevo camión…"
-  $('rf-truck').addEventListener('change', async (e) => {
-    if (e.target.value !== '__new__') return;
-    const matricula = (prompt('Matrícula del nuevo camión:') || '').trim();
-    if (!matricula) { await loadTrucks(); return; }
-    if (!currentTenantId) { rfMsg('No se pudo identificar la cuenta.', 'err'); return; }
-    const { data, error } = await sb.from('truck')
-      .insert({ tenant_id: currentTenantId, matricula }).select('id').single();
-    if (error) { rfMsg(error.message, 'err'); await loadTrucks(); return; }
-    await loadTrucks();
-    $('rf-truck').value = data.id;
-  });
-
   const rfMsg = (t, cls='') => { $('rf-msg').textContent = t; $('rf-msg').className = 'msg ' + cls; };
 
   $('form-refuel').addEventListener('submit', async (e) => {
     e.preventDefault();
     const truck_id = $('rf-truck').value;
-    if (!truck_id || truck_id === '__new__') return rfMsg('Elige un camión.', 'err');
+    if (!truck_id) return rfMsg('Añade un camión antes de registrar un repostaje.', 'err');
     if (!currentTenantId) return rfMsg('No se pudo identificar la cuenta.', 'err');
     rfMsg('Guardando…');
     const { error } = await sb.from('refuel').insert({
