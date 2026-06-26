@@ -146,6 +146,40 @@
       </form>
     </div>
 
+    <!-- Mis tarjetas -->
+    <div class="section-title" style="margin-top:26px;">Mis tarjetas de descuento</div>
+    <div class="panel-form">
+      <div id="card-list" class="truck-list"></div>
+      <form id="form-card" class="grid2" style="margin-top:14px;">
+        <div class="field">
+          <label>Nombre</label>
+          <input type="text" id="cd-nombre" placeholder="Galp Frota" required>
+        </div>
+        <div class="field">
+          <label>Mecánica</label>
+          <select id="cd-tipo">
+            <option value="pct_surtidor">% sobre surtidor (ej. Galp 16%)</option>
+            <option value="descuento_fijo">Descuento fijo €/L</option>
+            <option value="precio_lista">Listado por estación (Andamur)</option>
+            <option value="precio_zona">Precio por zona/semana (Radius)</option>
+          </select>
+        </div>
+        <div class="field" id="cd-valor-wrap">
+          <label id="cd-valor-label">Descuento (%)</label>
+          <input type="number" id="cd-valor" step="0.01" min="0" placeholder="16">
+        </div>
+        <div class="field">
+          <label>Marcas donde aplica</label>
+          <input type="text" id="cd-marcas" placeholder="GALP (vacío = todas)">
+        </div>
+        <div style="grid-column:1/-1;">
+          <p id="cd-hint" class="truck-empty hidden">Los precios de este listado se cargarán por importación (CSV/Excel), próximamente. De momento se guarda la tarjeta y su ámbito.</p>
+          <button class="btn" type="submit">Añadir tarjeta</button>
+          <div class="msg" id="cd-msg"></div>
+        </div>
+      </form>
+    </div>
+
     <!-- Registrar repostaje -->
     <div class="section-title" style="margin-top:26px;">Registrar repostaje</div>
     <div class="panel-form">
@@ -241,7 +275,7 @@
     currentTenantId = tenants?.[0]?.id || null;
     $('acc-name').textContent = tenants?.[0]?.nombre || session.user.email;
 
-    await Promise.all([loadReport(), loadTrucks(), suggestRefPrice()]);
+    await Promise.all([loadReport(), loadTrucks(), loadTarjetas(), suggestRefPrice()]);
   }
 
   let currentTenantId = null;
@@ -306,6 +340,82 @@
       $('rf-ref').value = avg.toFixed(3);
     }
   }
+
+  // ---- Tarjetas ----
+  const TIPO_LABEL = {
+    pct_surtidor: '% sobre surtidor',
+    descuento_fijo: '€/L de descuento',
+    precio_lista: 'listado por estación',
+    precio_zona: 'precio por zona/semana',
+  };
+  const cdMsg = (t, cls='') => { $('cd-msg').textContent = t; $('cd-msg').className = 'msg ' + cls; };
+
+  function cardDesc(c) {
+    if (c.tipo === 'pct_surtidor') return `${(Number(c.valor) * 100).toString().replace('.', ',')}% sobre surtidor`;
+    if (c.tipo === 'descuento_fijo') return `${Number(c.valor).toFixed(3).replace('.', ',')} €/L`;
+    return TIPO_LABEL[c.tipo] || c.tipo;
+  }
+
+  // Mostrar/ocultar el campo "valor" según la mecánica
+  $('cd-tipo').addEventListener('change', () => {
+    const tipo = $('cd-tipo').value;
+    const usaValor = tipo === 'pct_surtidor' || tipo === 'descuento_fijo';
+    $('cd-valor-wrap').classList.toggle('hidden', !usaValor);
+    $('cd-hint').classList.toggle('hidden', usaValor);
+    if (usaValor) {
+      $('cd-valor-label').textContent = tipo === 'pct_surtidor' ? 'Descuento (%)' : 'Descuento (€/L)';
+      $('cd-valor').placeholder = tipo === 'pct_surtidor' ? '16' : '0.10';
+    }
+  });
+
+  async function loadTarjetas() {
+    const { data } = await sb.from('tarjeta').select('*').order('nombre');
+    const list = data || [];
+    const cont = $('card-list');
+    if (!list.length) {
+      cont.innerHTML = '<div class="truck-empty">Aún no tienes tarjetas. Añade las que uses (Galp, Andamur, Radius…) 👇</div>';
+      return;
+    }
+    cont.innerHTML = list.map(c => {
+      const ambito = (c.aplica_marcas && c.aplica_marcas.length) ? c.aplica_marcas.join(', ') : 'todas las marcas';
+      return `<div class="truck-row">
+        <span><span class="mat">${esc(c.nombre)}</span> <span class="cons">· ${esc(cardDesc(c))} · ${esc(ambito)}</span></span>
+        <button type="button" data-id="${esc(c.id)}" data-nom="${esc(c.nombre)}">Borrar</button>
+      </div>`;
+    }).join('');
+    cont.querySelectorAll('button[data-id]').forEach(b => b.addEventListener('click', () => deleteTarjeta(b.dataset.id, b.dataset.nom)));
+  }
+
+  async function deleteTarjeta(id, nom) {
+    if (!confirm(`¿Borrar la tarjeta ${nom}?`)) return;
+    const { error } = await sb.from('tarjeta').delete().eq('id', id);
+    if (error) return cdMsg(error.message, 'err');
+    await loadTarjetas();
+  }
+
+  $('form-card').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!currentTenantId) return cdMsg('No se pudo identificar la cuenta.', 'err');
+    const nombre = $('cd-nombre').value.trim();
+    if (!nombre) return cdMsg('Pon un nombre.', 'err');
+    const tipo = $('cd-tipo').value;
+    const row = { tenant_id: currentTenantId, nombre, tipo };
+
+    if (tipo === 'pct_surtidor' || tipo === 'descuento_fijo') {
+      const v = Number($('cd-valor').value);
+      if (!v || v <= 0) return cdMsg('Indica el descuento.', 'err');
+      row.valor = tipo === 'pct_surtidor' ? v / 100 : v;  // % -> fracción
+    }
+    const marcas = $('cd-marcas').value.split(/[,;]/).map(s => s.trim().toUpperCase()).filter(Boolean);
+    if (marcas.length) row.aplica_marcas = marcas;
+
+    cdMsg('Guardando…');
+    const { error } = await sb.from('tarjeta').insert(row);
+    if (error) return cdMsg(error.message, 'err');
+    cdMsg('Tarjeta añadida ✓', 'ok');
+    $('cd-nombre').value = ''; $('cd-valor').value = ''; $('cd-marcas').value = '';
+    await loadTarjetas();
+  });
 
   const rfMsg = (t, cls='') => { $('rf-msg').textContent = t; $('rf-msg').className = 'msg ' + cls; };
 

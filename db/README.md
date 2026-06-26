@@ -20,6 +20,7 @@ Ejecutar en este orden exacto (cada uno depende del anterior):
 | 6 | `06_savings_demo.sql` | **Opcional (demo).** Vista `savings_demo` acotada al tenant demo AdmiLogistic y legible por `anon`, para la página de muestra `public/cuenta-demo.html` (reporting sin login). Borrar cuando haya auth real: `DROP VIEW gasoil.savings_demo;`. |
 | 7 | `07_auth_signup.sql` | **Alta self-serve.** Trigger `on_auth_user_created` en `auth.users`: por cada registro crea su `tenant` (empresa) + `profile` (rol `gestor`). Los datos vienen de `options.data` del signup (`company_name`, `tipo`, `nombre`). Lo consume `public/cuenta.html`. |
 | 8 | `08_auth_token_hook.sql` | **Custom Access Token Hook.** Función `custom_access_token_hook` que inyecta el claim `tenant_id` en el JWT (vía rápida para `current_tenant_id()`, evita el JOIN a `profile` por query). `SECURITY DEFINER` (GoTrue la corre como `supabase_auth_admin`, que no pasa la RLS). Requiere activar `GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_*` en el compose. |
+| 9 | `09_tarjetas.sql` | **Tarjetas de descuento** (capa inteligente). `tarjeta` (mecánica: `pct_surtidor`/`descuento_fijo`/`precio_lista`/`precio_zona`, ámbito en `aplica_marcas`) + `tarjeta_precio` (listados por estación/zona, carga por import). RLS privada por tenant. Lo consume `public/cuenta.html` (Mis tarjetas) y el importador `scripts/import-andamur.mjs`. |
 
 ### Cómo aplicarlos
 
