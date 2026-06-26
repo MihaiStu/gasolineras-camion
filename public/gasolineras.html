@@ -585,7 +585,7 @@ function parseRaw(raw) {
 // Lee la red pactada desde Supabase (schema gasoil). Devuelve el mismo shape que parseRaw.
 async function fetchPactadas() {
   const url = `${SUPABASE_URL}/rest/v1/station`
-    + `?select=id,nombre,marca,via,localidad,provincia,zona,lat,lng,price(producto,precio)`;
+    + `?select=id,nombre,marca,via,localidad,provincia,zona,lat,lng,geo_fuente,price(producto,precio)`;
   const res = await fetch(url, {
     headers: {
       apikey: SUPABASE_ANON_KEY,
@@ -610,6 +610,7 @@ async function fetchPactadas() {
       cp: '', fromApi: false,
       lat: r.lat != null ? Number(r.lat) : null,
       lng: r.lng != null ? Number(r.lng) : null,
+      geo: r.geo_fuente || null,
     };
   }).filter(s => !isNaN(s.price));
 }
@@ -949,6 +950,9 @@ function makePopupHtml(s) {
       <div class="popup-name">${isStarred(s.name) ? '⭐ ' : ''}${s.name}</div>
       <div class="popup-row"><b>Dirección:</b> ${s.via || '—'}</div>
       <div class="popup-row"><b>Localidad:</b> ${s.localidad}, ${s.provincia}${s.cp ? ' (' + s.cp + ')' : ''}</div>
+      ${(s.geo === 'pendiente' || !s.lat || !s.lng)
+        ? '<div class="popup-row" style="color:var(--yellow)">⚠ Ubicación aproximada, pendiente de afinar</div>'
+        : `<div class="popup-row"><b>Coordenadas:</b> ${Number(s.lat).toFixed(5)}, ${Number(s.lng).toFixed(5)}${s.geo === 'minetur' ? ' · oficial' : ''}</div>`}
       ${sourceNote}
       ${compareHtml}
       <a href="https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}" target="_blank" rel="noopener" class="popup-gmaps">📍 Ver en Google Maps</a>
