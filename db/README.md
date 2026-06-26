@@ -21,6 +21,7 @@ Ejecutar en este orden exacto (cada uno depende del anterior):
 | 7 | `07_auth_signup.sql` | **Alta self-serve.** Trigger `on_auth_user_created` en `auth.users`: por cada registro crea su `tenant` (empresa) + `profile` (rol `gestor`). Los datos vienen de `options.data` del signup (`company_name`, `tipo`, `nombre`). Lo consume `public/cuenta.html`. |
 | 8 | `08_auth_token_hook.sql` | **Custom Access Token Hook.** Función `custom_access_token_hook` que inyecta el claim `tenant_id` en el JWT (vía rápida para `current_tenant_id()`, evita el JOIN a `profile` por query). `SECURITY DEFINER` (GoTrue la corre como `supabase_auth_admin`, que no pasa la RLS). Requiere activar `GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_*` en el compose. |
 | 9 | `09_tarjetas.sql` | **Tarjetas de descuento** (capa inteligente). `tarjeta` (mecánica: `pct_surtidor`/`descuento_fijo`/`precio_lista`/`precio_zona`, ámbito en `aplica_marcas`) + `tarjeta_precio` (listados por estación/zona, carga por import). RLS privada por tenant. Lo consume `public/cuenta.html` (Mis tarjetas) y el importador `scripts/import-andamur.mjs`. |
+| 10 | `10_station_geocoding.sql` | **Geolocalización.** Añade a `station` los metadatos `geo_fuente` (nominatim/minetur/manual/seed/pendiente), `geo_tipo` (precisión: fuel/services/...) y `geo_at`. Marca como `seed` las coords de localidad existentes para que `scripts/geocode-stations.mjs` las reemplace por la posición real del surtidor. `manual` no se sobrescribe. |
 
 ### Cómo aplicarlos
 
