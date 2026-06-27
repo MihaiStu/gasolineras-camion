@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planificar ruta · Repostaje Camión</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --navy:#0f172a; --navy2:#1e293b; --panel:#162032; --accent:#f97316; --accent2:#fb923c; --green:#22c55e; --yellow:#eab308; --red:#ef4444; --text:#e2e8f0; --muted:#94a3b8; --border:#1e3a5f; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; }
+  body { font-family:'Barlow',sans-serif; background:var(--navy); color:var(--text); display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+  header { background:var(--navy2); border-bottom:2px solid var(--accent); padding:0 14px; height:52px; display:flex; align-items:center; gap:12px; flex-shrink:0; }
+  .brand { font-family:'Barlow Condensed',sans-serif; font-size:19px; font-weight:800; letter-spacing:1px; color:var(--accent); white-space:nowrap; }
+  .brand span { color:var(--text); }
+  header a { color:var(--muted); text-decoration:none; font-size:13px; font-weight:600; }
+  header a:hover { color:var(--text); }
+  .controls { display:flex; gap:8px; align-items:center; flex:1; flex-wrap:wrap; }
+  .controls input { background:var(--navy); color:var(--text); border:1px solid var(--border); border-radius:7px; padding:8px 10px; font-size:14px; min-width:140px; }
+  .controls input:focus { outline:none; border-color:var(--accent); }
+  .btn { background:var(--accent); color:#1a1006; border:none; border-radius:7px; padding:8px 16px; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:15px; letter-spacing:.5px; cursor:pointer; white-space:nowrap; }
+  .btn:hover { background:var(--accent2); } .btn:disabled { opacity:.6; }
+  .main { flex:1; display:flex; min-height:0; }
+  #map { flex:1; min-width:0; }
+  .side { width:380px; max-width:45vw; background:var(--panel); border-left:1px solid var(--border); overflow-y:auto; flex-shrink:0; }
+  @media (max-width:760px){ .main{flex-direction:column;} .side{width:100%;max-width:none;height:45%;} #map{height:55%;} }
+  .side-h { padding:12px 14px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--panel); }
+  .side-h .res { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:16px; }
+  .side-h .sub { color:var(--muted); font-size:12px; margin-top:2px; }
+  .st { padding:11px 14px; border-bottom:1px solid rgba(30,58,95,.5); cursor:pointer; }
+  .st:hover { background:#1a2640; }
+  .st .top { display:flex; justify-content:space-between; gap:8px; }
+  .st .nom { font-weight:700; font-size:14px; }
+  .st .km { color:var(--muted); font-size:12px; font-family:'JetBrains Mono',monospace; white-space:nowrap; }
+  .st .row { font-family:'JetBrains Mono',monospace; font-size:13px; margin-top:3px; }
+  .st .best { color:var(--green); font-weight:700; }
+  .st .off { color:var(--muted); }
+  .st .save { color:var(--accent2); }
+  .state { padding:20px 14px; color:var(--muted); font-size:14px; line-height:1.5; }
+  .note { padding:10px 14px; background:rgba(234,179,8,.1); color:var(--yellow); font-size:12.5px; line-height:1.4; border-bottom:1px solid var(--border); }
+  .note a { color:var(--accent); }
+</style>
+</head>
+<body>
+  <header>
+    <a href="/index.html" class="brand">REPOSTAJE <span>CAMIÓN</span></a>
+    <div class="controls">
+      <input type="text" id="origen" placeholder="Origen (ej. Pinto, Madrid)" value="Pinto, Madrid">
+      <input type="text" id="destino" placeholder="Destino (ej. Barcelona)" value="Barcelona">
+      <button class="btn" id="go">Calcular ruta</button>
+    </div>
+    <a href="/gasolineras.html">Mapa</a>
+    <a href="/cuenta.html">Mi cuenta</a>
+  </header>
+  <div class="main">
+    <div id="map"></div>
+    <div class="side">
+      <div class="side-h"><div class="res" id="res">Calcula una ruta</div><div class="sub" id="sub">Origen → destino y verás dónde repostar.</div></div>
+      <div id="note"></div>
+      <div id="list"><div class="state">Introduce origen y destino y pulsa «Calcular ruta».</div></div>
+    </div>
+  </div>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+  const SB_URL = 'http://192.168.1.33:8100';
+  const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzgyMjM3OTM0LCJleHAiOjIwOTc1OTc5MzR9.HIN7LriE0ngaW9_4jILe9MxtATqavJHAiCLR_GmV19s';
+  const sb = createClient(SB_URL, SB_ANON, { db: { schema: 'gasoil' }, auth: { persistSession: true, autoRefreshToken: true } });
+
+  const $ = id => document.getElementById(id);
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const BUFFER_KM = 8;   // margen desde la ruta
+
+  const map = L.map('map').setView([40.4, -3.7], 6);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution:'© OpenStreetMap © CARTO', maxZoom:19 }).addTo(map);
+  let routeLayer = null, markersLayer = L.layerGroup().addTo(map);
+
+  // ---- geo + distancias ----
+  async function geocode(q) {
+    const url = 'https://nominatim.openstreetmap.org/search?' + new URLSearchParams({ format:'json', limit:'1', countrycodes:'es', q });
+    const r = await fetch(url, { headers: { 'Accept':'application/json' } });
+    const d = await r.json();
+    return d[0] ? { lat:+d[0].lat, lng:+d[0].lon, name:d[0].display_name } : null;
+  }
+  const R = 6371;
+  const hav = (a, b) => { const dLat=(b.lat-a.lat)*Math.PI/180, dLng=(b.lng-a.lng)*Math.PI/180; const x=Math.sin(dLat/2)**2 + Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2; return 2*R*Math.asin(Math.sqrt(x)); };
+  function distToSeg(p, v, w) {
+    // grados a métrica local aproximada
+    const kx = Math.cos(p.lat*Math.PI/180)*111.32, ky = 110.57;
+    const px=(p.lng-v.lng)*kx, py=(p.lat-v.lat)*ky;
+    const wx=(w.lng-v.lng)*kx, wy=(w.lat-v.lat)*ky;
+    const l2=wx*wx+wy*wy; let t = l2 ? (px*wx+py*wy)/l2 : 0; t=Math.max(0,Math.min(1,t));
+    const dx=px-t*wx, dy=py-t*wy; return Math.sqrt(dx*dx+dy*dy);
+  }
+  function distToRoute(p, pts) { let m=Infinity; for (let i=0;i<pts.length-1;i++){ const d=distToSeg(p, pts[i], pts[i+1]); if(d<m)m=d; if(m<0.3)break; } return m; }
+  function nearestIdx(p, pts) { let m=Infinity, idx=0; for(let i=0;i<pts.length;i++){ const d=hav(p,pts[i]); if(d<m){m=d;idx=i;} } return idx; }
+
+  async function calcular() {
+    $('go').disabled = true;
+    $('list').innerHTML = '<div class="state">Calculando ruta…</div>';
+    $('note').innerHTML = '';
+    try {
+      const [o, d] = await Promise.all([geocode($('origen').value), geocode($('destino').value)]);
+      if (!o || !d) { $('list').innerHTML = '<div class="state">No encuentro el origen o el destino.</div>'; $('go').disabled=false; return; }
+
+      // OSRM
+      const ourl = `https://router.project-osrm.org/route/v1/driving/${o.lng},${o.lat};${d.lng},${d.lat}?overview=full&geometries=geojson`;
+      const rr = await (await fetch(ourl)).json();
+      if (!rr.routes || !rr.routes.length) { $('list').innerHTML = '<div class="state">No se pudo trazar la ruta.</div>'; $('go').disabled=false; return; }
+      const route = rr.routes[0];
+      const pts = route.geometry.coordinates.map(c => ({ lat:c[1], lng:c[0] }));
+      const km = (route.distance/1000), hrs = route.duration/3600;
+
+      if (routeLayer) map.removeLayer(routeLayer);
+      routeLayer = L.polyline(pts.map(p=>[p.lat,p.lng]), { color:'#f97316', weight:4, opacity:.85 }).addTo(map);
+      map.fitBounds(routeLayer.getBounds(), { padding:[30,30] });
+
+      $('res').textContent = `${Math.round(km)} km · ${Math.floor(hrs)}h ${Math.round((hrs%1)*60)}min`;
+
+      // estaciones + precios + (si login) tarjetas
+      const { data: { session } } = await sb.auth.getSession();
+      const [{ data: sts }, { data: prs }, cardsRes] = await Promise.all([
+        sb.from('station').select('id,nombre,marca,lat,lng,localidad,provincia').not('lat','is',null),
+        sb.from('price').select('station_id,precio').eq('producto','gasoleo_a'),
+        session ? sb.from('precio_tarjeta_estacion').select('station_id,nombre,neto').not('neto','is',null).order('neto',{ascending:true}) : Promise.resolve({ data:null }),
+      ]);
+      const surt = {}; (prs||[]).forEach(p=>surt[p.station_id]=Number(p.precio));
+      const cards = {}; (cardsRes.data||[]).forEach(r=>{ (cards[r.station_id]=cards[r.station_id]||[]).push({t:r.nombre,n:Number(r.neto)}); });
+
+      $('note').innerHTML = session ? '' : '<div class="note">Estás viendo solo el precio oficial. <a href="/cuenta.html">Entra</a> para ver tu mejor tarjeta en cada estación.</div>';
+
+      // filtrar en ruta + ordenar por avance
+      const enRuta = [];
+      for (const s of (sts||[])) {
+        const p = { lat:+s.lat, lng:+s.lng };
+        const dist = distToRoute(p, pts);
+        if (dist <= BUFFER_KM) {
+          const idx = nearestIdx(p, pts);
+          enRuta.push({ s, dist, idx, surt: surt[s.id], best: (cards[s.id]||[])[0] });
+        }
+      }
+      enRuta.sort((a,b)=>a.idx-b.idx);
+      // km aprox en ruta segun progreso del punto mas cercano
+      enRuta.forEach(e => e.kmRuta = Math.round((e.idx/pts.length)*km));
+
+      $('sub').textContent = `${enRuta.length} gasolineras en ruta (±${BUFFER_KM} km)`;
+      render(enRuta);
+    } catch (e) {
+      $('list').innerHTML = `<div class="state">Error: ${esc(e.message)}</div>`;
+    }
+    $('go').disabled = false;
+  }
+
+  function render(list) {
+    markersLayer.clearLayers();
+    if (!list.length) { $('list').innerHTML = '<div class="state">No hay gasolineras de la red en esta ruta.</div>'; return; }
+    $('list').innerHTML = list.map((e, i) => {
+      const off = e.surt ? e.surt.toFixed(3) : '—';
+      const best = e.best ? `<div class="row best">✅ ${esc(e.best.t)}: ${e.best.n.toFixed(3)} €/L${e.surt ? ` <span class="save">(-${((e.surt-e.best.n)*100).toFixed(0)} cts)</span>` : ''}</div>` : '';
+      return `<div class="st" data-i="${i}">
+        <div class="top"><span class="nom">${esc(e.s.nombre)}</span><span class="km">${e.kmRuta} km</span></div>
+        <div class="row off">Surtidor: ${off} €/L · ${esc(e.s.localidad||'')}</div>
+        ${best}
+      </div>`;
+    }).join('');
+    list.forEach((e, i) => {
+      const m = L.circleMarker([+e.s.lat, +e.s.lng], { radius:6, color: e.best?'#22c55e':'#94a3b8', fillColor:e.best?'#22c55e':'#64748b', fillOpacity:.9, weight:2 })
+        .bindPopup(`<b>${esc(e.s.nombre)}</b><br>Surtidor: ${e.surt?e.surt.toFixed(3):'—'} €/L${e.best?`<br>✅ ${esc(e.best.t)}: ${e.best.n.toFixed(3)} €/L`:''}`);
+      markersLayer.addLayer(m);
+      e._m = m;
+    });
+    $('list').querySelectorAll('.st').forEach(el => el.addEventListener('click', () => {
+      const e = list[+el.dataset.i]; map.setView([+e.s.lat, +e.s.lng], 12); e._m.openPopup();
+    }));
+  }
+
+  $('go').addEventListener('click', calcular);
+</script>
+</body>
+</html>
