@@ -42,6 +42,13 @@
   .state { padding:20px 14px; color:var(--muted); font-size:14px; line-height:1.5; }
   .note { padding:10px 14px; background:rgba(234,179,8,.1); color:var(--yellow); font-size:12.5px; line-height:1.4; border-bottom:1px solid var(--border); }
   .note a { color:var(--accent); }
+  .plan { padding:10px 14px; background:rgba(249,115,22,.08); border-bottom:1px solid var(--border); }
+  .plan-h { font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:14px; letter-spacing:.5px; color:var(--accent); margin-bottom:6px; }
+  .plan-b { font-size:13px; line-height:1.45; margin-bottom:6px; }
+  .plan-b .t { color:var(--text); font-weight:600; }
+  .plan-b .e { color:var(--green); font-weight:700; }
+  .plan-b .s { color:var(--accent2); font-family:'JetBrains Mono',monospace; font-size:12px; }
+  .st.rec { border-left:3px solid var(--accent); background:#1a2030; }
 </style>
 </head>
 <body>
@@ -50,6 +57,7 @@
     <div class="controls">
       <input type="text" id="origen" placeholder="Origen (ej. Pinto, Madrid)" value="Pinto, Madrid">
       <input type="text" id="destino" placeholder="Destino (ej. Barcelona)" value="Barcelona">
+      <input type="number" id="yaCond" title="Horas que ya llevas conducidas hoy" placeholder="0" min="0" max="9" step="0.5" value="0" style="min-width:70px;max-width:80px">
       <button class="btn" id="go">Calcular ruta</button>
     </div>
     <a href="/gasolineras.html">Mapa</a>
@@ -147,27 +155,65 @@
       enRuta.forEach(e => e.kmRuta = Math.round((e.idx/pts.length)*km));
 
       $('sub').textContent = `${enRuta.length} gasolineras en ruta (±${BUFFER_KM} km)`;
-      render(enRuta);
+      const plan = computePlan(enRuta, km, hrs);
+      render(enRuta, plan);
     } catch (e) {
       $('list').innerHTML = `<div class="state">Error: ${esc(e.message)}</div>`;
     }
     $('go').disabled = false;
   }
 
-  function render(list) {
+  // Tacógrafo UE: pausa 45 min cada 4,5 h de conducción; descanso diario a las 9 h.
+  function computePlan(list, km, hrs) {
+    const ya = Math.max(0, +$('yaCond').value || 0);
+    const speed = hrs > 0 ? km / hrs : 80;
+    const breaks = [];
+    list.forEach(e => e.rec = false);
+    let t = 4.5 - ya;
+    if (t <= 0) t = 0.1;
+    let n = 0;
+    while (t < hrs && n < 6) {
+      const distAtBreak = t * speed;
+      const totalDrive = ya + t;
+      const tipo = totalDrive >= 9 ? 'descanso diario (11 h)' : 'pausa 45 min';
+      let best = null, bestD = Infinity;
+      for (const e of list) { const d = Math.abs(e.kmRuta - distAtBreak); if (d < bestD) { bestD = d; best = e; } }
+      if (best) best.rec = true;
+      breaks.push({ h: t, km: Math.round(distAtBreak), tipo, est: best });
+      if (totalDrive >= 9) break;
+      t += 4.5; n++;
+    }
+    return breaks;
+  }
+
+  function planHtml(plan) {
+    if (!plan || !plan.length) return '';
+    const rows = plan.map(b => {
+      const h = Math.floor(b.h), mm = Math.round((b.h % 1) * 60);
+      const est = b.est
+        ? `repostar en <span class="e">${esc(b.est.s.nombre)}</span>` + (b.est.best
+            ? ` <span class="s">✅ ${esc(b.est.best.t)} ${b.est.best.n.toFixed(3)}€/L${b.est.surt ? ` (-${((b.est.surt - b.est.best.n) * 100).toFixed(0)} cts)` : ''}</span>`
+            : (b.est.surt ? ` <span class="s">${b.est.surt.toFixed(3)}€/L</span>` : ''))
+        : 'sin gasolinera de tu red cerca';
+      return `<div class="plan-b"><span class="t">⏱ ${b.tipo} a ${h}h${mm?(' '+mm+'min'):''} (~${b.km} km):</span> ${est}</div>`;
+    }).join('');
+    return `<div class="plan"><div class="plan-h">🕒 Plan de tacógrafo</div>${rows}</div>`;
+  }
+
+  function render(list, plan) {
     markersLayer.clearLayers();
-    if (!list.length) { $('list').innerHTML = '<div class="state">No hay gasolineras de la red en esta ruta.</div>'; return; }
-    $('list').innerHTML = list.map((e, i) => {
+    if (!list.length) { $('list').innerHTML = planHtml(plan) + '<div class="state">No hay gasolineras de la red en esta ruta.</div>'; return; }
+    $('list').innerHTML = planHtml(plan) + list.map((e, i) => {
       const off = e.surt ? e.surt.toFixed(3) : '—';
       const best = e.best ? `<div class="row best">✅ ${esc(e.best.t)}: ${e.best.n.toFixed(3)} €/L${e.surt ? ` <span class="save">(-${((e.surt-e.best.n)*100).toFixed(0)} cts)</span>` : ''}</div>` : '';
-      return `<div class="st" data-i="${i}">
-        <div class="top"><span class="nom">${esc(e.s.nombre)}</span><span class="km">${e.kmRuta} km</span></div>
+      return `<div class="st${e.rec ? ' rec' : ''}" data-i="${i}">
+        <div class="top"><span class="nom">${e.rec ? '🛑 ' : ''}${esc(e.s.nombre)}</span><span class="km">${e.kmRuta} km</span></div>
         <div class="row off">Surtidor: ${off} €/L · ${esc(e.s.localidad||'')}</div>
         ${best}
       </div>`;
     }).join('');
     list.forEach((e, i) => {
-      const m = L.circleMarker([+e.s.lat, +e.s.lng], { radius:6, color: e.best?'#22c55e':'#94a3b8', fillColor:e.best?'#22c55e':'#64748b', fillOpacity:.9, weight:2 })
+      const m = L.circleMarker([+e.s.lat, +e.s.lng], { radius: e.rec?10:6, color: e.rec?'#f97316':(e.best?'#22c55e':'#94a3b8'), fillColor: e.rec?'#f97316':(e.best?'#22c55e':'#64748b'), fillOpacity:.9, weight:e.rec?3:2 })
         .bindPopup(`<b>${esc(e.s.nombre)}</b><br>Surtidor: ${e.surt?e.surt.toFixed(3):'—'} €/L${e.best?`<br>✅ ${esc(e.best.t)}: ${e.best.n.toFixed(3)} €/L`:''}`);
       markersLayer.addLayer(m);
       e._m = m;
