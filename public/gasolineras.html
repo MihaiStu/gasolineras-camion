@@ -952,7 +952,7 @@ function makePopupHtml(s) {
   return `
     <div class="popup-inner">
       <div class="popup-name">${isStarred(s.name) ? '⭐ ' : ''}${esc(s.name)}</div>
-      ${(window.__mejor && s.sid && window.__mejor[s.sid]) ? `<div class="popup-row" style="color:var(--green);font-weight:700">💳 Mejor tarjeta: ${esc(window.__mejor[s.sid].t)} · ${Number(window.__mejor[s.sid].n).toFixed(3)} €/L</div>` : ''}
+      ${(window.__cards && s.sid && window.__cards[s.sid] && window.__cards[s.sid].length) ? `<div class="popup-cards" style="margin-top:6px;border-top:1px solid var(--border);padding-top:5px"><div style="font-weight:600;font-size:12px;color:var(--text);margin-bottom:2px">💳 Con tus tarjetas:</div>${window.__cards[s.sid].map((c, i) => `<div class="popup-row" style="${i === 0 ? 'color:var(--green);font-weight:700' : 'color:var(--muted)'}">${i === 0 ? '✅' : '·'} ${esc(c.t)}: ${c.n.toFixed(3)} €/L</div>`).join('')}</div>` : ''}
       <div class="popup-row"><b>Dirección:</b> ${s.via ? esc(s.via) : '—'}</div>
       <div class="popup-row"><b>Localidad:</b> ${esc(s.localidad)}, ${esc(s.provincia)}${s.cp ? ' (' + esc(s.cp) + ')' : ''}</div>
       ${(s.geo === 'pendiente' || !s.lat || !s.lng)
@@ -1087,11 +1087,12 @@ if ('serviceWorker' in navigator) {
     const sb = createClient(SB_URL, SB_ANON, { db: { schema: 'gasoil' }, auth: { persistSession: true, autoRefreshToken: true } });
     const { data: { session } } = await sb.auth.getSession();
     if (session) {
-      const { data } = await sb.from('mejor_tarjeta_estacion').select('station_id,mejor_tarjeta,mejor_neto');
+      // neto de TODAS las tarjetas por estación (ordenado: la 1ª es la más barata)
+      const { data } = await sb.from('precio_tarjeta_estacion').select('station_id,nombre,neto').not('neto', 'is', null).order('neto', { ascending: true });
       if (data && data.length) {
-        window.__mejor = {};
-        for (const r of data) window.__mejor[r.station_id] = { t: r.mejor_tarjeta, n: r.mejor_neto };
-        console.log('Mejor tarjeta cargada para', data.length, 'estaciones');
+        window.__cards = {};
+        for (const r of data) { (window.__cards[r.station_id] = window.__cards[r.station_id] || []).push({ t: r.nombre, n: Number(r.neto) }); }
+        console.log('Tarjetas cargadas para', Object.keys(window.__cards).length, 'estaciones');
       }
     }
   } catch (e) { console.warn('No se pudo cargar la mejor tarjeta:', e.message); }
