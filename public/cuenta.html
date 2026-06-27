@@ -184,6 +184,12 @@
     <div class="section-title" style="margin-top:26px;">Registrar repostaje</div>
     <div class="panel-form">
       <form id="form-refuel">
+        <div class="field" style="margin-bottom:12px;">
+          <label>Estación (opcional, autorrellena precios)</label>
+          <input type="text" id="rf-station" list="rf-station-dl" placeholder="Escribe para buscar tu estación…" autocomplete="off">
+          <datalist id="rf-station-dl"></datalist>
+          <div class="msg" id="rf-station-info" style="text-align:left;color:var(--green)"></div>
+        </div>
         <div class="grid2">
           <div class="field">
             <label>Camión</label>
@@ -275,8 +281,39 @@
     currentTenantId = tenants?.[0]?.id || null;
     $('acc-name').textContent = tenants?.[0]?.nombre || session.user.email;
 
-    await Promise.all([loadReport(), loadTrucks(), loadTarjetas(), suggestRefPrice()]);
+    await Promise.all([loadReport(), loadTrucks(), loadTarjetas(), suggestRefPrice(), loadStationData()]);
   }
+
+  // Estaciones + surtidor + mejor tarjeta, para autorrellenar el repostaje
+  let stationMap = {};
+  async function loadStationData() {
+    const [{ data: sts }, { data: prs }, { data: mej }] = await Promise.all([
+      sb.from('station').select('id,nombre,localidad').eq('truck_ok', true).order('nombre'),
+      sb.from('price').select('station_id,precio').eq('producto', 'gasoleo_a'),
+      sb.from('mejor_tarjeta_estacion').select('station_id,mejor_tarjeta,mejor_neto'),
+    ]);
+    const surtidor = {}; (prs || []).forEach(p => surtidor[p.station_id] = Number(p.precio));
+    const best = {}; (mej || []).forEach(m => best[m.station_id] = { card: m.mejor_tarjeta, net: Number(m.mejor_neto) });
+    stationMap = {};
+    $('rf-station-dl').innerHTML = (sts || []).map(s => {
+      const label = `${s.nombre}${s.localidad ? ' (' + s.localidad + ')' : ''}`;
+      stationMap[label] = { id: s.id, surtidor: surtidor[s.id], best: best[s.id] };
+      return `<option value="${esc(label)}"></option>`;
+    }).join('');
+  }
+
+  document.getElementById('rf-station').addEventListener('input', () => {
+    const e = stationMap[$('rf-station').value];
+    const info = $('rf-station-info');
+    if (!e) { info.textContent = ''; return; }
+    if (e.surtidor) $('rf-ref').value = e.surtidor.toFixed(3);
+    if (e.best) {
+      $('rf-pagado').value = e.best.net.toFixed(3);
+      info.textContent = `✅ Mejor: ${e.best.card} ${e.best.net.toFixed(3)} €/L${e.surtidor ? ' · surtidor ' + e.surtidor.toFixed(3) : ''}`;
+    } else {
+      info.textContent = e.surtidor ? `Surtidor ${e.surtidor.toFixed(3)} €/L (no tienes tarjeta aquí)` : 'Sin datos de precio para esta estación';
+    }
+  });
 
   let currentTenantId = null;
 
@@ -425,16 +462,18 @@
     if (!truck_id) return rfMsg('Añade un camión antes de registrar un repostaje.', 'err');
     if (!currentTenantId) return rfMsg('No se pudo identificar la cuenta.', 'err');
     rfMsg('Guardando…');
+    const est = stationMap[$('rf-station').value];
     const { error } = await sb.from('refuel').insert({
       tenant_id: currentTenantId,
       truck_id,
+      station_id: est ? est.id : null,
       litros: Number($('rf-litros').value),
       precio_pagado: Number($('rf-pagado').value),
       precio_referencia: Number($('rf-ref').value),
     });
     if (error) return rfMsg(error.message, 'err');
     rfMsg('Repostaje guardado ✓', 'ok');
-    $('rf-litros').value = ''; $('rf-pagado').value = '';
+    $('rf-litros').value = ''; $('rf-pagado').value = ''; $('rf-station').value = ''; $('rf-station-info').textContent = '';
     await loadReport();
   });
 
