@@ -896,6 +896,9 @@ function renderList() {
   }
 }
 
+// Escapa texto antes de meterlo en innerHTML (nombre de tarjeta y de estación son datos)
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
 function makePopupHtml(s) {
   const p = s.priceData;
   let compareHtml = '';
@@ -948,10 +951,10 @@ function makePopupHtml(s) {
 
   return `
     <div class="popup-inner">
-      <div class="popup-name">${isStarred(s.name) ? '⭐ ' : ''}${s.name}</div>
-      ${(window.__mejor && s.sid && window.__mejor[s.sid]) ? `<div class="popup-row" style="color:var(--green);font-weight:700">💳 Mejor tarjeta: ${window.__mejor[s.sid].t} · ${Number(window.__mejor[s.sid].n).toFixed(3)} €/L</div>` : ''}
-      <div class="popup-row"><b>Dirección:</b> ${s.via || '—'}</div>
-      <div class="popup-row"><b>Localidad:</b> ${s.localidad}, ${s.provincia}${s.cp ? ' (' + s.cp + ')' : ''}</div>
+      <div class="popup-name">${isStarred(s.name) ? '⭐ ' : ''}${esc(s.name)}</div>
+      ${(window.__mejor && s.sid && window.__mejor[s.sid]) ? `<div class="popup-row" style="color:var(--green);font-weight:700">💳 Mejor tarjeta: ${esc(window.__mejor[s.sid].t)} · ${Number(window.__mejor[s.sid].n).toFixed(3)} €/L</div>` : ''}
+      <div class="popup-row"><b>Dirección:</b> ${s.via ? esc(s.via) : '—'}</div>
+      <div class="popup-row"><b>Localidad:</b> ${esc(s.localidad)}, ${esc(s.provincia)}${s.cp ? ' (' + esc(s.cp) + ')' : ''}</div>
       ${(s.geo === 'pendiente' || !s.lat || !s.lng)
         ? '<div class="popup-row" style="color:var(--yellow)">⚠ Ubicación aproximada, pendiente de afinar</div>'
         : `<div class="popup-row"><b>Coordenadas:</b> ${Number(s.lat).toFixed(5)}, ${Number(s.lng).toFixed(5)}${s.geo === 'minetur' ? ' · oficial' : ''}</div>`}
