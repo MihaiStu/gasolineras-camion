@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin · Repostaje Camión</title>
+<meta name="robots" content="noindex">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --navy:#0f172a; --navy2:#1e293b; --panel:#162032; --accent:#f97316; --accent2:#fb923c; --green:#22c55e; --red:#ef4444; --text:#e2e8f0; --muted:#94a3b8; --border:#1e3a5f; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Barlow',sans-serif; background:radial-gradient(1200px 600px at 50% -10%,#14213d,var(--navy) 55%); color:var(--text); min-height:100vh; padding:24px 16px 48px; display:flex; flex-direction:column; align-items:center; }
+  .wrap { width:100%; max-width:720px; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; }
+  .brand { font-family:'Barlow Condensed',sans-serif; font-size:21px; font-weight:800; letter-spacing:1.4px; color:var(--accent); }
+  .brand span { color:var(--text); }
+  .tag { background:rgba(249,115,22,.15); border:1px solid var(--accent); color:var(--accent2); font-size:11px; font-weight:700; text-transform:uppercase; padding:4px 9px; border-radius:999px; }
+  .panel { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:22px; }
+  h1 { font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:26px; text-align:center; margin-bottom:16px; }
+  .field { margin-bottom:13px; }
+  label { display:block; font-size:12px; font-weight:600; letter-spacing:.4px; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+  input, textarea { width:100%; background:var(--navy); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:11px 12px; font-size:15px; font-family:'Barlow',sans-serif; }
+  textarea { font-family:'JetBrains Mono',monospace; font-size:12px; min-height:200px; white-space:pre; }
+  input:focus, textarea:focus { outline:none; border-color:var(--accent); }
+  .btn { width:100%; margin-top:6px; background:var(--accent); color:#1a1006; border:none; border-radius:9px; padding:13px; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:18px; letter-spacing:.5px; cursor:pointer; }
+  .btn:hover { background:var(--accent2); }
+  .btn:disabled { opacity:.6; }
+  .btn-ghost { background:none; border:1px solid var(--border); color:var(--muted); font-size:13px; padding:7px 12px; border-radius:8px; cursor:pointer; }
+  .msg { margin-top:12px; font-size:14px; text-align:center; min-height:18px; }
+  .msg.err { color:var(--red); } .msg.ok { color:var(--green); }
+  .hint { font-size:12px; color:var(--muted); margin-top:6px; line-height:1.5; }
+  .hidden { display:none; }
+  .acc { color:var(--muted); font-size:14px; } .acc b { color:var(--text); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">REPOSTAJE <span>CAMIÓN</span></div>
+    <span class="tag">Admin</span>
+  </div>
+
+  <div id="auth" class="panel" style="max-width:420px;margin:20px auto;">
+    <h1>Panel de administración</h1>
+    <div class="field"><label>Email</label><input type="email" id="a-email" autocomplete="email"></div>
+    <div class="field"><label>Contraseña</label><input type="password" id="a-pass" autocomplete="current-password"></div>
+    <button class="btn" id="a-login">Entrar</button>
+    <div class="msg" id="a-msg"></div>
+  </div>
+
+  <div id="admin" class="hidden">
+    <div class="topbar" style="margin-top:-6px;">
+      <span class="acc">Admin: <b id="a-who">…</b></span>
+      <button class="btn-ghost" id="a-logout">Salir</button>
+    </div>
+    <div class="panel">
+      <h1 style="font-size:22px;">Importar listado de precios</h1>
+      <p class="hint" style="margin-bottom:14px;">Pega el listado tal cual te lo pasan (Andamur/Radius): columnas separadas por tabulador, con cabeceras de sección. Crea/actualiza estaciones y recarga los precios de la tarjeta. Re-ejecutable.</p>
+      <div class="field"><label>Tarjeta</label><input type="text" id="i-tarjeta" value="Andamur"></div>
+      <div class="field"><label>Listado (TSV)</label><textarea id="i-tsv" placeholder="ZONA X&#9;VIA&#9;LOCALIDAD&#9;PROVINCIA&#9;PRECIO €/l&#10;ESTACION...&#9;A-7&#9;Lorca&#9;Murcia&#9;1,192"></textarea></div>
+      <button class="btn" id="i-go">Importar</button>
+      <div class="msg" id="i-msg"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+  const SB_URL = 'http://192.168.1.33:8100';
+  const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzgyMjM3OTM0LCJleHAiOjIwOTc1OTc5MzR9.HIN7LriE0ngaW9_4jILe9MxtATqavJHAiCLR_GmV19s';
+  const sb = createClient(SB_URL, SB_ANON, { db: { schema: 'gasoil' }, auth: { persistSession: true, autoRefreshToken: true } });
+  const $ = id => document.getElementById(id);
+  const amsg = (t, c='') => { $('a-msg').textContent = t; $('a-msg').className = 'msg ' + c; };
+  const imsg = (t, c='') => { $('i-msg').textContent = t; $('i-msg').className = 'msg ' + c; };
+  let tenantId = null;
+
+  async function refresh() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { $('auth').classList.remove('hidden'); $('admin').classList.add('hidden'); return; }
+    $('auth').classList.add('hidden'); $('admin').classList.remove('hidden');
+    $('a-who').textContent = session.user.email;
+    const { data } = await sb.from('tenant').select('id,nombre').limit(1);
+    tenantId = data?.[0]?.id || null;
+  }
+
+  $('a-login').onclick = async () => {
+    amsg('Entrando…');
+    const { error } = await sb.auth.signInWithPassword({ email: $('a-email').value, password: $('a-pass').value });
+    if (error) return amsg(error.message, 'err');
+    amsg(''); refresh();
+  };
+  $('a-logout').onclick = async () => { await sb.auth.signOut(); refresh(); };
+
+  $('i-go').onclick = async () => {
+    const tsv = $('i-tsv').value;
+    if (!tsv.trim()) return imsg('Pega el listado.', 'err');
+    if (!tenantId) return imsg('No se pudo identificar la cuenta.', 'err');
+    imsg('Importando… (puede tardar unos segundos)');
+    $('i-go').disabled = true;
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const res = await fetch(`${SB_URL}/functions/v1/admin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: SB_ANON, Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ action: 'import_list', tenant_id: tenantId, tarjeta_nombre: $('i-tarjeta').value || 'Andamur', tsv }),
+      });
+      const r = await res.json();
+      if (!res.ok || r.error) imsg('Error: ' + (r.error || res.status), 'err');
+      else imsg(`✅ Importado: ${r.estaciones} estaciones, ${r.precios} precios en la tarjeta "${r.tarjeta}".`, 'ok');
+    } catch (e) { imsg('Error: ' + e.message, 'err'); }
+    $('i-go').disabled = false;
+  };
+
+  refresh();
+</script>
+</body>
+</html>
