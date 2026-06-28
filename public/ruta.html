@@ -30,6 +30,11 @@
   .side-h { padding:12px 14px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--panel); }
   .side-h .res { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:16px; }
   .side-h .sub { color:var(--muted); font-size:12px; margin-top:2px; }
+  .save-banner { margin-top:8px; }
+  .save-banner.on { background:linear-gradient(180deg,rgba(34,197,94,.12),rgba(34,197,94,.03)); border:1px solid rgba(34,197,94,.4); border-radius:10px; padding:10px 12px; }
+  .save-banner .big { font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:30px; color:var(--green); line-height:1; }
+  .save-banner .d { color:var(--muted); font-size:12px; margin-top:3px; line-height:1.4; }
+  .save-banner .d b { color:var(--text); }
   .st { padding:11px 14px; border-bottom:1px solid rgba(30,58,95,.5); cursor:pointer; }
   .st:hover { background:#1a2640; }
   .st .top { display:flex; justify-content:space-between; gap:8px; }
@@ -66,7 +71,7 @@
   <div class="main">
     <div id="map"></div>
     <div class="side">
-      <div class="side-h"><div class="res" id="res">Calcula una ruta</div><div class="sub" id="sub">Origen → destino y verás dónde repostar.</div></div>
+      <div class="side-h"><div class="res" id="res">Calcula una ruta</div><div class="sub" id="sub">Origen → destino y verás dónde repostar.</div><div class="save-banner" id="saveBanner"></div></div>
       <div id="note"></div>
       <div id="list"><div class="state">Introduce origen y destino y pulsa «Calcular ruta».</div></div>
     </div>
@@ -156,6 +161,18 @@
 
       $('sub').textContent = `${enRuta.length} gasolineras en ruta (±${BUFFER_KM} km)`;
       const plan = computePlan(enRuta, km, hrs);
+
+      // Ahorro estimado de la ruta: litros necesarios × mejor diferencia vs surtidor
+      const CONSUMO = 30; // L/100km
+      const litros = Math.round(km * CONSUMO / 100);
+      let deal = null;
+      for (const e of enRuta) { if (e.best && e.surt) { const s = e.surt - e.best.n; if (!deal || s > deal.s) deal = { s, e }; } }
+      const sbEl = $('saveBanner');
+      if (deal && deal.s > 0) {
+        sbEl.className = 'save-banner on';
+        sbEl.innerHTML = `<div class="big">≈ ${Math.round(deal.s * litros)} €</div><div class="d">de ahorro en esta ruta (~<b>${litros} L</b> a 30 L/100km) repostando con <b>${esc(deal.e.best.t)}</b> en <b>${esc(deal.e.s.nombre)}</b> · -${(deal.s * 100).toFixed(0)} cts/L vs surtidor</div>`;
+      } else { sbEl.className = 'save-banner'; sbEl.innerHTML = ''; }
+
       render(enRuta, plan);
     } catch (e) {
       $('list').innerHTML = `<div class="state">Error: ${esc(e.message)}</div>`;
