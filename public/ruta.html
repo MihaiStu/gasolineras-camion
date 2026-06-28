@@ -54,6 +54,20 @@
   .plan-b .e { color:var(--green); font-weight:700; }
   .plan-b .s { color:var(--accent2); font-family:'JetBrains Mono',monospace; font-size:12px; }
   .st.rec { border-left:3px solid var(--accent); background:#1a2030; }
+  .st.sel { border-left:3px solid var(--green); background:rgba(34,197,94,.08); }
+  .top .r { display:flex; gap:6px; align-items:center; }
+  .pin { background:none; border:1px solid var(--border); color:var(--muted); border-radius:6px; padding:1px 7px; cursor:pointer; font-size:13px; line-height:1.4; }
+  .pin.on { border-color:var(--green); color:var(--green); }
+  .miplan { display:none; padding:11px 14px; background:rgba(34,197,94,.08); border-bottom:1px solid var(--border); position:sticky; top:64px; z-index:5; }
+  .miplan.on { display:block; }
+  .miplan-h { font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:14px; letter-spacing:.5px; color:var(--green); margin-bottom:6px; }
+  .miplan-r { display:flex; justify-content:space-between; gap:8px; font-size:13px; margin-bottom:4px; align-items:baseline; }
+  .miplan-r .n { font-weight:600; } .miplan-r .n .o { color:var(--muted); font-size:11px; font-family:'JetBrains Mono',monospace; }
+  .miplan-r .p { font-family:'JetBrains Mono',monospace; white-space:nowrap; } .miplan-r .p .b { color:var(--green); font-weight:700; }
+  .miplan-r .x { color:var(--muted); cursor:pointer; padding:0 4px; }
+  .miplan-r .x:hover { color:var(--red); }
+  .miplan-tot { margin-top:7px; padding-top:7px; border-top:1px solid rgba(34,197,94,.3); font-size:13px; }
+  .miplan-tot b { color:var(--green); font-family:'JetBrains Mono',monospace; }
 </style>
 </head>
 <body>
@@ -72,6 +86,7 @@
     <div id="map"></div>
     <div class="side">
       <div class="side-h"><div class="res" id="res">Calcula una ruta</div><div class="sub" id="sub">Origen → destino y verás dónde repostar.</div><div class="save-banner" id="saveBanner"></div></div>
+      <div id="miPlan" class="miplan"></div>
       <div id="note"></div>
       <div id="list"><div class="state">Introduce origen y destino y pulsa «Calcular ruta».</div></div>
     </div>
@@ -217,14 +232,41 @@
     return `<div class="plan"><div class="plan-h">🕒 Plan de tacógrafo</div>${rows}</div>`;
   }
 
+  const selected = new Set();
+  let currentList = [];
+
+  function renderMiPlan() {
+    const box = $('miPlan');
+    const chosen = currentList.filter(e => selected.has(e.s.id)).sort((a, b) => a.idx - b.idx);
+    if (!chosen.length) { box.className = 'miplan'; box.innerHTML = ''; return; }
+    let sumCts = 0, nCts = 0;
+    const rows = chosen.map(e => {
+      const precio = e.best ? e.best.n : e.surt;
+      const tag = e.best ? `<span class="b">${esc(e.best.t)} ${e.best.n.toFixed(3)}</span>` : `${e.surt ? e.surt.toFixed(3) : '—'}`;
+      if (e.best && e.surt) { sumCts += (e.surt - e.best.n) * 100; nCts++; }
+      return `<div class="miplan-r"><span class="n">${esc(e.s.nombre)} <span class="o">${e.kmRuta} km</span></span><span class="p">${tag} €/L <span class="x" data-x="${e.s.id}">✕</span></span></div>`;
+    }).join('');
+    const avg = nCts ? (sumCts / nCts).toFixed(0) : null;
+    box.className = 'miplan on';
+    box.innerHTML = `<div class="miplan-h">🛒 Mi plan de repostaje (${chosen.length})</div>${rows}` +
+      (avg ? `<div class="miplan-tot">Ahorras de media <b>-${avg} cts/L</b> en tus paradas vs surtidor.</div>` : '');
+    box.querySelectorAll('.x').forEach(x => x.addEventListener('click', () => { selected.delete(x.dataset.x); rerender(); }));
+  }
+
+  function rerender() { render(currentList, currentPlan); }
+  let currentPlan = null;
+
   function render(list, plan) {
+    currentList = list; currentPlan = plan;
     markersLayer.clearLayers();
     if (!list.length) { $('list').innerHTML = planHtml(plan) + '<div class="state">No hay gasolineras de la red en esta ruta.</div>'; return; }
     $('list').innerHTML = planHtml(plan) + list.map((e, i) => {
       const off = e.surt ? e.surt.toFixed(3) : '—';
       const best = e.best ? `<div class="row best">✅ ${esc(e.best.t)}: ${e.best.n.toFixed(3)} €/L${e.surt ? ` <span class="save">(-${((e.surt-e.best.n)*100).toFixed(0)} cts)</span>` : ''}</div>` : '';
-      return `<div class="st${e.rec ? ' rec' : ''}" data-i="${i}">
-        <div class="top"><span class="nom">${e.rec ? '🛑 ' : ''}${esc(e.s.nombre)}</span><span class="km">${e.kmRuta} km</span></div>
+      const sel = selected.has(e.s.id);
+      return `<div class="st${e.rec ? ' rec' : ''}${sel ? ' sel' : ''}" data-i="${i}">
+        <div class="top"><span class="nom">${e.rec ? '🛑 ' : ''}${esc(e.s.nombre)}</span>
+          <span class="r"><span class="km">${e.kmRuta} km</span><button class="pin${sel ? ' on' : ''}" data-pin="${i}" title="Marcar para repostar">${sel ? '📌' : '➕'}</button></span></div>
         <div class="row off">Surtidor: ${off} €/L · ${esc(e.s.localidad||'')}</div>
         ${best}
       </div>`;
@@ -238,6 +280,13 @@
     $('list').querySelectorAll('.st').forEach(el => el.addEventListener('click', () => {
       const e = list[+el.dataset.i]; map.setView([+e.s.lat, +e.s.lng], 12); e._m.openPopup();
     }));
+    $('list').querySelectorAll('.pin').forEach(btn => btn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const e = list[+btn.dataset.pin];
+      if (selected.has(e.s.id)) selected.delete(e.s.id); else selected.add(e.s.id);
+      rerender();
+    }));
+    renderMiPlan();
   }
 
   $('go').addEventListener('click', calcular);
